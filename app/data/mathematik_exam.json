@@ -1,0 +1,151 @@
+{
+    "exam": {
+      "title": "Mathematik Prüfung",
+      "tasks": [
+        {
+          "task_id": "task_1",
+          "title": "1. Aufgabe",
+          "subtitle": "In der Rechenmaschine wird die eingegebene Zahl Schritt für Schritt verarbeitet.",
+          "questions": [
+            {
+              "id": 23,
+              "question": "Welche Zahl muss du eingeben, damit die Ausgabezahl 102 herauskommt?",
+              "formula": "1. Eingabe: + 6.3, 2. Eingabe: / 3, 3. Eingabe: - 20.1",
+              "type": "numeric",
+              "solution": "360"
+            }
+          ]
+        },
+        {
+          "task_id": "task_2",
+          "title": "2. Aufgabe",
+          "subtitle": "Bootsvermietung «Am See». Öffnungszeiten: Mai bis September täglich (Mo bis So) von 8:30 bis 19:00 Uhr.",
+          "questions": [
+            {
+              "id": 24,
+              "question": "Wie viel kostet die Miete für eine halbe Stunde Ruderboot, wenn sie 2/3 des Stundenpreises für ein Rudeboot beträgt?",
+              "type": "numeric",
+              "solution": "20"
+            },
+            {
+              "id": 25,
+              "question": "Wie viele Kajaks besitzt der Vermieter, wenn er mit allen Kajaks pro Tag maximal 1040.- Franken verdienen kann?",
+              "type": "numeric",
+              "solution": "8"
+            },
+            {
+              "id": 26,
+              "question": "Ein Pedalo wird während der ganzen Öffnungszeit am Sonntag ununterbrochen jedesmal für 30 Minuten, ein anderes Pedalo ununterbrochen jedesmal für 60 Minuten vermietet. Wie gross ist der Unterschied auf den Einnahmen für diese beides Pedalos?",
+              "type": "numeric",
+              "solution": "65"
+            }
+          ]
+        },
+        {
+            "task_id": "task_3",
+            "title": "3. Aufgabe",
+            "subtitle": "Stefan plant in den Sommerferien eine Zugreise ins Tessin. Er freute sich, zum ersten Mal den 57 km langen Gotthard-Basistunnel zu durchfahren. Die Durchfahrt dauerte genau 19 Minuten.",
+            "questions": [
+              {
+                "id": 27,
+                "question": "Mit welcher Durchschnitssgeschwindigkeit fuhr der Zug im Basistunnel? Gib das Ergebnis in km/h an.",
+                "type": "numeric",
+                "solution": "180"
+              },
+              {
+                  "id": 28,
+                  "question": "In Bellinzona hatte Stefan gemäss Fahrplan 5 Minuten Zeit umzusteigen. Leider hatte der Zug 1h30 Verspätung. Mit seinem schweren Gepäck konnte Stefan mit 6 km/h gehen. Er erreichte den Anschluss im letzten Moment. Wie weit musste Stefan gehen? Gib deine Antwort in Meter an.",
+                  "type": "numeric",
+                  "solution": "350"
+                }
+            ]
+          },
+          {
+            "task_id": "task_4",
+            "title": "4. Aufgabe",
+            "subtitle": "Die beiden Zahlenfolgen sind je nach einer Regel aufgebaut.",
+            "questions": [
+              {
+                "id": 29,
+                "question": "2, A, B, 48, 240, 1440",
+                "formula": "Notiere die Zahlen A und B. Gib die Antworten kommasepariert ein. Beispiel: 10, 20",
+                "type": "numeric",
+                "solution": "4, 12"
+              },
+              {
+                  "id": 30,
+                  "question": "A, 30.5, 26.25, B, 17.75, C",
+                  "formula": "Notiere die Zahlen A, B und C. Gib die Antworten kommasepariert ein. Beispiel: 10, 20, 30",
+                  "type": "numeric",
+                  "solution": "34.75, 22, 13.5"
+                }
+            ]
+          },
+          {
+            "task_id": "task_5",
+            "title": "5. Aufgabe",
+            "subtitle": "Oma Tina kocht jeweils dienstags für ihre drei Enkel Lia, Sara und Ben das Mittagessen. Lia kommt alle zwei Wochen, Sara jeden dritten Dienstag und Ben nur jeden vierten Dienstag. Heute sind alle gemeinsam beim Mittagessen.",
+            "questions": [
+              {
+                "id": 31,
+                "question": "In wie vielen Wochen werden das nächste Mal wieder alle drei gemeinsam zum Mittagessen kommen?",
+                "type": "numeric",
+                "solution": "12"
+              },
+              {
+                "id": 32,
+                "question": "Wie oft waren bis dann nur Ben und Lisa gemeinsam Mittagessen?",
+                "type": "numeric",
+                "solution": "2"
+              },
+              {
+                  "id": 33,
+                  "question": "An wie vielen Dienstagen zwischen dem ersten und dem zweiten gemeinsamen Mittagessen aller drei Enkel bekochte Oma Tina keine Enkel?",
+                  "type": "numeric",
+                  "solution": "4"
+                }
+            ]
+          },
+          {
+            "task_id": "task_6",
+            "title": "6. Aufgabe",
+            "subtitle": "Die Bienenvölker von Maja und Willi liefern jedes Jahr durchschnittlich gleich viel Honig pro Volk. Imkerin Maja verdient mit ihren 20 Bienenvölkern in einem Jahr 24'480 Franken. Bei ihr kosten 500g Honig 24.- Franken. Imker Willi besitzt 15 Bienenvölker. Er verlangt für 500g Honig 22.- Franken.",
+            "questions": [
+              {
+                "id": 34,
+                "question": "Wie viel nimmt Willi durch den Verkauf seines Honigs ein?",
+                "type": "numeric",
+                "solution": "16830"
+              }
+            ]
+          },
+          {
+            "task_id": "task_7",
+            "title": "7. Aufgabe",
+            "subtitle": "Die folgende Figur (nicht massstäblich) ist aus Rechtecken zusammengesetzt. Der Punkt P ist die Mitte von AB und der Punkt Q die Mitte von AC. Der schattierte Teil hat die Fläche 40 cm2.",
+            "questions": [
+              {
+                "id": 35,
+                "question": "Bestimme die Fläche der gesamten Figur (fett ausgezogen).",
+                "type": "numeric",
+                "solution": "226"
+              }
+            ]
+          },
+          {
+            "task_id": "task_8",
+            "title": "8. Aufgabe",
+            "subtitle": "Der eingezeichnete Startwürfel wird immer durch Kippen über eine Würfelkante um 90 Grad auf dem eingezeichneten Weg zum Zielwürfel bewegt.",
+            "questions": [
+              {
+                "id": 36,
+                "question": "Beschrifte die sechs sichtbaren Seiten A, B, C, D, E und F des Zielwürfels mit den Augenzahlen, die dort zu liegen kommen (Hinweis: Die Summe der beiden gegenüberliegenden Augenzahlen eines Würfels beträgt immer 7). Gib deine Antworten kommasepariert ein. Ein Beispiel: 8, 9, 4 usw.",
+                "type": "numeric",
+                "solution": "1, 4, 2, 4, 1, 5"
+              }
+            ]
+          }
+      ]
+    }
+  }
+  

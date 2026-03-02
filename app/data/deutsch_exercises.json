@@ -1,0 +1,111 @@
+{
+  "uebungen": {
+    "deutsch": {
+      "title": "Deutsch Übungen",
+      "aufgaben": [
+        {
+          "id": "aufgabe_1",
+          "title": "Aufgabe 1",
+          "tasks": [
+            {
+              "id": 1,
+              "question": "Woher kommt Meral ursprünglich?",
+              "solution": "Kosovo",
+              "type": "text",
+              "hint": "Die Antwort findest du im zweiten Abschnitt."
+            },
+            {
+              "id": 2,
+              "question": "Welches Geschlecht hat Meral?",
+              "solution": "Weiblich",
+              "type": "text",
+              "hint": "Die Beschreibung der Person gibt Hinweise."
+            }
+          ]
+        },
+        {
+          "id": "aufgabe_2",
+          "title": "Aufgabe 2",
+          "tasks": [
+            {
+              "id": 3,
+              "question": "Wo beginnt die Rückblende in die Vergangenheit? Gib die entsprechenden ersten drei Wörter der Rückblende an.",
+              "solution": "Ich erklärte Sarah",
+              "type": "text",
+              "hint": "Achte auf den Übergang zwischen der Gegenwart und der Rückblende."
+            },
+            {
+              "id": 4,
+              "question": "Wo endet die Rückblende in die Vergangenheit? Gib die entsprechenden letzten drei Wörter der Rückblende an.",
+              "solution": "Namen gegeben hatten",
+              "type": "text",
+              "hint": "Achte auf den Übergang zwischen der Gegenwart und der Rückblende."
+            },
+            {
+              "id": 5,
+              "question": "Vor wie vielen Jahren hat das Gespräch über die Elefanten im Garten stattgefunden?",
+              "solution": "20",
+              "type": "text",
+              "hint": "Das Gespräch wird zeitlich verortet."
+            }
+          ]
+        },
+        {
+          "id": "aufgabe_3",
+          "title": "Aufgabe 3",
+          "tasks": [
+            {
+              "id": 6,
+              "question": "In welchem Satz wird eindeutig klar, dass Meral erst durch Sarah auf den Namen Dumbo gekommen ist?",
+              "solution": "Ich hätte auf die Schnelle keinen besseren erfinden können.",
+              "type": "text",
+              "hint": "Schreibe diesen einen Satz vollständig ab."
+            }
+          ]
+        },
+        {
+          "id": "aufgabe_4",
+          "title": "Aufgabe 4",
+          "subtitle": "Welches Synonym beschreibt das fett gedruckte Wort deiner Meinung nach am besten?",
+          "tasks": [
+            {
+              "id": 7,
+              "question": "Ich schlenderte durch die Marktgasse und traf zufällig auf Sarah.",
+              "options": ["trottete", "pilgerte", "bummelte", "ging", "marschierte"],
+              "solution": "bummelte",
+              "type": "multiple_choice"
+            },
+            {
+              "id": 8,
+              "question": "Ich erklärte Sarah damals scheinbar gleichgültig: «Im Kosovo wohnten wir vor dem Krieg ausserhalb des Dorfes, wir hatten Elefanten im Garten (...)",
+              "options": ["gleichmässig", "unbeteiligt", "freudlos", "verbittert", "abgebrüht"],
+              "solution": "unbeteiligt",
+              "type": "multiple_choice"
+            },
+            {
+              "id": 9,
+              "question": "Grossvater hatte nach diesem Angriff nur zerrissene Hosen.",
+              "options": ["geschlissene", "verschleissste", "löchrige", "zerfetzte", "abgerissene"],
+              "solution": "zerfetzte",
+              "type": "multiple_choice"
+            },
+            {
+              "id": 10,
+              "question": "Der Löwe war, nachdem er mit meinem Grossvater gekämpft hatte, sanft geworden, spielte sogar mit mir und meiner Schwester im Garten.",
+              "options": ["zart", "wohlwollend", "zahm", "herzlich", "gnädig"],
+              "solution": "zahm",
+              "type": "multiple_choice"
+            },
+            {
+              "id": 11,
+              "question": "«Treffen wir uns doch irgendwann einmal», meinte Sarah distanziert, «ich würde dich gerne wiedersehen (...)",
+              "options": ["aus der Ferne", "zugeknöpft", "böse", "barsch", "unhöflich"],
+              "solution": "zugeknöpft",
+              "type": "multiple_choice"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
