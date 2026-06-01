@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
+import { useAuthStore } from '@/store/useAuthStore'
 import {
   LayoutDashboard,
   GraduationCap,
@@ -138,7 +138,7 @@ function NavGroup({
     return (
       <button
         onClick={handleCollapsedClick}
-        title={title}
+        aria-label={title}
         className={`w-full flex items-center justify-center p-3 rounded-xl transition-colors ${
           hasActiveItem
             ? `${styles.active}`
@@ -197,8 +197,8 @@ function NavGroup({
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const { data: session } = useSession()
-  
+  const { isContentManager, isAdmin, isStudent } = useAuthStore()
+
   // Start mit false, dann aus localStorage laden nach Hydration
   const [isCollapsed, setIsCollapsed] = useState(false)
   
@@ -224,18 +224,13 @@ export default function Sidebar() {
     localStorage.setItem('sidebar-collapsed', 'false')
   }
   
-  // Rollen-Check
-  const isContentManager = session?.user?.role === 'lehrperson' || session?.user?.role === 'admin'
-  const isAdmin = session?.user?.role === 'admin'
-  const isStudent = session?.user?.role === 'user'
-
   return (
     <aside className={`${isCollapsed ? 'w-16 p-2' : 'w-64 p-4'} border-r border-border bg-card min-h-[calc(100vh-4rem)] hidden md:block transition-all duration-200`}>
       {/* Toggle Button */}
       <button
         onClick={toggleCollapsed}
+        aria-label={isCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
         className={`w-full flex items-center justify-center ${isCollapsed ? 'p-3' : 'px-4 py-3'} mb-4 rounded-xl hover:bg-accent text-muted-foreground hover:text-foreground transition-colors`}
-        title={isCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
       >
         {isCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
       </button>
@@ -284,13 +279,15 @@ export default function Sidebar() {
           onExpandSidebar={expandSidebar}
         />
 
-        <NavGroup 
-          title="Mentoring" 
-          icon={Handshake} 
+        {/* Mentoring temporär ausgeblendet
+        <NavGroup
+          title="Mentoring"
+          icon={Handshake}
           items={mentoringNavigation}
           isCollapsed={isCollapsed}
           onExpandSidebar={expandSidebar}
         />
+        */}
       </div>
 
       {/* Lehrperson Section */}

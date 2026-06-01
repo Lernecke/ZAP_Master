@@ -1,7 +1,9 @@
 import { Settings, Save } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { requireAdmin } from '@/lib/auth/guards'
 
-export default function EinstellungenPage() {
+export default async function EinstellungenPage() {
+  await requireAdmin()
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}

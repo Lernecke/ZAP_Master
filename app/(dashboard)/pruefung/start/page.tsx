@@ -2,28 +2,37 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { createAuthenticatedBrowserClient } from '@/lib/supabase/client'
-import { OldExamData, OldExamTask } from '@/types/old-exam'
-import examDataJson from '@/app/data/mathematik_exam.json'
-
-// Initialize tasks from JSON (outside component to avoid useEffect)
-const initialTasks = (examDataJson as OldExamData).exam.tasks
+import { useAuthStore } from '@/store/useAuthStore'
+import { OldExamTask } from '@/types/old-exam'
+import { Skeleton } from '@/app/components/ui/skeleton'
 
 export default function ExamStartPage() {
   const router = useRouter()
-  const { data: session } = useSession()
-  const userId = session?.user?.id
+  const { userId, supabaseAccessToken } = useAuthStore()
 
-  // Authentifizierter Supabase Client (Best Practice)
-  const supabaseAccessToken = session?.supabaseAccessToken
   const supabase = useMemo(
     () => supabaseAccessToken ? createAuthenticatedBrowserClient(supabaseAccessToken) : null,
     [supabaseAccessToken]
   )
 
-  const [tasks] = useState<OldExamTask[]>(initialTasks)
+  const [tasks, setTasks] = useState<OldExamTask[]>([])
   const [currentTask, setCurrentTask] = useState(0)
+
+  useEffect(() => {
+    if (!supabase) return
+    supabase
+      .from('trainer_exams')
+      .select('data')
+      .eq('id', 'zap-math-pruefung')
+      .single()
+      .then(({ data }) => {
+        if (data?.data) {
+          const examData = data.data as unknown as { tasks: OldExamTask[] }
+          setTasks(examData.tasks ?? [])
+        }
+      })
+  }, [supabase])
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [timer, setTimer] = useState(3600) // 60 minutes
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -191,8 +200,20 @@ export default function ExamStartPage() {
 
   if (tasks.length === 0) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="min-h-screen bg-background pb-24 space-y-6">
+        {/* Timer Header Skeleton */}
+        <div className="sticky top-0 z-10 bg-card shadow-sm border-b border-border">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        </div>
+        {/* Question Card Skeleton */}
+        <div className="max-w-4xl mx-auto px-4 space-y-6">
+          <Skeleton className="h-48 rounded-2xl" />
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+        </div>
       </div>
     )
   }

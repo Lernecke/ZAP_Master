@@ -11,7 +11,7 @@
               "id": 12,
               "question": "Löse die folgende Gleichung:",
               "formula": "2 \\cdot x \\, \\text{kg} + 536 \\, \\text{kg} = 1.24 \\, \\text{t}",
-              "solution": "360",
+              "solution": "352",
               "type": "numeric",
               "hint": "Formel vereinfachen und x berechnen."
             },

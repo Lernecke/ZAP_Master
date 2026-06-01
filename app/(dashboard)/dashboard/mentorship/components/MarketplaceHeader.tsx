@@ -23,7 +23,7 @@ export function MarketplaceHeader() {
         <Users className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Götti-System
+            Mentoring
           </h1>
           <p className="text-muted-foreground">
             Finde deinen Mentor oder biete deine Hilfe an
@@ -41,14 +41,14 @@ export function MarketplaceHeader() {
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Das Götti-System</DialogTitle>
+              <DialogTitle>Das Mentoring-System</DialogTitle>
               <DialogDescription>
                 Verbindet Lernende mit erfahrenen Schülern oder Lehrpersonen
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 text-sm">
               <div>
-                <h4 className="font-semibold">Als Mentor (Götti/Gotte)</h4>
+                <h4 className="font-semibold">Als Mentor</h4>
                 <p className="text-muted-foreground">
                   Biete deine Expertise in Fächern an, in denen du gut bist.
                   Erstelle ein &quot;Angebot&quot;-Inserat mit deinen Stärken.

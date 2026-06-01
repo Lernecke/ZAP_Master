@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { formatFileSize } from '@/lib/utils/format'
 import { 
   FileText, 
   Pencil, 
@@ -63,12 +64,6 @@ function getFileIcon(fileType: string | null, isLink?: boolean) {
   return fileTypeIcons[fileType] || <File className="w-5 h-5 text-muted-foreground" />
 }
 
-function formatFileSize(bytes: number | null) {
-  if (!bytes) return '-'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 // Get favicon URL for a link
 function getFaviconUrl(url: string): string {

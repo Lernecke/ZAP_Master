@@ -134,6 +134,7 @@ export function IntensivkurseClient({ initialKurse, userProfile }: Intensivkurse
           {suchbegriff && (
             <button
               onClick={() => setSuchbegriff('')}
+              aria-label="Suche zurücksetzen"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
@@ -144,7 +145,9 @@ export function IntensivkurseClient({ initialKurse, userProfile }: Intensivkurse
         {/* Fach-Filter */}
         <div className="relative">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <label htmlFor="fach-filter" className="sr-only">Nach Fach filtern</label>
           <select
+            id="fach-filter"
             value={fachFilter}
             onChange={(e) => setFachFilter(e.target.value as FachFilter)}
             className="h-11 pl-10 pr-8 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors appearance-none cursor-pointer min-w-[180px]"
@@ -324,7 +327,11 @@ function KursKarte({ kurs, isExpanded, onToggle, onAnmelden }: KursKarteProps) {
               </p>
               <p className="text-xs text-muted-foreground">pro Woche</p>
             </div>
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <button
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              aria-label={isExpanded ? `${kurs.name} zuklappen` : `${kurs.name} aufklappen`}
+              aria-expanded={isExpanded}
+            >
               {isExpanded ? (
                 <ChevronUp className="h-5 w-5 text-muted-foreground" />
               ) : (

@@ -3,10 +3,11 @@
 import { createAuthenticatedSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
+import { updateProfileSchema, updateThemeSchema } from '@/types/profil'
 
-export type ProfileResult<T = void> = 
+export type ProfileResult<T = void> =
   | { success: true; data?: T; message: string }
-  | { success: false; error: string }
+  | { success: false; error: string; fieldErrors?: Record<string, string[]> }
 
 interface ProfileUpdateData {
   first_name?: string
@@ -28,13 +29,23 @@ export async function updateProfile(data: ProfileUpdateData): Promise<ProfileRes
     return { success: false, error: 'Nicht authentifiziert' }
   }
 
+  const parsed = updateProfileSchema.safeParse(data)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validierungsfehler',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    }
+  }
+
   // Best Practice: Authentifizierter Client mit Supabase Token
   const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
 
   const { error } = await supabase
     .from('profiles')
     .update({
-      ...data,
+      ...data,          // includes class_level, birth_date, gender not covered by schema
+      ...parsed.data,   // validated fields overwrite their counterparts
       updated_at: new Date().toISOString(),
     })
     .eq('id', session.user.id)
@@ -59,12 +70,17 @@ export async function updateThemePreference(
     return { success: false, error: 'Nicht authentifiziert' }
   }
 
+  const parsed = updateThemeSchema.safeParse({ theme })
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Ungültiges Theme' }
+  }
+
   const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
 
   const { error } = await supabase
     .from('profiles')
     .update({
-      theme_preference: theme,
+      theme_preference: parsed.data.theme,
       updated_at: new Date().toISOString(),
     })
     .eq('id', session.user.id)

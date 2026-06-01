@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { useState } from 'react'
+import { useAuthStore } from '@/store/useAuthStore'
 import { Menu, X, LogOut, User, Settings } from 'lucide-react'
 
 const navigation = [
@@ -12,7 +13,7 @@ const navigation = [
 ]
 
 export default function Navbar() {
-  const { data: session } = useSession()
+  const { name, email, isAuthenticated } = useAuthStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -43,7 +44,7 @@ export default function Navbar() {
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center gap-4">
-            {session?.user && (
+            {isAuthenticated && (
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -51,13 +52,13 @@ export default function Navbar() {
                 >
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-blue-600 font-medium text-sm">
-                      {session.user.name?.charAt(0)?.toUpperCase() ||
-                        session.user.email?.charAt(0)?.toUpperCase() ||
+                      {name?.charAt(0)?.toUpperCase() ||
+                        email?.charAt(0)?.toUpperCase() ||
                         'U'}
                     </span>
                   </div>
                   <span className="text-sm text-gray-700 max-w-[150px] truncate">
-                    {session.user.name || session.user.email}
+                    {name || email}
                   </span>
                 </button>
 

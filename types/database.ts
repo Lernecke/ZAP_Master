@@ -315,6 +315,105 @@ export type Database = {
         }
         Relationships: []
       }
+      exercises: {
+        Row: {
+          id: number
+          subject_id: number | null
+          title: string | null
+          subtitle: string | null
+          table_data: Json | null
+          type: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          subject_id?: number | null
+          title?: string | null
+          subtitle?: string | null
+          table_data?: Json | null
+          type?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          subject_id?: number | null
+          title?: string | null
+          subtitle?: string | null
+          table_data?: Json | null
+          type?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          id: number
+          exercise_id: number
+          question: string
+          solution: string
+          type: string | null
+          formula: string | null
+          hint: string | null
+          highlight: string | null
+          options: Json | null
+        }
+        Insert: {
+          id?: number
+          exercise_id: number
+          question: string
+          solution: string
+          type?: string | null
+          formula?: string | null
+          hint?: string | null
+          highlight?: string | null
+          options?: Json | null
+        }
+        Update: {
+          id?: number
+          exercise_id?: number
+          question?: string
+          solution?: string
+          type?: string | null
+          formula?: string | null
+          hint?: string | null
+          highlight?: string | null
+          options?: Json | null
+        }
+        Relationships: []
+      }
+      math_solution_steps: {
+        Row: {
+          id: string
+          exercise_type: string
+          exercise_id: number
+          question: string
+          solution: string
+          steps: Json
+          model_used: string
+          generated_at: string | null
+        }
+        Insert: {
+          id?: string
+          exercise_type: string
+          exercise_id: number
+          question: string
+          solution: string
+          steps: Json
+          model_used?: string
+          generated_at?: string | null
+        }
+        Update: {
+          id?: string
+          exercise_type?: string
+          exercise_id?: number
+          question?: string
+          solution?: string
+          steps?: Json
+          model_used?: string
+          generated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       intensivwoche_kurse_mit_anmeldungen: {

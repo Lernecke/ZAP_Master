@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   return {
-    title: `${result.data.title} | Götti-System | ZAP`,
+    title: `${result.data.title} | Mentoring | ZAP`,
     description: result.data.description?.slice(0, 155),
   }
 }

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Skeleton } from '@/app/components/ui/skeleton'
 
 export const metadata = {
-  title: 'Götti-System | ZAP',
+  title: 'Mentoring | ZAP',
   description: 'Finde deinen Mentor oder biete deine Hilfe an',
 }
 

@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
+import { toast } from 'sonner'
+import { updateProfileSchema } from '@/types/profil'
 import {
   User,
   Camera,
@@ -17,7 +19,6 @@ import {
   Calendar,
   GraduationCap,
   FileText,
-  Check,
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import {
@@ -92,32 +93,41 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
   // UI state
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleSaveProfile = async () => {
     setSaving(true)
-    setMessage(null)
 
-    const result = await updateProfile({
+    const parsed = updateProfileSchema.safeParse({
       first_name: firstName.trim(),
       last_name: lastName.trim(),
-      bio: bio.trim(),
-      school_name: schoolName.trim(),
+      bio: bio.trim() || undefined,
+      school_name: schoolName.trim() || undefined,
+    })
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Validierungsfehler')
+      setSaving(false)
+      return
+    }
+
+    const result = await updateProfile({
+      first_name: parsed.data.first_name,
+      last_name: parsed.data.last_name,
+      bio: parsed.data.bio,
+      school_name: parsed.data.school_name,
       class_level: classLevel,
       birth_date: birthDate || null,
       gender: gender || null,
     })
 
     if (result.success) {
-      setMessage({ type: 'success', text: result.message })
-      // Refresh the page to show updated data
+      toast.success(result.message)
       router.refresh()
     } else {
-      setMessage({ type: 'error', text: result.error })
+      toast.error(result.error)
     }
 
     setSaving(false)
-    setTimeout(() => setMessage(null), 3000)
   }
 
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
@@ -126,8 +136,7 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
 
     const result = await updateThemePreference(newTheme)
     if (!result.success) {
-      setMessage({ type: 'error', text: result.error })
-      setTimeout(() => setMessage(null), 3000)
+      toast.error(result.error)
     }
   }
 
@@ -136,7 +145,6 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
     if (!file) return
 
     setUploadingAvatar(true)
-    setMessage(null)
 
     const formData = new FormData()
     formData.append('avatar', file)
@@ -145,13 +153,12 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
 
     if (result.success && result.data) {
       setAvatarUrl(result.data)
-      setMessage({ type: 'success', text: result.message })
+      toast.success(result.message)
     } else if (!result.success) {
-      setMessage({ type: 'error', text: result.error })
+      toast.error(result.error)
     }
 
     setUploadingAvatar(false)
-    setTimeout(() => setMessage(null), 3000)
 
     // Reset file input
     if (fileInputRef.current) {
@@ -167,13 +174,12 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
 
     if (result.success) {
       setAvatarUrl(null)
-      setMessage({ type: 'success', text: result.message })
+      toast.success(result.message)
     } else {
-      setMessage({ type: 'error', text: result.error })
+      toast.error(result.error)
     }
 
     setUploadingAvatar(false)
-    setTimeout(() => setMessage(null), 3000)
   }
 
   const getRoleName = (role: string | null) => {
@@ -189,22 +195,6 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Notification */}
-      {message && (
-        <div
-          className={`p-4 rounded-xl border ${
-            message.type === 'success'
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
-              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {message.type === 'success' && <Check className="h-4 w-4" />}
-            {message.text}
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Avatar & Quick Info */}
         <div className="space-y-6">
@@ -259,6 +249,7 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
                     size="sm"
                     onClick={handleDeleteAvatar}
                     disabled={uploadingAvatar}
+                    aria-label="Profilbild löschen"
                     className="rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -329,10 +320,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
             <h3 className="font-semibold text-foreground mb-4">Persönliche Daten</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label htmlFor="first-name" className="block text-sm font-medium text-foreground mb-1.5">
                   Vorname
                 </label>
                 <input
+                  id="first-name"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -341,10 +333,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label htmlFor="last-name" className="block text-sm font-medium text-foreground mb-1.5">
                   Nachname
                 </label>
                 <input
+                  id="last-name"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -353,10 +346,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label htmlFor="birth-date" className="block text-sm font-medium text-foreground mb-1.5">
                   Geburtsdatum
                 </label>
                 <input
+                  id="birth-date"
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
@@ -364,10 +358,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label htmlFor="gender" className="block text-sm font-medium text-foreground mb-1.5">
                   Geschlecht
                 </label>
                 <select
+                  id="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                   className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
@@ -382,10 +377,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-foreground mb-1.5">
+              <label htmlFor="bio" className="block text-sm font-medium text-foreground mb-1.5">
                 Über mich
               </label>
               <textarea
+                id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
@@ -407,10 +403,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label htmlFor="school-name" className="block text-sm font-medium text-foreground mb-1.5">
                   Schule
                 </label>
                 <input
+                  id="school-name"
                   type="text"
                   value={schoolName}
                   onChange={(e) => setSchoolName(e.target.value)}
@@ -419,10 +416,11 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label htmlFor="class-level" className="block text-sm font-medium text-foreground mb-1.5">
                   Klassenstufe
                 </label>
                 <select
+                  id="class-level"
                   value={classLevel}
                   onChange={(e) => setClassLevel(e.target.value)}
                   className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"

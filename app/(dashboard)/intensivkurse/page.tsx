@@ -1,6 +1,7 @@
+
 import { Suspense } from 'react'
-import { Loader2 } from 'lucide-react'
 import { auth } from '@/lib/auth/config'
+import { Skeleton } from '@/app/components/ui/skeleton'
 import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { IntensivkurseClient } from './intensivkurse-client'
@@ -120,9 +121,18 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
 
 function KurseLoading() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-12 text-center">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
-      <p className="text-muted-foreground mt-4">Kurse werden geladen...</p>
+    <div className="space-y-6">
+      {/* Header Skeleton */}
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      {/* Cards Skeleton */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="h-64 rounded-2xl" />
+        ))}
+      </div>
     </div>
   )
 }

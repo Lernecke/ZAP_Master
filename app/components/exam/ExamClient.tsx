@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Exam } from '@/types/exam'
-import { useProgress } from '@/context/ProgressContext'
+import { useProgressStore } from '@/store/useProgressStore'
 import ExamHeader from './ExamHeader'
 import MetaInfo from './MetaInfo'
 import QuestionCard from './QuestionCard'
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function ExamClient({ exam }: Props) {
-  const { updateAnswer, getAnswer, resetExam } = useProgress()
+  const { updateAnswer, getAnswer, resetExam } = useProgressStore()
 
   const [showValidation, setShowValidation] = useState(false)
   // Initialize isTextOpen based on subject (German exams start with sidebar open on desktop)

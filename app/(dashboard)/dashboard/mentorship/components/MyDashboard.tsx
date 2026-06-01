@@ -81,7 +81,7 @@ export function MyDashboard({ myListings, pendingRequests, activeRelations }: My
           <div className="text-2xl font-bold">{activeRelations.length}</div>
           <p className="text-xs text-muted-foreground">
             {activeRelations.length > 0
-              ? 'Götti-Verbindungen'
+              ? 'Aktive Verbindungen'
               : 'Noch keine Verbindungen'}
           </p>
           {activeRelations.length > 0 && (

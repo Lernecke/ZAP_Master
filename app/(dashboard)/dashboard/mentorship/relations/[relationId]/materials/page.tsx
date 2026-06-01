@@ -12,7 +12,7 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: 'Material-Hub | Götti-System | ZAP',
+  title: 'Material-Hub | Mentoring | ZAP',
 }
 
 async function MaterialsContent({ 

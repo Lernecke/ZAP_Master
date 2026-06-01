@@ -1,13 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { useState } from 'react'
+import { useAuthStore } from '@/store/useAuthStore'
 import { Menu, X, LogOut, User, Zap, ChevronDown, GraduationCap, Check, RotateCcw } from 'lucide-react'
 import { useClassFilter, CLASS_LEVELS } from '@/context/ClassFilterContext'
 
 export default function DashboardNavbar() {
-  const { data: session } = useSession()
+  const { name, email, isAuthenticated } = useAuthStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [classMenuOpen, setClassMenuOpen] = useState(false)
@@ -114,7 +115,7 @@ export default function DashboardNavbar() {
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center gap-3">
-            {session?.user && (
+            {isAuthenticated && (
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -122,13 +123,13 @@ export default function DashboardNavbar() {
                 >
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                     <span className="text-primary font-medium text-sm">
-                      {session.user.name?.charAt(0)?.toUpperCase() ||
-                        session.user.email?.charAt(0)?.toUpperCase() ||
+                      {name?.charAt(0)?.toUpperCase() ||
+                        email?.charAt(0)?.toUpperCase() ||
                         'U'}
                     </span>
                   </div>
                   <span className="text-sm text-foreground max-w-[150px] truncate">
-                    {session.user.name || session.user.email}
+                    {name || email}
                   </span>
                   <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -167,6 +168,8 @@ export default function DashboardNavbar() {
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Menü schliessen' : 'Menü öffnen'}
+              aria-expanded={mobileMenuOpen}
               className="p-2 rounded-lg text-foreground hover:bg-accent transition-colors"
             >
               {mobileMenuOpen ? (

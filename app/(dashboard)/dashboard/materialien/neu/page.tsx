@@ -2,8 +2,9 @@
 
 import { useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { useAuthStore } from '@/store/useAuthStore'
 import { 
   ArrowLeft, 
   Upload, 
@@ -146,11 +147,9 @@ function LinkPreview({ url, onRemove }: { url: string; onRemove: () => void }) {
 
 export default function NeuMaterialPage() {
   const router = useRouter()
-  const { data: session } = useSession()
+  const { supabaseAccessToken } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  // Authentifizierter Supabase Client (Best Practice für Storage)
-  const supabaseAccessToken = session?.supabaseAccessToken
+
   const supabase = useMemo(
     () => supabaseAccessToken ? createAuthenticatedBrowserClient(supabaseAccessToken) : null,
     [supabaseAccessToken]
@@ -159,7 +158,6 @@ export default function NeuMaterialPage() {
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -213,11 +211,10 @@ export default function NeuMaterialPage() {
     if (selectedFile) {
       // Max 50MB
       if (selectedFile.size > 50 * 1024 * 1024) {
-        setError('Datei zu gross. Maximum ist 50MB.')
+        toast.error('Datei zu gross. Maximum ist 50MB.')
         return
       }
       setFile(selectedFile)
-      setError(null)
       
       // Auto-fill name if empty
       if (!name) {
@@ -256,7 +253,7 @@ export default function NeuMaterialPage() {
       return urlData.publicUrl
     } catch (err) {
       console.error('Upload error:', err)
-      setError('Fehler beim Hochladen der Datei')
+      toast.error('Fehler beim Hochladen der Datei')
       return null
     } finally {
       setUploading(false)
@@ -266,7 +263,6 @@ export default function NeuMaterialPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError(null)
     
     try {
       // Upload file first
@@ -304,14 +300,14 @@ export default function NeuMaterialPage() {
       const result = await createMaterial(formData)
       
       if (!result.success) {
-        setError(result.error || 'Fehler beim Speichern')
+        toast.error(result.error || 'Fehler beim Speichern')
         return
       }
       
       router.push('/dashboard/materialien')
     } catch (err) {
       console.error('Submit error:', err)
-      setError('Ein Fehler ist aufgetreten')
+      toast.error('Ein Fehler ist aufgetreten')
     } finally {
       setLoading(false)
     }
@@ -346,12 +342,6 @@ export default function NeuMaterialPage() {
           </div>
         </div>
       </div>
-
-      {error && (
-        <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Two Column Layout */}

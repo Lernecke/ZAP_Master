@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Skeleton } from '@/app/components/ui/skeleton'
 import { getPublicKurse } from './actions'
 import { KurseClient } from './kurse-client'
 import { KurseHeader } from './kurse-header'
@@ -38,9 +38,12 @@ async function KurseContent() {
 
 function KurseLoading() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-12 text-center">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
-      <p className="text-muted-foreground mt-4">Kurse werden geladen...</p>
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="h-72 rounded-2xl" />
+        ))}
+      </div>
     </div>
   )
 }

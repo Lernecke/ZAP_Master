@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useMemo, useRef, useEffect } from 'react'
+import { toast } from 'sonner'
 import { 
   Shield, 
   ShieldCheck, 
@@ -59,8 +60,6 @@ type Props = {
 export function UserTable({ users, currentUserId }: Props) {
   const [isPending, startTransition] = useTransition()
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [searchQuery, setSearchQuery] = useState('')
@@ -166,17 +165,14 @@ export function UserTable({ users, currentUserId }: Props) {
   }
 
   const handleRoleChange = (userId: string, newRole: UserRole) => {
-    setError(null)
-    setSuccess(null)
     setOpenMenuId(null)
-    
+
     startTransition(async () => {
       const result = await updateUserRole(userId, newRole)
       if (result.error) {
-        setError(result.error)
+        toast.error(result.error)
       } else {
-        setSuccess('Rolle erfolgreich geändert')
-        setTimeout(() => setSuccess(null), 3000)
+        toast.success('Rolle erfolgreich geändert')
       }
     })
   }
@@ -219,18 +215,6 @@ export function UserTable({ users, currentUserId }: Props) {
 
   return (
     <div>
-      {/* Status Messages */}
-      {error && (
-        <div className="mb-4 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mb-4 rounded-xl bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400">
-          {success}
-        </div>
-      )}
-
       {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         {/* Search */}

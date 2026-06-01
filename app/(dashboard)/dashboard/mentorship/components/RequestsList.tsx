@@ -276,7 +276,7 @@ function RequestCard({ request, type }: RequestCardProps) {
             </DialogTitle>
             <DialogDescription>
               {isAccepting
-                ? 'Wenn du die Anfrage annimmst, wird eine Götti-Beziehung erstellt.'
+                ? 'Wenn du die Anfrage annimmst, wird eine Mentoring-Beziehung erstellt.'
                 : 'Du kannst optional eine Nachricht an den Anfragenden senden.'}
             </DialogDescription>
           </DialogHeader>

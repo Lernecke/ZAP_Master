@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { Plus, BookOpen, Loader2 } from 'lucide-react'
+import { Plus, BookOpen } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { Skeleton } from '@/app/components/ui/skeleton'
 import { getMaterialien, getSubjects } from './actions'
 import { MaterialienTabelle } from '@/app/(dashboard)/dashboard/materialien/materialien-tabelle'
 import { requireContentManager } from '@/lib/auth/guards'
@@ -81,8 +82,13 @@ async function MaterialienContent() {
 
 function MaterialienLoading() {
   return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="space-y-4">
+      <Skeleton className="h-12 w-full rounded-xl" />
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        ))}
+      </div>
     </div>
   )
 }

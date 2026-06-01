@@ -8,7 +8,7 @@ import { Skeleton } from '@/app/components/ui/skeleton'
 import { ArrowLeft, Users } from 'lucide-react'
 
 export const metadata = {
-  title: 'Meine Götti-Beziehungen | ZAP',
+  title: 'Meine Mentoring-Beziehungen | ZAP',
 }
 
 async function RelationsContent({ currentUserId }: { currentUserId: string }) {
@@ -51,7 +51,7 @@ export default async function RelationsPage() {
         <Users className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Meine Götti-Beziehungen
+            Meine Mentoring-Beziehungen
           </h1>
           <p className="text-muted-foreground">
             Verwalte deine aktiven Mentor-Mentee Verbindungen

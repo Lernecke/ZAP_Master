@@ -32,6 +32,12 @@ export interface ExerciseData {
   }
 }
 
+export interface MathSolutionStep {
+  step_number: number
+  explanation: string
+  formula?: string
+}
+
 export interface UserExerciseAnswer {
   id: string
   user_id: string

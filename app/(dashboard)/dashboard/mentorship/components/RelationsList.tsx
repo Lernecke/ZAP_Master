@@ -45,7 +45,7 @@ export function RelationsList({ relations, currentUserId }: RelationsListProps) 
         <Users className="h-12 w-12 text-muted-foreground/50" />
         <h3 className="mt-4 text-lg font-semibold">Keine aktiven Beziehungen</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          Du hast noch keine aktiven Götti-Beziehungen. Erstelle ein Inserat oder 
+          Du hast noch keine aktiven Mentoring-Beziehungen. Erstelle ein Inserat oder 
           reagiere auf bestehende Angebote/Gesuche!
         </p>
         <Link href="/dashboard/mentorship">
@@ -170,7 +170,7 @@ function RelationCard({ relation, currentUserId }: RelationCardProps) {
             <p className="text-sm">
               {isMentor ? (
                 <>
-                  Du bist der <strong>Mentor (Götti/Gotte)</strong> in dieser Beziehung.
+                  Du bist der <strong>Mentor</strong> in dieser Beziehung.
                   Du kannst {partner?.first_name} bei Fragen helfen und eingereichte
                   Materialien korrigieren.
                 </>
@@ -220,7 +220,7 @@ function RelationCard({ relation, currentUserId }: RelationCardProps) {
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Götti-Beziehung beenden</DialogTitle>
+            <DialogTitle>Mentoring-Beziehung beenden</DialogTitle>
             <DialogDescription>
               Bitte gib einen Grund an, warum du die Beziehung beenden möchtest.
               Diese Aktion kann nicht rückgängig gemacht werden.

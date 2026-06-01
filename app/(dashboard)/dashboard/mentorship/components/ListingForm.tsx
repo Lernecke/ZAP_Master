@@ -96,7 +96,7 @@ export function ListingForm({ listing, mode }: ListingFormProps) {
           </CardTitle>
           <CardDescription>
             {mode === 'create'
-              ? 'Erstelle ein Angebot oder Gesuch für das Götti-System'
+              ? 'Erstelle ein Angebot oder Gesuch für das Mentoring-System'
               : 'Aktualisiere dein Inserat'}
           </CardDescription>
         </CardHeader>

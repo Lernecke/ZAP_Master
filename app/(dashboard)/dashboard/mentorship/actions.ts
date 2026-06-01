@@ -390,7 +390,7 @@ export async function acceptRequest(requestId: string, responseMessage?: string)
     .eq('id', requestId)
 
   revalidatePath('/dashboard/mentorship')
-  return { success: true, data: relation as MentorshipRelation, message: 'Anfrage angenommen! Neue Götti-Beziehung erstellt.' }
+  return { success: true, data: relation as MentorshipRelation, message: 'Anfrage angenommen! Neue Mentoring-Beziehung erstellt.' }
 }
 
 /**
@@ -514,7 +514,7 @@ export async function endRelation(relationId: string, reason: string): Promise<A
   }
 
   revalidatePath('/dashboard/mentorship')
-  return { success: true, message: 'Götti-Beziehung beendet.' }
+  return { success: true, message: 'Mentoring-Beziehung beendet.' }
 }
 
 // ============================================

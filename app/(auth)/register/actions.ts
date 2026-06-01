@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { registerSchema } from '@/types/auth'
 
 /**
  * TEMPORÄR: Erstellt einen User ohne E-Mail-Bestätigung
@@ -13,7 +14,22 @@ export async function registerUserWithoutConfirmation(
   firstName: string,
   lastName: string
 ): Promise<{ success: boolean; error: string | null; userId: string | null }> {
-  
+
+  const parsed = registerSchema.safeParse({
+    email,
+    password,
+    confirmPassword: password, // Server-side: equality already validated client-side
+    firstName,
+    lastName,
+  })
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? 'Validierungsfehler',
+      userId: null,
+    }
+  }
+
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -27,12 +43,12 @@ export async function registerUserWithoutConfirmation(
 
   // User mit Admin API erstellen (umgeht E-Mail-Bestätigung)
   const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
+    email: parsed.data.email,
+    password: parsed.data.password,
     email_confirm: true, // Direkt bestätigt!
     user_metadata: {
-      first_name: firstName,
-      last_name: lastName,
+      first_name: parsed.data.firstName,
+      last_name: parsed.data.lastName,
     },
   })
 
@@ -48,9 +64,9 @@ export async function registerUserWithoutConfirmation(
       .from('profiles')
       .upsert({
         id: userId,
-        email: email,
-        first_name: firstName,
-        last_name: lastName,
+        email: parsed.data.email,
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
         role: 'user',
         theme_preference: 'light',
       }, {

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { ListingForm } from '../components/ListingForm'
 
 export const metadata = {
-  title: 'Neues Inserat | Götti-System | ZAP',
+  title: 'Neues Inserat | Mentoring | ZAP',
   description: 'Erstelle ein neues Angebot oder Gesuch',
 }
 

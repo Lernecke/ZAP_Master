@@ -3,14 +3,7 @@
 import { createAuthenticatedSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
-
-// Erlaubte Dateitypen und Maximalgröße
-const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-]
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+import { createSignedUploadUrlSchema } from '@/types/aufsatz'
 
 export type EssayResult<T = void> = 
   | { success: true; data?: T; message?: string }
@@ -85,31 +78,23 @@ export async function createSignedUploadUrl(
   // Auth-Check (Schritte 1-3)
   const authCheck = await requireStudentAuth()
   if (!authCheck.authenticated) return authCheck.error as EssayResult<SignedUploadUrl>
-  
-  // Validierung: Dateityp
-  if (!ALLOWED_MIME_TYPES.includes(fileType)) {
-    return { 
-      success: false, 
-      error: 'Nur PDF und Word-Dokumente (.pdf, .doc, .docx) sind erlaubt.' 
+
+  const parsed = createSignedUploadUrlSchema.safeParse({ fileName, fileType, fileSize })
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? 'Validierungsfehler',
     }
   }
-  
-  // Validierung: Dateigröße
-  if (fileSize > MAX_FILE_SIZE) {
-    return { 
-      success: false, 
-      error: 'Die Datei ist zu gross. Maximale Grösse: 10MB.' 
-    }
-  }
-  
+
   // Dateiname sanitieren
-  const sanitizedName = fileName
+  const sanitizedName = parsed.data.fileName
     .replace(/[^a-zA-Z0-9äöüÄÖÜß._-]/g, '_')
     .substring(0, 100)
-  
+
   // Unique ID für Dateinamen
   const uniqueId = crypto.randomUUID()
-  
+
   // Pfad: aufsaetze/{user.id}/{uuid}--{originalname}
   const filePath = `aufsaetze/${authCheck.userId}/${uniqueId}--${sanitizedName}`
   
@@ -348,6 +333,34 @@ export async function deleteEssay(essayId: string): Promise<EssayResult> {
   
   revalidatePath('/aufsaetze')
   return { success: true, message: 'Entwurf gelöscht.' }
+}
+
+/**
+ * Lädt alle freigegebenen KI-Korrekturen für die eigenen Aufsätze
+ */
+export async function getReleasedAiCorrections(): Promise<EssayResult<Record<string, string>>> {
+  const authCheck = await requireStudentAuth()
+  if (!authCheck.authenticated) return authCheck.error as EssayResult<Record<string, string>>
+
+  const supabase = createAuthenticatedSupabaseClient(authCheck.supabaseAccessToken)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('essay_ai_corrections')
+    .select('essay_id, teacher_edited_suggestion, raw_suggestion')
+    .eq('status', 'released')
+
+  if (error) {
+    // Tabelle existiert evtl. noch nicht – kein Fehler zurückgeben
+    return { success: true, data: {} }
+  }
+
+  const map: Record<string, string> = {}
+  for (const row of data ?? []) {
+    map[row.essay_id] = row.teacher_edited_suggestion ?? row.raw_suggestion
+  }
+
+  return { success: true, data: map }
 }
 
 /**

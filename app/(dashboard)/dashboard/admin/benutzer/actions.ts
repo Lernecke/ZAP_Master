@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth/guards'
 import { revalidatePath } from 'next/cache'
 import type { UserRole } from '@/types/next-auth'
 import type { Database } from '@/types/database'
+import { updateUserRoleSchema } from '@/types/admin'
 
 // Admin Client direkt erstellen (umgeht RLS)
 function getAdminClient() {
@@ -64,22 +65,31 @@ export async function getUsers(): Promise<{ users: UserWithProfile[], error: str
  * Benutzer-Rolle ändern
  */
 export async function updateUserRole(
-  userId: string, 
+  userId: string,
   newRole: UserRole
-): Promise<{ success: boolean, error: string | null }> {
+): Promise<{ success: boolean; error: string | null; fieldErrors?: Record<string, string[]> }> {
   const session = await requireAdmin()
-  
+
+  const parsed = updateUserRoleSchema.safeParse({ userId, newRole })
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validierungsfehler',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    }
+  }
+
   // Verhindere, dass Admin sich selbst degradiert
-  if (session.user.id === userId && newRole !== 'admin') {
+  if (parsed.data.userId === session.user.id && parsed.data.newRole !== 'admin') {
     return { success: false, error: 'Du kannst deine eigene Admin-Rolle nicht entfernen.' }
   }
   
   const supabase = getAdminClient()
-  
+
   const { error } = await supabase
     .from('profiles')
-    .update({ role: newRole, updated_at: new Date().toISOString() })
-    .eq('id', userId)
+    .update({ role: parsed.data.newRole, updated_at: new Date().toISOString() })
+    .eq('id', parsed.data.userId)
   
   if (error) {
     return { success: false, error: error.message }

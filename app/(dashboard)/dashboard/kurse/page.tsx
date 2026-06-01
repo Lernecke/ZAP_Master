@@ -2,10 +2,10 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { 
   Plus, 
-  GraduationCap,
-  Loader2
+  GraduationCap
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { Skeleton } from '@/app/components/ui/skeleton'
 import { getKurse } from './actions'
 import { KurseTabelle } from './kurse-tabelle'
 import { requireContentManager } from '@/lib/auth/guards'
@@ -78,9 +78,13 @@ async function KurseContent() {
 
 function KurseLoading() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-12 text-center">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
-      <p className="text-muted-foreground mt-4">Kurse werden geladen...</p>
+    <div className="space-y-4">
+      <Skeleton className="h-12 w-full rounded-xl" />
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+        ))}
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { createAuthenticatedSupabaseClient, createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
+import { createMaterialSchema } from '@/types/material'
 
 // Öffentliche Funktion - braucht kein Auth
 export async function getSubjects() {
@@ -55,50 +56,68 @@ export async function getMaterialien() {
 
 export async function createMaterial(formData: FormData) {
   const session = await auth()
-  
+
   if (!session?.user || !session.supabaseAccessToken || !['lehrperson', 'admin'].includes(session.user.role || '')) {
     return { success: false, error: 'Nicht autorisiert' }
   }
-  
-  const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
-  
-  const name = formData.get('name') as string
-  const description = formData.get('description') as string
-  const subjectId = formData.get('subject_id') as string
-  const type = formData.get('type') as string
+
+  const rawName = formData.get('name') as string
+  const rawDescription = formData.get('description') as string
+  const rawSubjectId = formData.get('subject_id') as string
+  const materialCategory = formData.get('type') as string // 'document' | 'worksheet' | etc.
   const classLevels = formData.getAll('class_levels') as string[]
   const fileUrl = formData.get('file_url') as string
-  const fileSize = formData.get('file_size') as string
+  const rawFileSize = formData.get('file_size') as string
   const fileType = formData.get('file_type') as string
   const isLink = formData.get('is_link') === 'true'
-  
+
+  const parsed = createMaterialSchema.safeParse({
+    name: rawName,
+    description: rawDescription || undefined,
+    subject_id: rawSubjectId ? parseInt(rawSubjectId) : NaN,
+    type: isLink ? 'link' : 'file',
+    url: isLink ? fileUrl || undefined : undefined,
+    file_path: !isLink ? fileUrl || undefined : undefined,
+    file_size: rawFileSize ? parseInt(rawFileSize) : undefined,
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validierungsfehler',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    }
+  }
+
+  const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('learning_materials')
     .insert({
-      name,
-      description: description || null,
-      subject_id: subjectId ? parseInt(subjectId) : null,
-      type: type || 'document',
+      name: parsed.data.name,
+      description: parsed.data.description ?? null,
+      subject_id: parsed.data.subject_id,
+      type: materialCategory || 'document',
       class_levels: classLevels.length > 0 ? classLevels : ['5. Klasse', '6. Klasse'],
-      file_url: fileUrl || null,
-      file_size: fileSize ? parseInt(fileSize) : null,
+      file_url: parsed.data.url ?? parsed.data.file_path ?? null,
+      file_size: parsed.data.file_size ?? null,
       file_type: fileType || null,
-      is_link: isLink,
+      is_link: parsed.data.type === 'link',
       created_by: session.user.id,
       is_public: true,
     })
     .select()
     .single()
-  
+
   if (error) {
     console.error('Create material error:', error)
     return { success: false, error: error.message }
   }
-  
+
   revalidatePath('/dashboard/materialien')
   revalidatePath('/materialien')
-  
+
   return { success: true, data }
 }
 
@@ -125,30 +144,47 @@ export async function updateMaterial(id: number, formData: FormData) {
     }
   }
   
-  const name = formData.get('name') as string
-  const description = formData.get('description') as string
-  const subjectId = formData.get('subject_id') as string
-  const type = formData.get('type') as string
+  const rawName = formData.get('name') as string
+  const rawDescription = formData.get('description') as string
+  const rawSubjectId = formData.get('subject_id') as string
+  const materialCategory = formData.get('type') as string
   const classLevels = formData.getAll('class_levels') as string[]
   const isPublic = formData.get('is_public') === 'true'
-  
+  const fileUrl = formData.get('file_url') as string
+  const rawFileSize = formData.get('file_size') as string
+  const fileType = formData.get('file_type') as string
+  const isLink = formData.get('is_link') === 'true'
+
+  const parsed = createMaterialSchema.safeParse({
+    name: rawName,
+    description: rawDescription || undefined,
+    subject_id: rawSubjectId ? parseInt(rawSubjectId) : NaN,
+    type: isLink ? 'link' : 'file',
+    url: isLink ? fileUrl || undefined : undefined,
+    file_path: !isLink && fileUrl ? fileUrl : undefined,
+    file_size: rawFileSize ? parseInt(rawFileSize) : undefined,
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validierungsfehler',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    }
+  }
+
   const updateData: Record<string, unknown> = {
-    name,
-    description: description || null,
-    subject_id: subjectId ? parseInt(subjectId) : null,
-    type: type || 'document',
+    name: parsed.data.name,
+    description: parsed.data.description ?? null,
+    subject_id: parsed.data.subject_id,
+    type: materialCategory || 'document',
     class_levels: classLevels.length > 0 ? classLevels : ['5. Klasse', '6. Klasse'],
     is_public: isPublic,
   }
-  
-  // Neue Datei falls hochgeladen
-  const fileUrl = formData.get('file_url') as string
-  const fileSize = formData.get('file_size') as string
-  const fileType = formData.get('file_type') as string
-  
+
   if (fileUrl) {
-    updateData.file_url = fileUrl
-    updateData.file_size = fileSize ? parseInt(fileSize) : null
+    updateData.file_url = parsed.data.url ?? parsed.data.file_path ?? null
+    updateData.file_size = parsed.data.file_size ?? null
     updateData.file_type = fileType || null
   }
   

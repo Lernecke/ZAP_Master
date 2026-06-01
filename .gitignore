@@ -56,3 +56,16 @@ supabase/.temp
 
 # OS
 Thumbs.db
+
+# Claude Code (lokale IDE-Einstellungen, nicht für GitHub)
+.claude/
+
+# MCP Server Konfiguration (persönlich, nicht für GitHub)
+.mcp.json
+
+# Legacy-Projekte (lokal als Referenz, nicht Teil des zap-v2 Repos)
+ZAP/
+legacy-bardhi/
+
+# Dokumentation (lokal, nicht für GitHub)
+docs/

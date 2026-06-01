@@ -9,7 +9,7 @@ import { Skeleton } from '@/app/components/ui/skeleton'
 import { ArrowLeft, Inbox, Send } from 'lucide-react'
 
 export const metadata = {
-  title: 'Anfragen | Götti-System | ZAP',
+  title: 'Anfragen | Mentoring | ZAP',
 }
 
 async function RequestsContent() {
@@ -82,7 +82,7 @@ export default async function RequestsPage() {
           Meine Anfragen
         </h1>
         <p className="text-muted-foreground">
-          Verwalte eingehende und ausgehende Götti-Anfragen
+          Verwalte eingehende und ausgehende Mentoring-Anfragen
         </p>
       </div>
 

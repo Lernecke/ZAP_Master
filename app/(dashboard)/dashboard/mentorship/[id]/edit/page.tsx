@@ -8,7 +8,7 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: 'Inserat bearbeiten | Götti-System | ZAP',
+  title: 'Inserat bearbeiten | Mentoring | ZAP',
 }
 
 export default async function EditListingPage({ params }: PageProps) {

@@ -24,7 +24,7 @@ import {
   intensivwocheAnmeldungSchema, 
   type IntensivwocheAnmeldungInput 
 } from '@/types/intensivwoche'
-import { submitIntensivwocheAnmeldung } from '@/app/(public)/anmeldung/actions'
+import { submitIntensivwocheAnmeldung } from '@/app/(public)/kurse/actions'
 import type { UserProfileData } from './page'
 
 // Generisches Kurs-Interface für Modal

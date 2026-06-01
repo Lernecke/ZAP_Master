@@ -1,28 +1,19 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { 
-  Upload, 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle,
-  Trash2,
-  Download,
-  Send,
-  Pencil,
-  X,
-  Loader2,
-  FileUp
+import { formatFileSize, formatDateTime as formatDate } from '@/lib/utils/format'
+import {
+  Upload, FileText, Clock, CheckCircle2, AlertCircle,
+  Trash2, Download, Send, Pencil, X, Loader2, FileUp, ChevronDown
 } from 'lucide-react'
-import { 
-  createSignedUploadUrl, 
-  saveEssayMetadata, 
-  getMyEssays, 
-  submitEssay, 
-  deleteEssay,
-  getEssayDownloadUrl,
-  type Essay 
+import dynamic from 'next/dynamic'
+
+const ReactMarkdown = dynamic(() => import('react-markdown'), { ssr: false })
+import { Skeleton } from '@/app/components/ui/skeleton'
+import {
+  createSignedUploadUrl, saveEssayMetadata, getMyEssays,
+  submitEssay, deleteEssay, getEssayDownloadUrl, getReleasedAiCorrections,
+  type Essay
 } from './actions'
 
 const SUBJECTS = [
@@ -44,6 +35,8 @@ const STATUS_CONFIG = {
 
 export function AufsaetzeClient() {
   const [essays, setEssays] = useState<Essay[]>([])
+  const [aiCorrections, setAiCorrections] = useState<Record<string, string>>({})
+  const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showUploadForm, setShowUploadForm] = useState(false)
   
@@ -61,10 +54,12 @@ export function AufsaetzeClient() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const loadEssays = useCallback(async () => {
-    const result = await getMyEssays()
-    if (result.success && result.data) {
-      setEssays(result.data)
-    }
+    const [essayResult, aiResult] = await Promise.all([
+      getMyEssays(),
+      getReleasedAiCorrections(),
+    ])
+    if (essayResult.success && essayResult.data) setEssays(essayResult.data)
+    if (aiResult.success && aiResult.data) setAiCorrections(aiResult.data)
     setIsLoading(false)
   }, [])
 
@@ -204,45 +199,47 @@ export function AufsaetzeClient() {
     setActionLoading(null)
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-CH', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="space-y-8">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        {/* Cards Skeleton */}
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-start justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Meine Aufsätze</h1>
-          <p className="text-muted-foreground mt-1">
-            Lade deine Aufsätze hoch und verfolge den Bewertungsstatus.
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <FileText className="w-6 h-6 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">Meine Aufsätze</h1>
+          </div>
+          <p className="text-muted-foreground">
+            Schreibe und verbessere deine Aufsätze mit KI-Unterstützung.
           </p>
         </div>
-        
         {!showUploadForm && (
           <button
             onClick={() => setShowUploadForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shrink-0"
           >
             <Upload className="w-4 h-4" />
             Neuer Aufsatz
@@ -487,19 +484,39 @@ export function AufsaetzeClient() {
                         Erstellt: {formatDate(essay.created_at)}
                       </p>
                       
-                      {/* Feedback (wenn bewertet) */}
-                      {essay.feedback && (
-                        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                            Feedback:
-                          </p>
-                          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                            {essay.feedback}
-                          </p>
-                          {essay.grade && (
-                            <p className="text-sm font-semibold text-green-800 dark:text-green-200 mt-2">
-                              Note: {essay.grade}
-                            </p>
+                      {/* Feedback Accordion */}
+                      {(essay.feedback || aiCorrections[essay.id]) && (
+                        <div className="mt-3 border border-border rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => setExpandedFeedback(expandedFeedback === essay.id ? null : essay.id)}
+                            className="w-full flex items-center justify-between px-4 py-2.5 bg-muted/50 hover:bg-muted transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-sm font-medium">Feedback</span>
+                              {essay.grade && (
+                                <span className="px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs font-semibold shrink-0">
+                                  Note: {essay.grade}
+                                </span>
+                              )}
+                              {expandedFeedback !== essay.id && (
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {(essay.feedback ?? aiCorrections[essay.id]).replace(/[#*_`]/g, '').split('\n').find(l => l.trim()) ?? ''}
+                                </span>
+                              )}
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ml-2 ${expandedFeedback === essay.id ? 'rotate-180' : ''}`} />
+                          </button>
+                          {expandedFeedback === essay.id && (
+                            <div className="px-4 py-4 border-t border-border">
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown>{essay.feedback ?? aiCorrections[essay.id]}</ReactMarkdown>
+                              </div>
+                              {essay.grade && (
+                                <p className="text-sm font-semibold mt-4 pt-3 border-t border-border">
+                                  Note: {essay.grade}
+                                </p>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
@@ -560,6 +577,7 @@ export function AufsaetzeClient() {
           })}
         </div>
       )}
+
     </div>
   )
 }
