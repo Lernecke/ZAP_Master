@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startseite — Vorschlag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233F; --ink-soft:#3C4A68; --paper:#F5F6F1; --card:#FFFFFE;
+    --sage:#6B8F71; --sage-deep:#4E6E54; --sage-pale:#E4EBE3; --sage-onDark:#8CB392;
+    --gold:#C89B3C; --gold-pale:#F3E8D2; --line:#DBDDD2;
+    --ink-pale:#E4E6ED;
+    --azure:#2F5D8A; --azure-pale:#E1EAF2;
+    --serif:'Fraunces', serif; --sans:'Inter', sans-serif; --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.5; -webkit-font-smoothing:antialiased;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+  :focus-visible{outline:2px solid var(--sage-deep); outline-offset:3px;}
+
+  /* ---------- NAV ---------- */
+  nav.topnav{background:var(--ink); color:#fff;}
+  .navrow{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 28px;
+    max-width:1080px; margin:0 auto;
+  }
+  .logo{font-family:var(--serif); font-weight:600; font-size:23px; color:#fff;}
+  .navlinks{display:flex; align-items:center; gap:13px; font-size:13px; font-weight:500;}
+  .navlinks a{color:rgba(255,255,255,.85); padding-bottom:3px;}
+  .navlinks a:hover{color:#fff;}
+  .navlinks a.active{color:#fff; border-bottom:2px solid var(--gold);}
+  .has-dropdown{position:relative;}
+  .dd-trigger{display:flex; align-items:center; gap:5px; cursor:pointer;}
+  .dd-trigger::after{content:"▾"; font-size:9px; opacity:.8;}
+  .dropdown{
+    position:absolute; top:calc(100% + 14px); left:-16px; background:#fff; color:var(--ink);
+    border-radius:8px; padding:10px; min-width:190px; box-shadow:0 20px 40px -16px rgba(0,0,0,.35);
+    opacity:0; visibility:hidden; transform:translateY(-6px); transition:.15s ease;
+  }
+  .has-dropdown:hover .dropdown, .has-dropdown:focus-within .dropdown{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+  .dropdown a{
+    display:block; padding:9px 12px; border-radius:5px; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  .dropdown a:hover{background:var(--sage-pale); color:var(--sage-deep);}
+  .navright{display:flex; align-items:center; gap:22px; font-size:14px; font-weight:500;}
+  .navright a{color:rgba(255,255,255,.85);}
+  .navright a:hover{color:#fff;}
+  .navright .login-button{
+    min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+    padding:9px 17px; border-radius:6px; background:var(--gold); color:var(--ink); font-weight:700;
+  }
+  .navright .login-button:hover{background:#DAB569; color:var(--ink);}
+  /* Kontakt bewusst NICHT visuell abgesetzt - gleiche Optik wie übrige Links */
+
+  /* Hamburger-Menü (reines CSS, checkbox-basiert) */
+  .nav-toggle{display:none;}
+  .hamburger{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:26px; height:20px; cursor:pointer; order:-1;
+  }
+  .hamburger span{display:block; width:100%; height:2px; background:#fff; border-radius:1px;}
+
+  @media(max-width:820px){
+    .navrow{flex-wrap:wrap;}
+    .hamburger{display:flex;}
+    .navlinks{
+      display:none; order:5; width:100%; flex-direction:column; gap:0;
+      margin-top:16px; border-top:1px solid rgba(255,255,255,.15);
+    }
+    .nav-toggle:checked ~ .navlinks{display:flex;}
+    .navlinks a{
+      padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px;
+    }
+    .navlinks a.active{border-bottom:1px solid rgba(255,255,255,.1); position:relative;}
+    .navlinks a.active::after{content:""; position:absolute; left:0; bottom:-1px; width:32px; height:2px; background:var(--gold);}
+  }
+
+  @media(max-width:560px){ .navright a:not(.login-button):not(.hamburger){display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{padding:64px 0 32px;}
+  .hero-inner{max-width:640px; margin:0 auto; text-align:center;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--sage-deep);
+    text-transform:uppercase; display:inline-flex; align-items:center; gap:8px; margin-bottom:16px;
+  }
+  h1{
+    font-family:var(--serif); font-weight:500; font-size:clamp(28px,4vw,40px); line-height:1.15;
+    margin-bottom:16px; text-wrap:balance;
+  }
+  .hero p.lede{font-size:15px; color:var(--ink-soft); max-width:80ch; margin:0 auto 36px;}
+
+  /* Signatur-Element: Klassen-Wähler */
+  .picker{
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:30px;
+    box-shadow:0 24px 48px -28px rgba(22,35,63,.22);
+  }
+  .picker-q{font-family:var(--serif); font-size:18px; font-weight:600; margin-bottom:18px;}
+
+  .picker-groups{display:grid; grid-template-columns:3fr 2fr; gap:14px; align-items:start;}
+  @media(max-width:700px){ .picker-groups{grid-template-columns:1fr;} }
+
+  .picker-group{margin-bottom:16px;}
+  .picker-groups .picker-group{margin-bottom:0;}
+  .picker-group:last-of-type{margin-bottom:0;}
+  .picker-group-head{
+    font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+    color:#fff; padding:9px 14px; border-radius:8px 8px 0 0;
+  }
+  .picker-group-head.primar{background:var(--sage-onDark); color:var(--ink);}
+  .picker-group-head.sek{background:#7A5A1D;}
+  .picker-group-tiles{
+    display:grid; gap:10px; border:1px solid var(--line); border-top:none; border-bottom:none; padding:14px;
+  }
+  .picker-group-tiles.cols-3{grid-template-columns:repeat(3,1fr);}
+  .picker-group-tiles.cols-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:480px){
+    .picker-group-tiles.cols-3{grid-template-columns:repeat(2,1fr);}
+  }
+  .picker-group-foot{
+    font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.05em;
+    color:#fff; padding:8px 14px; border-radius:0 0 8px 8px; text-align:center;
+  }
+  .picker-group-foot.primar{background:var(--sage-onDark); color:var(--ink);}
+  .picker-group-foot.sek{background:#7A5A1D;}
+  .picker-item{
+    display:flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:8px;
+    padding:18px 8px; text-align:center; font-size:14px; font-weight:600; color:var(--ink); transition:.15s;
+  }
+  .picker-group-tiles.cols-3 .picker-item{border-color:var(--sage-deep);}
+  .picker-group-tiles.cols-3 .picker-item:hover{background:var(--sage-pale); color:var(--sage-deep);}
+  .picker-group-tiles.cols-2 .picker-item{border-color:#7A5A1D;}
+  .picker-group-tiles.cols-2 .picker-item:hover{background:var(--gold-pale); color:#7A5A1D;}
+
+  .picker-alt{margin-top:20px; font-size:13px; color:var(--ink-soft);}
+  .picker-alt a{color:var(--ink); font-weight:600; text-decoration:underline;}
+  .picker-foot{margin-top:16px; font-size:12.5px; color:var(--ink-soft);}
+  .picker-foot a{color:var(--sage-deep); font-weight:600; text-decoration:underline;}
+
+  /* ---------- TRUST BAR ---------- */
+  .trust{border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:22px 0;}
+  .trust .wrap{display:flex; justify-content:center; gap:40px; flex-wrap:wrap; font-size:13.5px; color:var(--ink-soft); text-align:center;}
+  .trust b{display:block; font-family:var(--serif); font-size:22px; color:var(--ink); font-weight:600;}
+
+  /* ---------- VALUE PROPS ---------- */
+  .values{padding:32px 0 8px;}
+  .section-head{max-width:56ch; margin:0 auto 24px; text-align:center;}
+  .section-head .eyebrow{justify-content:center;}
+  .section-head h2{font-family:var(--serif); font-weight:500; font-size:clamp(24px,3vw,30px);}
+  .value-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px;}
+  @media(max-width:820px){ .value-grid{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:480px){ .value-grid{grid-template-columns:1fr;} }
+  .value-card{padding:20px; border-top:3px solid var(--sage-deep);}
+  .value-card:nth-child(2){border-top-color:var(--ink);}
+  .value-card:nth-child(3){border-top-color:var(--gold);}
+  .value-card:nth-child(4){border-top-color:var(--sage-deep);}
+  .value-card h3{font-family:var(--serif); font-size:16.5px; font-weight:600; margin-bottom:8px;}
+  .value-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+
+  /* ---------- SECONDARY SERVICES (bewusst getrennt von Klassenstufen) ---------- */
+  .services{padding:16px 0 48px;}
+  .service-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media(max-width:600px){ .service-grid{grid-template-columns:1fr;} }
+  .service-card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:26px;
+    display:flex; flex-direction:column; transition:.15s ease;
+  }
+  .service-card:hover{border-color:var(--sage-deep); box-shadow:0 16px 32px -20px rgba(22,35,63,.25);}
+  .service-card.core{border-color:var(--sage-deep);}
+  .service-card.core:hover{border-color:var(--sage-deep); box-shadow:0 16px 32px -20px rgba(78,110,84,.35);}
+  .service-card.examprep{border-color:#7A5A1D;}
+  .service-card.examprep:hover{border-color:#7A5A1D; box-shadow:0 16px 32px -20px rgba(156,122,44,.35);}
+  .service-card.tertiary{border-color:var(--azure);}
+  .service-card.tertiary:hover{border-color:var(--azure); box-shadow:0 16px 32px -20px rgba(47,93,138,.35);}
+  .service-subgroup{grid-column:1 / -1;}
+  .service-subgroup-label{
+    font-family:var(--mono); font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:10px; text-align:center;
+  }
+  .service-subgroup-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media(max-width:600px){ .service-subgroup-grid{grid-template-columns:1fr;} }
+  .service-card h3{font-family:var(--serif); font-size:19px; font-weight:600; margin-bottom:8px;}
+  .service-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.6; flex:1;}
+
+  /* ---------- TESTIMONIAL ---------- */
+  .testi{padding:20px 0 64px;}
+  .testi-card{
+    background:var(--sage-pale); border-radius:12px; padding:36px; display:grid;
+    grid-template-columns:auto 1fr; gap:22px; align-items:center;
+  }
+  @media(max-width:700px){ .testi-card{grid-template-columns:1fr;} }
+  .testi-avatar{width:64px; height:64px; border-radius:50%; overflow:hidden; background:#fff; flex:none;}
+  .testi-avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .testi-card p.quote{font-family:var(--serif); font-size:18px; color:var(--ink); max-width:62ch;}
+  .testi-card p.quote::before{content:"\201C"; color:var(--sage-deep); font-size:1.3em; line-height:0; vertical-align:-0.1em; margin-right:2px;}
+  .testi-card .by{margin-top:10px; font-family:var(--mono); font-size:12px; color:var(--ink-soft);}
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta{background:var(--ink); color:#fff; padding:60px 0; text-align:center;}
+  .final-cta h2{font-family:var(--serif); font-weight:500; font-size:clamp(22px,3vw,28px); margin-bottom:12px;}
+  .final-cta p{color:#B9C6E0; max-width:48ch; margin:0 auto 24px; font-size:14.5px;}
+  .final-cta .btn{background:#fff; color:var(--ink); padding:14px 26px; border-radius:3px; font-weight:600; font-size:14px; display:inline-block;}
+  .final-cta .btn:hover{background:var(--gold); color:#fff;}
+
+  footer{padding:30px 0; font-size:12.5px; color:var(--ink-soft); text-align:center;}
+</style>
+</head>
+<body>
+
+<nav class="topnav" aria-label="Hauptnavigation">
+  <div class="navrow">
+    <a href="Startseite.html" class="logo" aria-label="Lernecke Startseite"><span style="color:var(--sage-onDark)">Lern</span><em style="font-style:italic;color:#7A5A1D">ecke</em></a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <div class="navlinks">
+      <a href="Startseite.html" class="active" aria-current="page">Startseite</a>
+      <a href="Layout_4_Klasse_Hauptseite.html">4.Kl</a>
+      <a href="Layout_5_Klasse_Hauptseite.html">5.Kl</a>
+      <a href="Layout_6_Klasse_Hauptseite.html">6.Kl</a>
+      <a href="Layout_1_Sek_Hauptseite.html">1.Sek</a>
+      <a href="Layout_2_Sek__Hauptseite.html">2./3.Sek</a>
+      <a href="Layout_BMS_Hauptseite.html">BMS</a>
+      <a href="Layout_Maturapruefung_Seite.html">Matura</a>
+      <a href="Layout_Nachhilfe_Seite.html">Nachhilfe</a>
+      <a href="Layout_UeberUns_Seite.html">Über uns</a>
+    </div>
+    <div class="navright">
+      <label for="nav-toggle" class="hamburger" aria-label="Menü öffnen"><span></span><span></span><span></span></label>
+      <a href="#">EN</a>
+      <a href="#">Kontakt</a>
+      <a href="/login" class="login-button">Login</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="angebot">
+  <div class="wrap hero-inner">
+    <div class="eyebrow">Kompetenzzentrum Gymivorbereitung Zürich</div>
+    <h1>Der richtige Weg zur Gymiprüfung —<br>für jede Klassenstufe.</h1>
+    <p class="lede">Individuelle Förderung in Kleingruppen, von der 4. Klasse bis zur 2./3. Sek.<br>Sagen Sie uns, wo Ihr Kind steht — wir zeigen Ihnen den passenden Kurs.</p>
+
+    <div class="picker">
+      <div class="picker-q">In welcher Klasse ist Ihr Kind aktuell?</div>
+
+      <div class="picker-groups">
+        <div class="picker-group">
+          <div class="picker-group-head primar">Primarschule</div>
+          <div class="picker-group-tiles cols-3">
+            <a href="Layout_4_Klasse_Hauptseite.html" class="picker-item">4. Klasse</a>
+            <a href="Layout_5_Klasse_Hauptseite.html" class="picker-item">5. Klasse</a>
+            <a href="Layout_6_Klasse_Hauptseite.html" class="picker-item">6. Klasse</a>
+          </div>
+          <div class="picker-group-foot primar">Langzeitgymnasium</div>
+        </div>
+
+        <div class="picker-group">
+          <div class="picker-group-head sek">Sekundarschule</div>
+          <div class="picker-group-tiles cols-2">
+            <a href="Layout_1_Sek_Hauptseite.html" class="picker-item">1. Sek</a>
+            <a href="Layout_2_Sek__Hauptseite.html" class="picker-item">2./3. Sek</a>
+          </div>
+          <div class="picker-group-foot sek">Kurzzeitgymnasium</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="picker-alt">
+      Bereits in der Lehre oder am Gymnasium? Zur <a href="Layout_BMS_Hauptseite.html">BMS-Aufnahmeprüfung</a> oder <a href="Layout_Maturapruefung_Seite.html">Maturaprüfung</a>.
+    </div>
+  </div>
+</header>
+
+<section class="values wrap">
+  <div class="section-head">
+    <h2>Unsere Leistungen</h2>
+  </div>
+  <div class="value-grid">
+    <div class="value-card">
+      <h3>Individuelle Förderung</h3>
+      <p>Kleingruppen von 3 bis max. 8 Kindern statt Frontalunterricht.</p>
+    </div>
+    <div class="value-card">
+      <h3>Standortbestimmung</h3>
+      <p>Zu Beginn erkennen wir Lücken gezielt und schliessen sie Schritt für Schritt.</p>
+    </div>
+    <div class="value-card">
+      <h3>Aufsatztraining</h3>
+      <p>Individuelles Coaching mit Korrektur und Feedback zu jedem Text.</p>
+    </div>
+    <div class="value-card">
+      <h3>Betreuung ausserhalb der Kurszeiten</h3>
+      <p>Fragen jederzeit per Chat — im Kurspreis inbegriffen.</p>
+    </div>
+  </div>
+</section>
+
+<section class="services wrap">
+  <div class="section-head">
+    <h2>Ergänzend zu unseren Kursen</h2>
+  </div>
+  <div class="service-grid">
+    <a href="Layout_Lerncoaching_Seite.html" class="service-card core" aria-label="Mehr über Lerncoaching erfahren">
+      <h3>Lerncoaching</h3>
+      <p>Rüstzeug für strukturiertes, konzentriertes und nachhaltiges Lernen — unabhängig davon, welchen Kurs Ihr Kind sonst besucht.</p>
+    </a>
+    <a href="Layout_Nachhilfe_Seite.html" class="service-card core" aria-label="Mehr über das Nachhilfe-Abo erfahren">
+      <h3>Nachhilfe-Abo</h3>
+      <p>Gezielte 1:1-Unterstützung in Deutsch, Mathematik oder Französisch als 10er- oder 20er-Lektionen-Abo — unabhängig von einer Kursteilnahme.</p>
+    </a>
+
+    <div class="service-subgroup">
+      <div class="service-subgroup-label">Nur 6. Klasse &amp; 2./3. Sek</div>
+      <div class="service-subgroup-grid">
+        <a href="Layout_DistanceLearning_Seite.html" class="service-card examprep" aria-label="Mehr über Distance Learning erfahren">
+          <h3>Distance Learning</h3>
+          <p>Der Intensivkurs-Sportferien lässt sich auch von zu Hause oder vom Ferienort aus per Video-Unterricht besuchen.</p>
+        </a>
+        <a href="Layout_Pruefungssimulation_Landingpage.html" class="service-card examprep" aria-label="Mehr über die Simulationsprüfung erfahren">
+          <h3>Simulationsprüfung</h3>
+          <p>Ohne Kursverpflichtung buchbar: eine realistische Prüfungssimulation statt eines ganzen Kurses — inkl. Auswertung und individuellem Feedback.</p>
+        </a>
+      </div>
+    </div>
+
+    <div class="service-subgroup">
+      <div class="service-subgroup-label">Berufsmatura &amp; Gymnasium</div>
+      <div class="service-subgroup-grid">
+        <a href="Layout_BMS_Hauptseite.html" class="service-card tertiary" aria-label="Mehr über die BMS-Aufnahmeprüfung erfahren">
+          <h3>BMS-Aufnahmeprüfung</h3>
+          <p>Vorbereitung auf die Aufnahmeprüfung an die Berufsmaturitätsschule — für den Weg über eine Lehre mit Berufsmatura.</p>
+        </a>
+        <a href="Layout_Maturapruefung_Seite.html" class="service-card tertiary" aria-label="Mehr über die Maturaprüfungsvorbereitung erfahren">
+          <h3>Maturaprüfung</h3>
+          <p>Fokussierte Vorbereitung auf die Maturaprüfung am Gymnasium oder an der Berufsmaturitätsschule.</p>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="testi wrap">
+  <div class="testi-card">
+    <div class="testi-avatar"><!-- TODO: echtes (freigegebenes) Foto einsetzen, z. B. images/testimonials/adina.jpg --><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27112%27%20height%3D%27112%27%20viewBox%3D%270%200%20112%20112%27%3E%3Ccircle%20cx%3D%2756%27%20cy%3D%2756%27%20r%3D%2756%27%20fill%3D%27%23E4EBE3%27/%3E%3Ctext%20x%3D%2756%27%20y%3D%2768%27%20font-family%3D%27Georgia%2Cserif%27%20font-size%3D%2740%27%20font-weight%3D%27600%27%20fill%3D%27%234E6E54%27%20text-anchor%3D%27middle%27%3EA%3C/text%3E%3C/svg%3E" alt="Adina" width="64" height="64"></div>
+    <div>
+      <p class="quote">Ich war mir nicht sicher, ob ich die Prüfung schaffe und ins Gymi soll. Dank Ihnen habe ich nun die Prüfung bestanden und freue mich aufs Gymnasium.</p>
+      <div class="by">Adina, 13 Jahre — Langzeitgymnasium, Intensivkurs Sportferien</div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap">
+    <h2>Nicht sicher, welcher Kurs passt?</h2>
+    <p>Wir beraten Sie unverbindlich und finden gemeinsam die passende Vorbereitung für Ihr Kind.</p>
+    <a href="#" class="btn">Kostenloses Beratungsgespräch vereinbaren</a>
+  </div>
+</section>
+
+<footer>© 2026 Gymivorbereitung Zürich</footer>
+
+</body>
+</html>

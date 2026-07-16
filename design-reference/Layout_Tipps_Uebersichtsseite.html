@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tipps — Gymivorbereitung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233F; --ink-soft:#3C4A68; --paper:#F5F6F1; --card:#FFFFFE;
+    --sage:#6B8F71; --sage-deep:#4E6E54; --sage-pale:#E4EBE3; --sage-onDark:#8CB392;
+    --gold:#C89B3C; --gold-pale:#F3E8D2; --line:#DBDDD2;
+    --rust:#B5674D; --blue:#5C7A9E;
+    --serif:'Fraunces', serif; --sans:'Inter', sans-serif; --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.5; -webkit-font-smoothing:antialiased;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1000px; margin:0 auto; padding:0 28px;}
+  :focus-visible{outline:2px solid var(--sage-deep); outline-offset:3px;}
+
+  /* ---------- NAV (identisch zur Startseite) ---------- */
+  nav.topnav{background:var(--ink); color:#fff;}
+  .navrow{display:flex; align-items:center; justify-content:space-between; padding:16px 28px; max-width:1080px; margin:0 auto;}
+  .logo{font-family:var(--serif); font-weight:600; font-size:19px; color:#fff;}
+  .navlinks{display:flex; align-items:center; gap:26px; font-size:14px; font-weight:500;}
+  .navlinks a{color:rgba(255,255,255,.85); padding-bottom:3px;}
+  .navlinks a:hover{color:#fff;}
+  .navlinks a.active{color:#fff; border-bottom:2px solid var(--gold);}
+  .has-dropdown{position:relative;}
+  .dd-trigger{display:flex; align-items:center; gap:5px; cursor:pointer;}
+  .dd-trigger::after{content:"▾"; font-size:9px; opacity:.8;}
+  .dropdown{
+    position:absolute; top:calc(100% + 14px); left:-16px; background:#fff; color:var(--ink);
+    border-radius:8px; padding:10px; min-width:190px; box-shadow:0 20px 40px -16px rgba(0,0,0,.35);
+    opacity:0; visibility:hidden; transform:translateY(-6px); transition:.15s ease; z-index:10;
+  }
+  .has-dropdown:hover .dropdown, .has-dropdown:focus-within .dropdown{opacity:1; visibility:visible; transform:translateY(0);}
+  .dropdown a{display:block; padding:9px 12px; border-radius:5px; font-size:13.5px; font-weight:500; color:var(--ink);}
+  .dropdown a:hover{background:var(--sage-pale); color:var(--sage-deep);}
+  .navlinks a.active{color:#fff; border-bottom:2px solid var(--gold);}
+  .navright{display:flex; align-items:center; gap:22px; font-size:14px; font-weight:500;}
+  .navright a{color:rgba(255,255,255,.85);}
+  .navright a:hover{color:#fff;}
+  .navright .login-button{min-height:44px; display:inline-flex; align-items:center; justify-content:center; padding:9px 17px; border-radius:6px; background:var(--gold); color:var(--ink); font-weight:700;}
+  .navright .login-button:hover{background:#DAB569; color:var(--ink);}
+  .navlinks{gap:13px; font-size:13px;}
+  .nav-toggle{display:none;}
+  .hamburger{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:26px; height:20px; cursor:pointer; order:-1;
+  }
+  .hamburger span{display:block; width:100%; height:2px; background:#fff; border-radius:1px;}
+  @media(max-width:820px){
+    .navrow{flex-wrap:wrap;}
+    .hamburger{display:flex;}
+    .navlinks{
+      display:none; order:5; width:100%; flex-direction:column; gap:0;
+      margin-top:16px; border-top:1px solid rgba(255,255,255,.15);
+    }
+    .nav-toggle:checked ~ .navlinks{display:flex;}
+    .navlinks a{padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px;}
+    .navlinks a.active{border-bottom:1px solid rgba(255,255,255,.1); position:relative;}
+    .navlinks a.active::after{content:""; position:absolute; left:0; bottom:-1px; width:32px; height:2px; background:var(--gold);}
+  }
+  /* Kontakt bleibt auch auf kleinen Screens sichtbar (kein Login-Button mehr, der Vorrang hätte) */
+
+  /* ---------- HERO ---------- */
+  .hero{padding:56px 0 44px; text-align:center;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--sage-deep);
+    text-transform:uppercase; display:inline-flex; align-items:center; gap:8px; margin-bottom:16px;
+  }
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(28px,4vw,40px); line-height:1.12; margin-bottom:14px;}
+  .hero p.lede{font-size:15.5px; color:var(--ink-soft); max-width:62ch; margin:0 auto;}
+
+  /* ---------- KATEGORIEN-LEGENDE ---------- */
+  .cat-legend{display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin:32px 0 44px; font-family:var(--mono); font-size:11.5px; color:var(--ink-soft);}
+  .cat-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .cat-legend .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .cat-legend .dot.plan{background:var(--sage-deep);}
+  .cat-legend .dot.lern{background:var(--gold);}
+  .cat-legend .dot.deutsch{background:var(--blue);}
+  .cat-legend .dot.mathe{background:var(--rust);}
+  .cat-legend .dot.foerder{background:var(--ink);}
+
+  /* ---------- TIPP-KARTEN ---------- */
+  .section-head{max-width:60ch; margin:0 auto 24px; text-align:center;}
+  .section-head h2{font-family:var(--serif); font-weight:500; font-size:clamp(20px,2.6vw,26px); margin-bottom:8px;}
+  .section-head p{font-size:13.5px; color:var(--ink-soft);}
+
+  .tip-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:56px;}
+  @media(max-width:820px){ .tip-grid{grid-template-columns:1fr 1fr;} }
+  @media(max-width:560px){ .tip-grid{grid-template-columns:1fr;} }
+
+  .tip-card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:22px;
+    display:flex; flex-direction:column; border-top:4px solid var(--line);
+  }
+  .tip-card.plan{border-top-color:var(--sage-deep);}
+  .tip-card.lern{border-top-color:var(--gold);}
+  .tip-card.deutsch{border-top-color:var(--blue);}
+  .tip-card.mathe{border-top-color:var(--rust);}
+  .tip-card.foerder{border-top-color:var(--ink);}
+
+  .tip-tag{
+    align-self:flex-start; font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase;
+    padding:3px 9px; border-radius:20px; margin-bottom:12px;
+  }
+  .tip-card.plan .tip-tag{color:var(--sage-deep); background:var(--sage-pale);}
+  .tip-card.lern .tip-tag{color:#7A5A1D; background:var(--gold-pale);}
+  .tip-card.deutsch .tip-tag{color:var(--blue); background:#E9EEF3;}
+  .tip-card.mathe .tip-tag{color:var(--rust); background:#F4E7E2;}
+  .tip-card.foerder .tip-tag{color:var(--ink); background:#EAECF2;}
+
+  .tip-card h3{font-family:var(--serif); font-weight:600; font-size:16px; margin-bottom:8px; line-height:1.3;}
+  .tip-card p{font-size:13px; color:var(--ink-soft); line-height:1.6; margin-bottom:14px; flex:1;}
+  .tip-card a.link{font-size:12.5px; font-weight:600; color:var(--ink); border-bottom:1px solid var(--ink); align-self:flex-start;}
+
+  /* ---------- FAQ ---------- */
+  .faq{border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--card); margin-bottom:40px;}
+  .faq details{border-top:1px solid var(--line);}
+  .faq details:first-child{border-top:none;}
+  .faq summary{
+    list-style:none; cursor:pointer; padding:16px 20px; font-weight:600; font-size:14px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+  }
+  .faq summary::-webkit-details-marker{display:none;}
+  .faq summary::after{content:"+"; font-family:var(--mono); color:var(--ink-soft); flex:none;}
+  .faq details[open] summary::after{content:"–";}
+  .faq .a{padding:0 20px 18px; font-size:13.5px; color:var(--ink-soft); line-height:1.6;}
+
+  /* ---------- SCHLUSS-HINWEIS ---------- */
+  .more-note{
+    background:var(--sage-pale); border-radius:10px; padding:22px 26px; text-align:center;
+    font-size:13.5px; color:var(--ink-soft); margin-bottom:56px;
+  }
+  .more-note b{color:var(--ink);}
+
+  footer{padding:30px 0; font-size:12.5px; color:var(--ink-soft); text-align:center;}
+
+  /* ============================================================
+     Ergänzung: Klassenstufen-Dropdown gruppiert, Breadcrumb, Skip-Link
+     (ersetzt die vorher flache 13-Item-Liste)
+     ============================================================ */
+  .skip-link{
+    position:absolute; left:-999px; top:auto; background:var(--ink); color:#fff; padding:10px 16px;
+    border-radius:0 0 6px 0; z-index:100;
+  }
+  .skip-link:focus{left:0; top:0;}
+  .dropdown{min-width:280px;}
+  .dd-trigger{background:none; border:0; font:inherit; color:rgba(255,255,255,.85); padding:0 0 3px;}
+  .dd-trigger:hover{color:#fff;}
+  .dd-groups{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .dd-group-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:6px; padding:0 12px;
+  }
+  .dropdown a.current{background:var(--sage-pale); color:var(--sage-deep); font-weight:700;}
+  @media(max-width:820px){
+    .has-dropdown{width:100%;}
+    .dropdown{
+      position:static; opacity:1; visibility:visible; transform:none; display:none;
+      background:rgba(255,255,255,.06); box-shadow:none; color:#fff; min-width:0; margin-bottom:8px;
+    }
+    .has-dropdown:focus-within .dropdown{display:block;}
+    .dd-groups{grid-template-columns:1fr;}
+    .dd-group-label{color:rgba(255,255,255,.55);}
+    .dropdown a{color:#fff;}
+    .dropdown a:hover, .dropdown a.current{background:rgba(255,255,255,.1); color:#fff;}
+    .dd-trigger{padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px; width:100%; justify-content:flex-start;}
+  }
+  .crumbs{
+    max-width:1080px; margin:20px auto 0; padding:0 28px; font-family:var(--mono); font-size:12px;
+    color:var(--ink-soft); display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .crumbs a{color:var(--sage-deep); font-weight:600;}
+  .crumbs a:hover{text-decoration:underline;}
+  .crumbs .sep{color:var(--line);}
+  .crumbs .current{color:var(--ink); font-weight:600;}
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+<nav class="topnav" aria-label="Hauptnavigation">
+  <div class="navrow">
+    <a href="Startseite.html" class="logo" aria-label="Lernecke Startseite"><span style="color:var(--sage-onDark)">Lern</span><em style="font-style:italic;color:#7A5A1D">ecke</em></a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <div class="navlinks">
+      <div class="has-dropdown">
+        <button type="button" class="dd-trigger" aria-expanded="false" aria-haspopup="true">Klassenstufen</button>
+        <div class="dropdown">
+          <div class="dd-groups">
+            <div>
+              <div class="dd-group-label">Primarschule</div>
+              <a href="Layout_4_Klasse_Hauptseite.html">4. Klasse</a>
+              <a href="Layout_5_Klasse_Hauptseite.html">5. Klasse</a>
+              <a href="Layout_6_Klasse_Hauptseite.html">6. Klasse</a>
+            </div>
+            <div>
+              <div class="dd-group-label">Sekundarschule</div>
+              <a href="Layout_1_Sek_Hauptseite.html">1. Sek</a>
+              <a href="Layout_2_Sek__Hauptseite.html">2./3. Sek</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="Layout_BMS_Hauptseite.html">BMS</a>
+      <a href="Layout_Maturapruefung_Seite.html">Matura</a>
+      <a href="Layout_Nachhilfe_Seite.html">Nachhilfe</a>
+      <a href="Layout_UeberUns_Seite.html">Über uns</a>
+    </div>
+    <div class="navright">
+      <label for="nav-toggle" class="hamburger" aria-label="Menü öffnen"><span></span><span></span><span></span></label>
+      <a href="#">Kontakt</a>
+    </div>
+  </div>
+</nav>
+
+<div class="crumbs" aria-label="Breadcrumb">
+  <a href="Startseite.html">Startseite</a><span class="sep">/</span>
+  <span class="current">Tipps</span>
+</div>
+
+<div class="wrap" id="main">
+
+  <header class="hero">
+    <div class="eyebrow">Wissen &amp; Orientierung</div>
+    <h1>Tipps rund um die Gymivorbereitung</h1>
+    <p class="lede">Kurze, konkrete Einblicke aus unserer Praxis — zur Prüfungsplanung, zum Lernen zu Hause, zu Deutsch und Mathematik sowie zu besonderen Förderbedarfen. Für Eltern, die sich einen Überblick verschaffen möchten, bevor sie ins Detail gehen.</p>
+  </header>
+
+  <div class="cat-legend">
+    <span><i class="dot plan"></i>Prüfung &amp; Planung</span>
+    <span><i class="dot lern"></i>Lernen &amp; Motivation</span>
+    <span><i class="dot deutsch"></i>Deutsch &amp; Aufsatz</span>
+    <span><i class="dot mathe"></i>Mathematik</span>
+    <span><i class="dot foerder"></i>Besondere Förderbedarfe</span>
+  </div>
+
+  <div class="section-head">
+    <h2>Aktuelle Beiträge</h2>
+    <p>Eine Auswahl — die Sammlung wächst laufend.</p>
+  </div>
+
+  <div class="tip-grid">
+    <div class="tip-card plan">
+      <span class="tip-tag">Prüfung &amp; Planung</span>
+      <h3>Langzeit- oder Kurzzeitgymnasium — welcher Weg passt?</h3>
+      <p>Beide Wege führen ans Gymnasium, unterscheiden sich aber deutlich in Tempo, Einstiegsalter und Anforderungsprofil. Eine Übersicht der wichtigsten Unterschiede, damit die Entscheidung leichter fällt.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card plan">
+      <span class="tip-tag">Prüfung &amp; Planung</span>
+      <h3>Wann sollte die Vorbereitung beginnen?</h3>
+      <p>Ein früher Einstieg schon in der 5. Klasse gibt vielen Kindern Sicherheit und Zeit, Lücken in Ruhe zu schliessen — muss aber nicht für jedes Kind der richtige Zeitpunkt sein.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card plan">
+      <span class="tip-tag">Prüfung &amp; Planung</span>
+      <h3>Was sich am Prüfungsformat zuletzt geändert hat</h3>
+      <p>Prüfungsreglemente werden periodisch angepasst. Die wichtigsten Änderungen im Überblick, damit Sie mit aktuellem Wissen planen.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+
+    <div class="tip-card lern">
+      <span class="tip-tag">Lernen &amp; Motivation</span>
+      <h3>Wenn Lernen zu Hause zum Kraftakt wird</h3>
+      <p>Streit ums Üben ist oft ein Beziehungsthema, kein Fleissproblem. Warum Struktur und ein klar getrennter Rahmen zwischen Eltern- und Lernrolle hier oft mehr bewirken als zusätzlicher Druck.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card lern">
+      <span class="tip-tag">Lernen &amp; Motivation</span>
+      <h3>Struktur, die wirklich hilft</h3>
+      <p>Ein realistischer Wochenplan mit festen Lernblöcken schafft Verlässlichkeit — für Kinder wie für Eltern. Konkrete Ansätze für den Alltag zu Hause.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card lern">
+      <span class="tip-tag">Lernen &amp; Motivation</span>
+      <h3>Mental stark in die Prüfung</h3>
+      <p>Nervosität vor der Prüfung ist normal — entscheidend ist, wie gut ein Kind lernt, damit umzugehen. Einfache Techniken, die sich in den Alltag einbauen lassen.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+
+    <div class="tip-card deutsch">
+      <span class="tip-tag">Deutsch &amp; Aufsatz</span>
+      <h3>Was einen guten Aufsatz ausmacht</h3>
+      <p>Nicht Perfektion zählt, sondern ein klarer roter Faden, eigene Sprache und ein glaubwürdiger Inhalt. Worauf es bei der Bewertung wirklich ankommt.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card deutsch">
+      <span class="tip-tag">Deutsch &amp; Aufsatz</span>
+      <h3>Kommasetzung ohne Grammatikstress</h3>
+      <p>Mit einem einfachen Bild statt trockener Regeln verstehen viele Kinder Satzgrenzen deutlich schneller. Ein praktischer Ansatz fürs Üben zu Hause.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card deutsch">
+      <span class="tip-tag">Deutsch &amp; Aufsatz</span>
+      <h3>Rechtschreibung verstehen statt auswendig lernen</h3>
+      <p>Wer die Logik hinter Regeln erkennt, muss weniger pauken. Wie Kinder ein echtes Gefühl für Rechtschreibung entwickeln.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+
+    <div class="tip-card mathe">
+      <span class="tip-tag">Mathematik</span>
+      <h3>Der Lösungsweg zählt so viel wie das Resultat</h3>
+      <p>Ein richtiges Ergebnis allein reicht an der Prüfung oft nicht — die Nachvollziehbarkeit des Rechenwegs bringt zusätzliche Punkte. Was das für die Vorbereitung bedeutet.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card mathe">
+      <span class="tip-tag">Mathematik</span>
+      <h3>Textaufgaben Schritt für Schritt meistern</h3>
+      <p>Die grösste Hürde ist oft nicht das Rechnen, sondern das Verstehen der Aufgabenstellung. Eine Herangehensweise, die Kindern hier Sicherheit gibt.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+
+    <div class="tip-card foerder">
+      <span class="tip-tag">Besondere Förderbedarfe</span>
+      <h3>Wenn Konzentration besonders schwerfällt</h3>
+      <p>Manche Kinder brauchen mehr Struktur und kürzere Lerneinheiten, um ihr Potenzial zu zeigen. Was in der Vorbereitung dann besonders hilft.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+    <div class="tip-card foerder">
+      <span class="tip-tag">Besondere Förderbedarfe</span>
+      <h3>Nachteilsausgleich — was Eltern wissen sollten</h3>
+      <p>Bei bestimmten Diagnosen können Anpassungen bei der Prüfung beantragt werden. Ein Überblick, was dafür nötig ist und wie der Ablauf funktioniert.</p>
+      <a href="#" class="link">Weiterlesen →</a>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>Häufige Fragen</h2>
+  </div>
+  <div class="faq">
+    <details>
+      <summary>Muss ich zuerst einen Kurs buchen, um diese Tipps zu nutzen?</summary>
+      <p class="a">Nein — die Tipps stehen allen Eltern offen, unabhängig davon, ob Ihr Kind bereits einen Kurs bei uns besucht.</p>
+    </details>
+    <details>
+      <summary>Für welche Klassenstufen sind die Tipps relevant?</summary>
+      <p class="a">Die meisten Beiträge sind für alle Stufen zwischen 4. Klasse und 2./3. Sek hilfreich; einzelne Themen (z. B. Prüfungsformat-Änderungen) sind spezifisch für das jeweilige Prüfungsjahr gekennzeichnet.</p>
+    </details>
+    <details>
+      <summary>Wie oft kommen neue Beiträge dazu?</summary>
+      <p class="a">Wir ergänzen die Sammlung laufend um neue Themen aus unserer Beratungs- und Kurspraxis.</p>
+    </details>
+  </div>
+
+  <div class="more-note">
+    Sie finden hier nicht, wonach Sie suchen? <b>Schreiben Sie uns</b> — wir nehmen Themenwünsche gerne auf.
+  </div>
+
+</div>
+
+<footer>© 2026 Gymivorbereitung Zürich</footer>
+
+</body>
+</html>

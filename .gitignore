@@ -69,3 +69,6 @@ legacy-bardhi/
 
 # Dokumentation (lokal, nicht für GitHub)
 docs/
+
+# Temporäre Prüfdateien der versionierten Designreferenzen
+design-reference/_writetest.tmp

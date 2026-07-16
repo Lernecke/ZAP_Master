@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halbjahreskurs 5. Klasse - Deutsch @ Mathematik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233F; --ink-soft:#3C4A68; --paper:#F5F6F1; --card:#FFFFFE;
+    --sage:#6B8F71; --sage-deep:#4E6E54; --sage-pale:#E4EBE3;
+    --gold:#C89B3C; --gold-pale:#F3E8D2; --line:#DBDDD2;
+    --rust:#B5674D; --blue:#5C7A9E;
+    --serif:'Fraunces', serif; --sans:'Inter', sans-serif; --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.5; padding:56px 28px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  a{color:inherit; text-decoration:none;}
+
+  .flow-step{display:flex; align-items:center; gap:12px; margin:44px 0 14px;}
+  .flow-step .num{
+    font-family:var(--mono); font-size:13px; color:var(--ink-soft); background:transparent; border:1px solid var(--line);
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none;
+  }
+  .flow-step .label{font-family:var(--mono); font-size:15px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:#000;}
+
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(24px,3vw,32px); margin-bottom:10px;}
+  .lede{color:var(--ink-soft); font-size:15px; max-width:60ch; margin-bottom:8px;}
+
+  .aufbau{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px; margin-top:12px;}
+  .aufbau-grid{display:grid; grid-template-columns:1fr 1fr 1fr;}
+  @media(max-width:700px){ .aufbau-grid{grid-template-columns:1fr;} }
+  .phase{padding:24px 22px 24px; position:relative; border-top:4px solid var(--line);}
+  .phase:nth-child(1){border-top-color:var(--sage-deep); background:linear-gradient(180deg, var(--sage-pale) 0%, transparent 70px);}
+  .phase:nth-child(2){border-top-color:var(--ink); background:linear-gradient(180deg, #EAECF2 0%, transparent 70px);}
+  .phase:nth-child(3){border-top-color:var(--gold); background:linear-gradient(180deg, var(--gold-pale) 0%, transparent 70px);}
+  .phase + .phase{border-left:1px solid var(--line);}
+  @media(max-width:700px){ .phase + .phase{border-left:none; border-top:4px solid var(--line);} .phase:nth-child(1){border-top-color:var(--sage-deep);} .phase:nth-child(2){border-top-color:var(--ink);} .phase:nth-child(3){border-top-color:var(--gold);} }
+  .phase .pnum{font-family:var(--mono); font-size:11px; letter-spacing:.06em; margin-bottom:10px; font-weight:600;}
+  .phase:nth-child(1) .pnum{color:var(--sage-deep);}
+  .phase:nth-child(2) .pnum{color:var(--ink);}
+  .phase:nth-child(3) .pnum{color:#7A5A1D;}
+  .phase h3{font-family:var(--serif); font-weight:600; font-size:18px; margin-bottom:8px;}
+  .phase p{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+  .phase .arrow-next{
+    position:absolute; right:-11px; top:50%; transform:translateY(-50%); z-index:2;
+    width:22px; height:22px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--sage-deep);
+  }
+  @media(max-width:700px){ .phase .arrow-next{display:none;} }
+
+  .overview{
+    background:var(--card); border:1px solid var(--line); border-top:4px solid var(--gold); border-radius:10px; padding:26px; margin-top:12px;
+    display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;
+  }
+  .overview ul{list-style:none; font-size:13.5px;}
+  .overview li{padding:5px 0; display:flex; gap:8px;}
+  .overview li::before{content:"—"; color:var(--sage-deep);}
+  .overview .price{text-align:right;}
+  .overview .price b{font-family:var(--serif); font-size:26px; display:block;}
+
+  .booking{background:var(--card); border:1px solid var(--line); border-top:4px solid var(--sage-deep); border-radius:10px; padding:22px; margin-top:12px;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  td, th{padding:11px 8px; border-top:1px solid var(--line); text-align:left;}
+  tbody tr:first-child td{border-top:none;}
+  tbody tr:nth-child(even){background:var(--paper);}
+  .free{color:var(--sage-deep); font-weight:600;}
+  .full{color:#b23a3a; font-weight:600;}
+  .row-btn{display:inline-block; background:var(--ink); color:#fff; padding:7px 14px; border-radius:3px; font-size:12.5px; font-weight:600; white-space:nowrap;}
+  .row-btn:hover{background:var(--sage-deep);}
+  .row-btn.disabled{background:transparent; color:var(--ink-soft); border:1px solid var(--line); cursor:not-allowed;}
+  th{font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--ink-soft); text-transform:uppercase; font-weight:500;}
+
+  .daydetails{position:relative;}
+  .daydetails summary{
+    list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); border:1px solid var(--line);
+    padding:5px 10px; border-radius:3px; white-space:nowrap;
+  }
+  .daydetails summary::-webkit-details-marker{display:none;}
+  .daydetails summary::after{content:"▾"; font-size:9px;}
+  .daydetails summary:hover{border-color:var(--ink); color:var(--ink);}
+  .daydetails[open] summary{border-color:var(--sage-deep); color:var(--sage-deep); background:var(--sage-pale);}
+  .daydetails[open] summary::after{content:"▴";}
+  .daylist{
+    position:absolute; top:calc(100% + 6px); left:0; z-index:10; background:#fff; border:1px solid var(--line);
+    border-radius:6px; padding:10px 14px; box-shadow:0 12px 28px -12px rgba(22,35,63,.28); min-width:250px;
+  }
+  .daylist div{font-size:12.5px; padding:4px 0; color:var(--ink); white-space:nowrap;}
+
+  /* Warum wir */
+  .whywe{margin-top:64px;}
+  .whywe-head{max-width:60ch; margin:0 auto 24px; text-align:center;}
+  .whywe-head .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--sage-deep);
+    text-transform:uppercase; display:inline-block; margin-bottom:12px;
+  }
+  .whywe-head h2{font-family:var(--serif); font-weight:500; font-size:clamp(22px,3vw,28px); line-height:1.15; margin-bottom:8px;}
+  .whywe-head p{font-size:14px; color:var(--ink-soft);}
+
+  .features{
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:1px; background:var(--line);
+    border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:40px;
+  }
+  @media(max-width:600px){ .features{grid-template-columns:1fr;} }
+  .feature{background:var(--card); padding:26px 24px; border-top:4px solid var(--line);}
+  .feature.sage{border-top-color:var(--sage-deep);}
+  .feature.gold{border-top-color:var(--gold);}
+  .feature.rust{border-top-color:var(--rust);}
+  .feature.blue{border-top-color:var(--blue);}
+  .feature h3{font-family:var(--serif); font-weight:600; font-size:16.5px; margin-bottom:8px;}
+  .feature.sage h3{color:var(--sage-deep);}
+  .feature.gold h3{color:#7A5A1D;}
+  .feature.rust h3{color:var(--rust);}
+  .feature.blue h3{color:var(--blue);}
+  .feature p{font-size:13px; color:var(--ink-soft); line-height:1.55;}
+
+  .testi-head{text-align:center; margin-bottom:24px;}
+  .testi-head span{font-family:var(--serif); font-weight:600; font-size:22px; color:var(--ink);}
+  .testi-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media(max-width:760px){ .testi-grid{grid-template-columns:1fr;} }
+  .testi{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px 22px; display:flex; flex-direction:column;}
+  .testi .quote{font-size:13.5px; color:var(--ink); line-height:1.55; margin-bottom:12px; flex:1;}
+  .testi .quote::before{content:"“"; color:var(--gold); font-family:var(--serif); font-size:20px;}
+  .testi .who{font-family:var(--mono); font-size:11px; color:var(--ink-soft);}
+
+  /* Mobile: Buchungstabelle als Kartenliste statt Tabelle */
+  @media(max-width:600px){
+    .booking table{border:none;}
+    .booking thead{display:none;}
+    .booking table, .booking tbody, .booking tr, .booking td{display:block; width:100%;}
+    .booking tbody tr{
+      background:var(--card); border:1px solid var(--line); border-radius:10px;
+      padding:16px 16px 14px; margin-bottom:12px;
+    }
+    .booking tbody tr:nth-child(even){background:var(--card);}
+    .booking td{border-top:1px solid var(--line); padding:9px 0; text-align:left;}
+    .booking td::before{
+      content:attr(data-label); display:block; font-family:var(--mono); font-size:10px;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:4px;
+    }
+    .booking td:first-child{
+      border-top:none; padding:0 0 10px; font-family:var(--serif); font-weight:600; font-size:16.5px; color:var(--ink);
+    }
+    .booking td.action-cell{border-top:none; padding-top:12px;}
+    .booking td.action-cell .row-btn, .booking td.action-cell .row-btn.disabled{display:block; text-align:center;}
+    .booking .daylist{left:auto; right:0; min-width:0; width:100%;}
+  }
+
+  /* ============================================================
+     Kompakte Hauptnavigation + Breadcrumb (ersetzt reinen Zurück-Link)
+     ============================================================ */
+  .skip-link{
+    position:absolute; left:-999px; top:auto; background:var(--ink); color:#fff; padding:10px 16px;
+    border-radius:0 0 6px 0; z-index:100;
+  }
+  .skip-link:focus{left:0; top:0;}
+
+  nav.topnav{background:var(--ink); color:#fff;}
+  .navrow{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 28px;
+    max-width:1080px; margin:0 auto;
+  }
+  .logo{font-family:var(--serif); font-weight:600; font-size:23px; color:#fff;}
+  .navlinks{display:flex; align-items:center; gap:13px; font-size:13px; font-weight:500;}
+  .navlinks a{color:rgba(255,255,255,.85); padding-bottom:3px;}
+  .navlinks a:hover{color:#fff;}
+  .navlinks a.active{color:#fff; border-bottom:2px solid var(--gold);}
+  .has-dropdown{position:relative;}
+  .dd-trigger{display:flex; align-items:center; gap:5px; cursor:pointer; color:rgba(255,255,255,.85); background:none; border:0; font:inherit; padding:0 0 3px;}
+  .dd-trigger:hover{color:#fff;}
+  .dd-trigger::after{content:"▾"; font-size:9px; opacity:.8;}
+  .dropdown{
+    position:absolute; top:calc(100% + 14px); left:-16px; background:#fff; color:var(--ink);
+    border-radius:8px; padding:14px; min-width:280px; box-shadow:0 20px 40px -16px rgba(0,0,0,.35);
+    opacity:0; visibility:hidden; transform:translateY(-6px); transition:.15s ease;
+  }
+  .has-dropdown:hover .dropdown, .has-dropdown:focus-within .dropdown{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+  .dd-groups{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .dd-group-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:6px; padding:0 12px;
+  }
+  .dropdown a{
+    display:block; padding:9px 12px; border-radius:5px; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  .dropdown a:hover{background:var(--sage-pale); color:var(--sage-deep);}
+  .dropdown a.current{background:var(--sage-pale); color:var(--sage-deep); font-weight:700;}
+  .navright{display:flex; align-items:center; gap:22px; font-size:14px; font-weight:500;}
+  .navright a{color:rgba(255,255,255,.85);}
+  .navright a:hover{color:#fff;}
+
+  .nav-toggle{display:none;}
+  .hamburger{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:26px; height:20px; cursor:pointer; order:-1;
+  }
+  .hamburger span{display:block; width:100%; height:2px; background:#fff; border-radius:1px;}
+
+  @media(max-width:820px){
+    .navrow{flex-wrap:wrap;}
+    .hamburger{display:flex;}
+    .navlinks{
+      display:none; order:5; width:100%; flex-direction:column; align-items:stretch; gap:0;
+      margin-top:16px; border-top:1px solid rgba(255,255,255,.15);
+    }
+    .nav-toggle:checked ~ .navlinks{display:flex;}
+    .navlinks a, .dd-trigger{
+      padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px; width:100%;
+    }
+    .has-dropdown{width:100%;}
+    .dropdown{
+      position:static; opacity:1; visibility:visible; transform:none; display:none;
+      background:rgba(255,255,255,.06); box-shadow:none; color:#fff; min-width:0; margin-bottom:8px;
+    }
+    .has-dropdown:focus-within .dropdown{display:block;}
+    .dd-groups{grid-template-columns:1fr;}
+    .dd-group-label{color:rgba(255,255,255,.55);}
+    .dropdown a{color:#fff;}
+    .dropdown a:hover, .dropdown a.current{background:rgba(255,255,255,.1); color:#fff;}
+  }
+
+  .crumbs{
+    max-width:1080px; margin:20px auto 0; padding:0 28px; font-family:var(--mono); font-size:12px;
+    color:var(--ink-soft); display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .crumbs a{color:var(--sage-deep); font-weight:600;}
+  .crumbs a:hover{text-decoration:underline;}
+  .crumbs .sep{color:var(--line);}
+  .crumbs .current{color:var(--ink); font-weight:600;}
+  body{padding-top:0;}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+<nav class="topnav" aria-label="Hauptnavigation">
+  <div class="navrow">
+    <a href="Startseite.html" class="logo" aria-label="Lernecke Startseite"><span style="color:#8CB392">Lern</span><em style="font-style:italic;color:#DAB569">ecke</em></a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <div class="navlinks">
+      <div class="has-dropdown">
+        <button type="button" class="dd-trigger" aria-expanded="false" aria-haspopup="true">Klassenstufen</button>
+        <div class="dropdown">
+          <div class="dd-groups">
+            <div>
+              <div class="dd-group-label">Primarschule</div>
+              <a href="Layout_4_Klasse_Hauptseite.html">4. Klasse</a>
+              <a href="Layout_5_Klasse_Hauptseite.html" class="current">5. Klasse</a>
+              <a href="Layout_6_Klasse_Hauptseite.html">6. Klasse</a>
+            </div>
+            <div>
+              <div class="dd-group-label">Sekundarschule</div>
+              <a href="Layout_1_Sek_Hauptseite.html">1. Sek</a>
+              <a href="Layout_2_Sek__Hauptseite.html">2./3. Sek</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="Layout_BMS_Hauptseite.html">BMS</a>
+      <a href="Layout_Maturapruefung_Seite.html">Matura</a>
+      <a href="Layout_Nachhilfe_Seite.html">Nachhilfe</a>
+      <a href="Layout_UeberUns_Seite.html">Über uns</a>
+    </div>
+    <div class="navright">
+      <label for="nav-toggle" class="hamburger" aria-label="Menü öffnen"><span></span><span></span><span></span></label>
+      <a href="#">Kontakt</a>
+    </div>
+  </div>
+</nav>
+
+<div class="crumbs" aria-label="Breadcrumb">
+  <a href="Startseite.html">Startseite</a><span class="sep">/</span>
+  <a href="Layout_5_Klasse_Hauptseite.html">5. Klasse</a><span class="sep">/</span>
+  <span class="current">Intensivkurs</span>
+</div>
+<div class="wrap" id="main">
+
+  <h1>Halbjahreskurs 5. Klasse - Deutsch @ Mathematik</h1>
+  <p class="lede">Grundlagen in Deutsch und Mathematik auffrischen — spielerisch, ohne Prüfungsdruck, mit spürbarem Fortschritt in einer Woche.</p>
+
+  <div class="flow-step">
+    <div class="num">1</div>
+    <div class="label">Kursaufbau</div>
+  </div>
+  <div class="aufbau">
+    <div class="aufbau-grid">
+      <div class="phase">
+        <div class="pnum">SCHRITT 1</div>
+        <h3>Ankommen &amp; Einschätzen</h3>
+        <p>Ein kurzer, spielerischer Check am ersten Tag zeigt der Lehrperson, wo Ihr Kind in Deutsch und Mathematik steht.</p>
+        <div class="arrow-next">→</div>
+      </div>
+      <div class="phase">
+        <div class="pnum">SCHRITT 2</div>
+        <h3>Üben &amp; Vertiefen</h3>
+        <p>An jedem Halbtag wechseln sich Deutsch, Mathematik und eine spielerische Vertiefung ab — Lernspiele und Wettbewerbe halten die Motivation hoch.</p>
+        <div class="arrow-next">→</div>
+      </div>
+      <div class="phase">
+        <div class="pnum">SCHRITT 3</div>
+        <h3>Zeigen, was man kann</h3>
+        <p>Kein Test-Druck, aber ein kurzer, positiver Rückblick am letzten Tag zeigt, was Ihr Kind dazugelernt hat und woran es dranbleiben kann.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="num">2</div>
+    <div class="label">Überblick &amp; Preis</div>
+  </div>
+  <div class="overview">
+    <ul>
+      <li>5 Halbtage in den Ferien</li>
+      <li>Kurszeit: 09.00 – 12.00 Uhr oder 13.30 – 16.30 Uhr</li>
+      <li>Kleingruppen: 3 bis max. 8 Kinder</li>
+      <li>Zürich HB · Stadelhofen</li>
+    </ul>
+    <div class="price">
+      <b>CHF 890</b>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="num">3</div>
+    <div class="label">Buchung</div>
+  </div>
+  <div class="booking" id="buchung">
+    <table>
+      <thead>
+        <tr><th>Kurs</th><th>Datum</th><th>Zeit</th><th>Tagesplan</th><th>Standort</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Kurs">Kurs A</td><td data-label="Datum">08.–12. Feb.</td><td data-label="Zeit">09.00–12.00</td>
+          <td data-label="Tagesplan">
+            <details class="daydetails">
+              <summary>Tagesplan</summary>
+              <div class="daylist">
+                <div>Mo, 08. Feb. — 09.00–12.00</div>
+                <div>Di, 09. Feb. — 09.00–12.00</div>
+                <div>Mi, 10. Feb. — 09.00–12.00</div>
+                <div>Do, 11. Feb. — 09.00–12.00</div>
+                <div>Fr, 12. Feb. — 09.00–12.00 (Rückblick)</div>
+              </div>
+            </details>
+          </td>
+          <td data-label="Standort">Zürich HB</td><td data-label="Status" class="free">freie Plätze</td><td class="action-cell"><a href="#" class="row-btn">Anmelden</a></td>
+        </tr>
+        <tr>
+          <td data-label="Kurs">Kurs B</td><td data-label="Datum">15.–19. Feb.</td><td data-label="Zeit">13.30–16.30</td>
+          <td data-label="Tagesplan">
+            <details class="daydetails">
+              <summary>Tagesplan</summary>
+              <div class="daylist">
+                <div>Mo, 15. Feb. — 13.30–16.30</div>
+                <div>Di, 16. Feb. — 13.30–16.30</div>
+                <div>Mi, 17. Feb. — 13.30–16.30</div>
+                <div>Do, 18. Feb. — 13.30–16.30</div>
+                <div>Fr, 19. Feb. — 13.30–16.30 (Rückblick)</div>
+              </div>
+            </details>
+          </td>
+          <td data-label="Standort">Stadelhofen</td><td data-label="Status" class="free">freie Plätze</td><td class="action-cell"><a href="#" class="row-btn">Anmelden</a></td>
+        </tr>
+        <tr>
+          <td data-label="Kurs">Kurs C</td><td data-label="Datum">22.–26. Feb.</td><td data-label="Zeit">09.00–12.00</td>
+          <td data-label="Tagesplan">
+            <details class="daydetails">
+              <summary>Tagesplan</summary>
+              <div class="daylist">
+                <div>Mo, 22. Feb. — 09.00–12.00</div>
+                <div>Di, 23. Feb. — 09.00–12.00</div>
+                <div>Mi, 24. Feb. — 09.00–12.00</div>
+                <div>Do, 25. Feb. — 09.00–12.00</div>
+                <div>Fr, 26. Feb. — 09.00–12.00 (Rückblick)</div>
+              </div>
+            </details>
+          </td>
+          <td data-label="Standort">Zürich HB</td><td data-label="Status" class="full">keine Plätze</td><td class="action-cell"><span class="row-btn disabled">Ausgebucht</span></td>
+        </tr>
+        <tr>
+          <td data-label="Kurs">Kurs D</td><td data-label="Datum">22.–26. Feb.</td><td data-label="Zeit">13.30–16.30</td>
+          <td data-label="Tagesplan">
+            <details class="daydetails">
+              <summary>Tagesplan</summary>
+              <div class="daylist">
+                <div>Mo, 22. Feb. — 13.30–16.30</div>
+                <div>Di, 23. Feb. — 13.30–16.30</div>
+                <div>Mi, 24. Feb. — 13.30–16.30</div>
+                <div>Do, 25. Feb. — 13.30–16.30</div>
+                <div>Fr, 26. Feb. — 13.30–16.30 (Rückblick)</div>
+              </div>
+            </details>
+          </td>
+          <td data-label="Standort">Stadelhofen</td><td data-label="Status" class="free">freie Plätze</td><td class="action-cell"><a href="#" class="row-btn">Anmelden</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="whywe">
+    <div class="whywe-head">
+      <span class="eyebrow">Was uns auszeichnet</span>
+      <h2>4 Gründe, die zählen</h2>
+      <p>Worauf es bei der Kurswahl wirklich ankommt.</p>
+    </div>
+
+    <div class="features">
+      <div class="feature sage">
+        <h3>Standortbestimmung zu Kursbeginn</h3>
+        <p>Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.</p>
+      </div>
+      <div class="feature gold">
+        <h3>Lernen mit Spass statt Druck</h3>
+        <p>Lernspiele und Wettbewerbe sorgen dafür, dass Üben sich nicht wie ein Test anfühlt.</p>
+      </div>
+      <div class="feature rust">
+        <h3>Praktische Lern- und Prüfungsstrategien</h3>
+        <p>Von der richtigen Lernumgebung über Konzentrationsübungen bis zur Herangehensweise an typische Aufgaben — Grundlagen, die auch später an der Gymiprüfung helfen.</p>
+      </div>
+      <div class="feature blue">
+        <h3>Kleingruppen von höchstens 8 Kindern</h3>
+        <p>Genug Raum für individuelle Fragen, ohne dass ein Kind im Kurs untergeht.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

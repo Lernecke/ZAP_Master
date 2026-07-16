@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selbststudium — 2./3. Sek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+    --ink:#16233F;
+    --ink-soft:#3C4A68;
+    --paper:#F5F6F1;
+    --card:#FFFFFE;
+    --sage:#6B8F71;
+    --sage-deep:#4E6E54;
+    --sage-pale:#E4EBE3;
+    --gold:#C89B3C;
+    --gold-deep:#7A5A1D;
+    --gold-pale:#F3E8D2;
+    --line:#DBDDD2;
+    --serif:'Fraunces', serif;
+    --sans:'Inter', sans-serif;
+    --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--sans);
+    line-height:1.5; -webkit-font-smoothing:antialiased; padding:64px 28px;
+  }
+  a{text-decoration:none; color:inherit;}
+  .wrap{max-width:1000px; margin:0 auto;}
+  nav.top{max-width:1000px;margin:0 auto 28px;font:600 13px var(--sans);color:var(--sage-deep); display:flex; gap:22px;}
+  nav.top a:hover{color:var(--ink);}
+
+  /* ---------- Hero ---------- */
+  .hero-head{max-width:640px; margin:0 auto 40px;}
+  .hero-head .badge{
+    display:inline-block; font-family:var(--serif); font-weight:600; font-size:clamp(24px,3.6vw,42px);
+    letter-spacing:0; line-height:1.15; color:#fff;
+    background:linear-gradient(135deg, #A6772A, var(--gold) 55%, #DAB569);
+    text-transform:none; padding:26px 34px; border-radius:14px; margin-bottom:24px; position:relative; overflow:hidden;
+  }
+  .hero-head .badge::after{
+    content:""; position:absolute; inset:0;
+    background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.08) 0 2px, transparent 2px 26px);
+    pointer-events:none;
+  }
+  .hero-head h1{
+    font-family:var(--serif); font-weight:600; font-size:clamp(24px,3.6vw,42px); color:var(--ink);
+    line-height:1.15; white-space:nowrap; margin-bottom:18px;
+  }
+  @media(max-width:640px){ .hero-head h1{ white-space:normal; } }
+  .hero-head p{font-size:15.5px; color:var(--ink-soft); max-width:52ch;}
+  .hero-facts{display:flex; flex-wrap:wrap; gap:28px; margin-top:22px;}
+  .hero-fact{color:var(--ink); font-size:14.5px; white-space:nowrap;}
+  .hero-fact .num{font-family:var(--serif); font-weight:600; color:var(--gold-deep); margin-right:6px;}
+  .hero-fact .lbl{font-family:var(--sans); font-weight:500;}
+
+  /* ---------- Section heads ---------- */
+  .section-head{max-width:70ch; margin:0 auto 26px; text-align:center;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--gold-deep);
+    text-transform:uppercase; display:inline-flex; align-items:center; gap:8px; margin-bottom:14px;
+  }
+  h2{
+    font-family:var(--serif); font-weight:500; font-size:clamp(24px,3vw,30px); line-height:1.2;
+    margin-bottom:12px; text-wrap:balance;
+  }
+  .section-head p{font-size:14.5px; color:var(--ink-soft); max-width:60ch; margin:0 auto;}
+
+  section{margin-bottom:56px;}
+
+  /* ---------- Feature grid (Was ist inbegriffen) ---------- */
+  .feature-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  @media(max-width:760px){ .feature-grid{grid-template-columns:1fr;} }
+  .feature{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:24px 22px;
+  }
+  .feature .mark{
+    font-family:var(--mono); font-size:11px; color:var(--gold-deep); background:var(--gold-pale);
+    display:inline-block; padding:3px 9px; border-radius:20px; margin-bottom:14px;
+  }
+  .feature h3{font-family:var(--serif); font-weight:600; font-size:18px; margin-bottom:8px;}
+  .feature p{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+
+  /* ---------- Zugangs-Hinweis ---------- */
+  .notice{
+    display:flex; gap:16px; align-items:flex-start; background:var(--gold-pale); border:1px solid #E4CE9C;
+    border-radius:10px; padding:20px 22px;
+  }
+  .notice .icon{
+    font-family:var(--mono); font-size:13px; color:#fff; background:var(--gold-deep);
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none;
+  }
+  .notice p{font-size:13.5px; color:var(--ink); line-height:1.55;}
+  .notice strong{color:var(--gold-deep);}
+
+  /* ---------- Preis-Karte ---------- */
+  .price-card{
+    background:var(--card); border:1px solid var(--sage); border-radius:12px; padding:34px 36px;
+    display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  }
+  .price-card .info .label{
+    font-family:var(--mono); font-size:11px; letter-spacing:.04em; color:var(--gold-deep); text-transform:uppercase; margin-bottom:8px; display:block;
+  }
+  .price-card .value{font-family:var(--serif); font-weight:600; font-size:34px; color:var(--ink);}
+  .price-card .note{font-size:13px; color:var(--ink-soft); margin-top:4px;}
+  .btn{
+    background:var(--ink); color:#fff; padding:14px 26px; border-radius:3px;
+    font-size:14px; font-weight:600; white-space:nowrap; display:inline-block;
+  }
+  .btn:hover{background:var(--gold-deep);}
+
+  /* ---------- FAQ ---------- */
+  .faq{max-width:760px; margin:0 auto;}
+  details{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 22px; margin-bottom:12px;
+  }
+  details + details{margin-top:12px;}
+  summary{
+    font-family:var(--sans); font-weight:600; font-size:14.5px; cursor:pointer; list-style:none;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::after{content:"+"; font-family:var(--serif); font-size:20px; color:var(--gold-deep); flex:none; margin-left:12px;}
+  details[open] summary::after{content:"–";}
+  details p{font-size:13.5px; color:var(--ink-soft); margin-top:12px; line-height:1.6;}
+
+  .back-cta{text-align:center; margin-top:8px;}
+  .back-cta a{font-family:var(--mono); font-size:12.5px; color:var(--sage-deep); font-weight:500;}
+  .back-cta a:hover{color:var(--ink);}
+
+  /* ============================================================
+     Kompakte Hauptnavigation + Breadcrumb (ersetzt reinen Zurück-Link)
+     ============================================================ */
+  .skip-link{
+    position:absolute; left:-999px; top:auto; background:var(--ink); color:#fff; padding:10px 16px;
+    border-radius:0 0 6px 0; z-index:100;
+  }
+  .skip-link:focus{left:0; top:0;}
+
+  nav.topnav{background:var(--ink); color:#fff;}
+  .navrow{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 28px;
+    max-width:1080px; margin:0 auto;
+  }
+  .logo{font-family:var(--serif); font-weight:600; font-size:23px; color:#fff;}
+  .navlinks{display:flex; align-items:center; gap:13px; font-size:13px; font-weight:500;}
+  .navlinks a{color:rgba(255,255,255,.85); padding-bottom:3px;}
+  .navlinks a:hover{color:#fff;}
+  .navlinks a.active{color:#fff; border-bottom:2px solid var(--gold);}
+  .has-dropdown{position:relative;}
+  .dd-trigger{display:flex; align-items:center; gap:5px; cursor:pointer; color:rgba(255,255,255,.85); background:none; border:0; font:inherit; padding:0 0 3px;}
+  .dd-trigger:hover{color:#fff;}
+  .dd-trigger::after{content:"▾"; font-size:9px; opacity:.8;}
+  .dropdown{
+    position:absolute; top:calc(100% + 14px); left:-16px; background:#fff; color:var(--ink);
+    border-radius:8px; padding:14px; min-width:280px; box-shadow:0 20px 40px -16px rgba(0,0,0,.35);
+    opacity:0; visibility:hidden; transform:translateY(-6px); transition:.15s ease;
+  }
+  .has-dropdown:hover .dropdown, .has-dropdown:focus-within .dropdown{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+  .dd-groups{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .dd-group-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:6px; padding:0 12px;
+  }
+  .dropdown a{
+    display:block; padding:9px 12px; border-radius:5px; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  .dropdown a:hover{background:var(--sage-pale); color:var(--sage-deep);}
+  .dropdown a.current{background:var(--sage-pale); color:var(--sage-deep); font-weight:700;}
+  .navright{display:flex; align-items:center; gap:22px; font-size:14px; font-weight:500;}
+  .navright a{color:rgba(255,255,255,.85);}
+  .navright a:hover{color:#fff;}
+
+  .nav-toggle{display:none;}
+  .hamburger{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:26px; height:20px; cursor:pointer; order:-1;
+  }
+  .hamburger span{display:block; width:100%; height:2px; background:#fff; border-radius:1px;}
+
+  @media(max-width:820px){
+    .navrow{flex-wrap:wrap;}
+    .hamburger{display:flex;}
+    .navlinks{
+      display:none; order:5; width:100%; flex-direction:column; align-items:stretch; gap:0;
+      margin-top:16px; border-top:1px solid rgba(255,255,255,.15);
+    }
+    .nav-toggle:checked ~ .navlinks{display:flex;}
+    .navlinks a, .dd-trigger{
+      padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px; width:100%;
+    }
+    .has-dropdown{width:100%;}
+    .dropdown{
+      position:static; opacity:1; visibility:visible; transform:none; display:none;
+      background:rgba(255,255,255,.06); box-shadow:none; color:#fff; min-width:0; margin-bottom:8px;
+    }
+    .has-dropdown:focus-within .dropdown{display:block;}
+    .dd-groups{grid-template-columns:1fr;}
+    .dd-group-label{color:rgba(255,255,255,.55);}
+    .dropdown a{color:#fff;}
+    .dropdown a:hover, .dropdown a.current{background:rgba(255,255,255,.1); color:#fff;}
+  }
+
+  .crumbs{
+    max-width:1080px; margin:20px auto 0; padding:0 28px; font-family:var(--mono); font-size:12px;
+    color:var(--ink-soft); display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .crumbs a{color:var(--sage-deep); font-weight:600;}
+  .crumbs a:hover{text-decoration:underline;}
+  .crumbs .sep{color:var(--line);}
+  .crumbs .current{color:var(--ink); font-weight:600;}
+  body{padding-top:0;}
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+<nav class="topnav" aria-label="Hauptnavigation">
+  <div class="navrow">
+    <a href="Startseite.html" class="logo" aria-label="Lernecke Startseite"><span style="color:#8CB392">Lern</span><em style="font-style:italic;color:#DAB569">ecke</em></a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <div class="navlinks">
+      <div class="has-dropdown">
+        <button type="button" class="dd-trigger" aria-expanded="false" aria-haspopup="true">Klassenstufen</button>
+        <div class="dropdown">
+          <div class="dd-groups">
+            <div>
+              <div class="dd-group-label">Primarschule</div>
+              <a href="Layout_4_Klasse_Hauptseite.html">4. Klasse</a>
+              <a href="Layout_5_Klasse_Hauptseite.html">5. Klasse</a>
+              <a href="Layout_6_Klasse_Hauptseite.html">6. Klasse</a>
+            </div>
+            <div>
+              <div class="dd-group-label">Sekundarschule</div>
+              <a href="Layout_1_Sek_Hauptseite.html">1. Sek</a>
+              <a href="Layout_2_Sek__Hauptseite.html" class="current">2./3. Sek</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="Layout_BMS_Hauptseite.html">BMS</a>
+      <a href="Layout_Maturapruefung_Seite.html">Matura</a>
+      <a href="Layout_Nachhilfe_Seite.html">Nachhilfe</a>
+      <a href="Layout_UeberUns_Seite.html">Über uns</a>
+    </div>
+    <div class="navright">
+      <label for="nav-toggle" class="hamburger" aria-label="Menü öffnen"><span></span><span></span><span></span></label>
+      <a href="#">Kontakt</a>
+    </div>
+  </div>
+</nav>
+
+<div class="crumbs" aria-label="Breadcrumb">
+  <a href="Startseite.html">Startseite</a><span class="sep">/</span>
+  <a href="Layout_2_Sek__Hauptseite.html">2./3. Sek</a><span class="sep">/</span>
+  <span class="current">Selbststudium</span>
+</div>
+
+<div class="wrap" id="main">
+
+  <div class="hero-head">
+    <span class="badge">Selbststudium · 2./3. Sek</span>
+    <h1>Eigenständig üben, gezielt vorbereiten</h1>
+    <p>Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.</p>
+    <div class="hero-facts">
+      <div class="hero-fact"><span class="num">3</span><span class="lbl">Aufsätze mit Feedback</span></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Was ist inbegriffen</span>
+      <h2>Alle Materialien an einem Ort</h2>
+      <p>Kein Kurs, keine festen Termine — nur die Unterlagen und die Rückmeldung, die es für ein selbstständiges Training braucht.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <span class="mark">Übungen</span>
+        <h3>Übungsaufgaben</h3>
+        <p>Aufgaben zu allen Prüfungsbereichen — von Sprachbetrachtung bis Textverständnis und Mathematik.</p>
+      </div>
+      <div class="feature">
+        <span class="mark">Prüfungen</span>
+        <h3>Alte Prüfungen &amp; Lösungen</h3>
+        <p>Bisherige Aufnahmeprüfungen im Original, jeweils mit vollständigen Lösungen zum Selbstvergleich.</p>
+      </div>
+      <div class="feature">
+        <span class="mark">Feedback</span>
+        <h3>Aufsatz-Feedback</h3>
+        <p>Bis zu 3 eigene Aufsätze einreichen und eine persönliche, schriftliche Rückmeldung erhalten.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="notice">
+      <span class="icon">i</span>
+      <p><strong>Zugriff verfällt nach der Gymiprüfung:</strong> Der Zugang zur Materialplattform ist bis zur Aufnahmeprüfung im März 2027 gültig und wird danach automatisch deaktiviert. Eine Verlängerung ist nicht vorgesehen.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="price-card">
+      <div class="info">
+        <span class="label">Selbststudium</span>
+        <span class="value">CHF 190</span>
+        <p class="note">Einmalig · Zugang bis zur Prüfung im März 2027</p>
+      </div>
+      <a href="#" class="btn">Zugang erhalten</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Häufige Fragen</h2>
+    </div>
+    <div class="faq">
+      <details open>
+        <summary>Ist das Selbststudium an eine Kursteilnahme gebunden?</summary>
+        <p>Nein. Das Selbststudium ist ein eigenständiges Angebot und kann unabhängig von einer Teilnahme am Halbjahreskurs oder Intensivkurs gebucht werden.</p>
+      </details>
+      <details>
+        <summary>Wie lange ist der Zugang gültig?</summary>
+        <p>Der Zugang gilt ab Erhalt der Zugangsdaten bis zur Gymiprüfung im März 2027. Danach wird er automatisch deaktiviert.</p>
+      </details>
+      <details>
+        <summary>Wie funktioniert das Aufsatz-Feedback?</summary>
+        <p>Du reichst deinen Aufsatz über die Plattform ein und erhältst innerhalb weniger Tage eine schriftliche Rückmeldung mit konkreten Verbesserungshinweisen. Insgesamt können bis zu drei Aufsätze eingereicht werden.</p>
+      </details>
+      <details>
+        <summary>Sind die Lösungen zu allen Aufgaben enthalten?</summary>
+        <p>Ja, zu sämtlichen Übungsaufgaben und alten Prüfungen liegen vollständige Lösungen bei, sodass eigenständig kontrolliert werden kann.</p>
+      </details>
+    </div>
+  </section>
+
+  <div class="back-cta">
+    <a href="Layout_2_Sek__Hauptseite.html">← Zurück zur Übersicht 2./3. Sek</a>
+  </div>
+
+</div>
+</body>
+</html>

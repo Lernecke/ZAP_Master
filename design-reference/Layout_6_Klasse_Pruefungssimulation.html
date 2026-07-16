@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Pruefungssimulation Seitenkonzept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:light dark;
+    --ink:#16233F; --ink-soft:#3C4A68; --paper:#F5F6F1; --card:#FFFFFE;
+    --sage:#6B8F71; --sage-deep:#4E6E54; --sage-pale:#E4EBE3;
+    --gold:#C89B3C; --gold-pale:#F3E8D2; --line:#DBDDD2;
+    --serif:'Fraunces', serif; --sans:'Inter', sans-serif; --mono:'IBM Plex Mono', monospace;
+  }
+  html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:#F5F6F1}iframe{display:block;width:100%;max-width:736px;height:calc(100vh - 2rem);margin:0 auto;border:0;border-radius:10px;box-shadow:0 14px 36px rgba(22,35,63,.08)}
+  /* ============================================================
+     Kompakte Hauptnavigation + Breadcrumb (ersetzt reinen Zurück-Link)
+     ============================================================ */
+  .skip-link{
+    position:absolute; left:-999px; top:auto; background:var(--ink); color:#fff; padding:10px 16px;
+    border-radius:0 0 6px 0; z-index:100;
+  }
+  .skip-link:focus{left:0; top:0;}
+
+  nav.topnav{background:var(--ink); color:#fff;}
+  .navrow{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 28px;
+    max-width:1080px; margin:0 auto;
+  }
+  .logo{font-family:var(--serif); font-weight:600; font-size:23px; color:#fff;}
+  .navlinks{display:flex; align-items:center; gap:13px; font-size:13px; font-weight:500;}
+  .navlinks a{color:rgba(255,255,255,.85); padding-bottom:3px;}
+  .navlinks a:hover{color:#fff;}
+  .navlinks a.active{color:#fff; border-bottom:2px solid var(--gold);}
+  .has-dropdown{position:relative;}
+  .dd-trigger{display:flex; align-items:center; gap:5px; cursor:pointer; color:rgba(255,255,255,.85); background:none; border:0; font:inherit; padding:0 0 3px;}
+  .dd-trigger:hover{color:#fff;}
+  .dd-trigger::after{content:"▾"; font-size:9px; opacity:.8;}
+  .dropdown{
+    position:absolute; top:calc(100% + 14px); left:-16px; background:#fff; color:var(--ink);
+    border-radius:8px; padding:14px; min-width:280px; box-shadow:0 20px 40px -16px rgba(0,0,0,.35);
+    opacity:0; visibility:hidden; transform:translateY(-6px); transition:.15s ease;
+  }
+  .has-dropdown:hover .dropdown, .has-dropdown:focus-within .dropdown{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+  .dd-groups{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .dd-group-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:6px; padding:0 12px;
+  }
+  .dropdown a{
+    display:block; padding:9px 12px; border-radius:5px; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  .dropdown a:hover{background:var(--sage-pale); color:var(--sage-deep);}
+  .dropdown a.current{background:var(--sage-pale); color:var(--sage-deep); font-weight:700;}
+  .navright{display:flex; align-items:center; gap:22px; font-size:14px; font-weight:500;}
+  .navright a{color:rgba(255,255,255,.85);}
+  .navright a:hover{color:#fff;}
+
+  .nav-toggle{display:none;}
+  .hamburger{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:26px; height:20px; cursor:pointer; order:-1;
+  }
+  .hamburger span{display:block; width:100%; height:2px; background:#fff; border-radius:1px;}
+
+  @media(max-width:820px){
+    .navrow{flex-wrap:wrap;}
+    .hamburger{display:flex;}
+    .navlinks{
+      display:none; order:5; width:100%; flex-direction:column; align-items:stretch; gap:0;
+      margin-top:16px; border-top:1px solid rgba(255,255,255,.15);
+    }
+    .nav-toggle:checked ~ .navlinks{display:flex;}
+    .navlinks a, .dd-trigger{
+      padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px; width:100%;
+    }
+    .has-dropdown{width:100%;}
+    .dropdown{
+      position:static; opacity:1; visibility:visible; transform:none; display:none;
+      background:rgba(255,255,255,.06); box-shadow:none; color:#fff; min-width:0; margin-bottom:8px;
+    }
+    .has-dropdown:focus-within .dropdown{display:block;}
+    .dd-groups{grid-template-columns:1fr;}
+    .dd-group-label{color:rgba(255,255,255,.55);}
+    .dropdown a{color:#fff;}
+    .dropdown a:hover, .dropdown a.current{background:rgba(255,255,255,.1); color:#fff;}
+  }
+
+  .crumbs{
+    max-width:1080px; margin:20px auto 0; padding:0 28px; font-family:var(--mono); font-size:12px;
+    color:var(--ink-soft); display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .crumbs a{color:var(--sage-deep); font-weight:600;}
+  .crumbs a:hover{text-decoration:underline;}
+  .crumbs .sep{color:var(--line);}
+  .crumbs .current{color:var(--ink); font-weight:600;}
+  body{padding-top:0;}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+<nav class="topnav" aria-label="Hauptnavigation">
+  <div class="navrow">
+    <a href="Startseite.html" class="logo" aria-label="Lernecke Startseite"><span style="color:#8CB392">Lern</span><em style="font-style:italic;color:#DAB569">ecke</em></a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <div class="navlinks">
+      <div class="has-dropdown">
+        <button type="button" class="dd-trigger" aria-expanded="false" aria-haspopup="true">Klassenstufen</button>
+        <div class="dropdown">
+          <div class="dd-groups">
+            <div>
+              <div class="dd-group-label">Primarschule</div>
+              <a href="Layout_4_Klasse_Hauptseite.html">4. Klasse</a>
+              <a href="Layout_5_Klasse_Hauptseite.html">5. Klasse</a>
+              <a href="Layout_6_Klasse_Hauptseite.html" class="current">6. Klasse</a>
+            </div>
+            <div>
+              <div class="dd-group-label">Sekundarschule</div>
+              <a href="Layout_1_Sek_Hauptseite.html">1. Sek</a>
+              <a href="Layout_2_Sek__Hauptseite.html">2./3. Sek</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="Layout_BMS_Hauptseite.html">BMS</a>
+      <a href="Layout_Maturapruefung_Seite.html">Matura</a>
+      <a href="Layout_Nachhilfe_Seite.html">Nachhilfe</a>
+      <a href="Layout_UeberUns_Seite.html">Über uns</a>
+    </div>
+    <div class="navright">
+      <label for="nav-toggle" class="hamburger" aria-label="Menü öffnen"><span></span><span></span><span></span></label>
+      <a href="#">Kontakt</a>
+    </div>
+  </div>
+</nav>
+
+<div class="crumbs" aria-label="Breadcrumb">
+  <a href="Startseite.html">Startseite</a><span class="sep">/</span>
+  <a href="Layout_6_Klasse_Hauptseite.html">6. Klasse</a><span class="sep">/</span>
+  <span class="current">Prüfungssimulation</span>
+</div>
+<iframe id="main" sandbox="allow-scripts" referrerpolicy="no-referrer" title="Pruefungssimulation Seitenkonzept" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;Pruefungssimulation Seitenkonzept&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(--background) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: light-dark(rgb(255 255 255), rgb(24 24 24));
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 12.5px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--viz-font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;exam-simulation-page&quot;&gt;
+  &lt;style&gt;
+    @import url(&#x27;https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Inter:wght@400;500&amp;display=swap&#x27;);
+    #exam-simulation-page { --zap-sage: var(--viz-series-3); --zap-gold: var(--viz-series-2); --zap-rust: var(--viz-series-4); --zap-blue: var(--viz-series-1); display: grid; gap: 1.5rem; max-width: 900px; margin-inline: auto; color: var(--foreground); font-family: &#x27;Inter&#x27;, sans-serif; }
+    #exam-simulation-page h1, #exam-simulation-page h2, #exam-simulation-page h3 { font-family: &#x27;Fraunces&#x27;, serif; font-weight: 500; }
+    #exam-simulation-page .hero { display: grid; gap: 1.5rem; align-items: center; padding: 2rem 0 1.25rem; border-bottom: 1px solid var(--border); }
+    #exam-simulation-page .eyebrow { display: flex; gap: .5rem; align-items: center; margin-bottom: .75rem; }
+    #exam-simulation-page .eyebrow, #exam-simulation-page th, #exam-simulation-page summary { font-family: &#x27;IBM Plex Mono&#x27;, monospace; }
+    #exam-simulation-page .hero-copy { display: grid; gap: .65rem; }
+    #exam-simulation-page .hero-copy p { max-width: 62ch; margin: 0; color: var(--muted-foreground); }
+    #exam-simulation-page .section { display: grid; gap: 1.1rem; }
+    #exam-simulation-page .booking-section { border-top: 1px solid var(--border); padding-top: 1.75rem; }
+    #exam-simulation-page .section-head { display: grid; gap: .35rem; max-width: 62ch; }
+    #exam-simulation-page .section-head p { margin: 0; color: var(--muted-foreground); }
+    #exam-simulation-page .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    #exam-simulation-page .step { display: grid; align-content: start; background: var(--background); border-top: 4px solid var(--border); }
+    #exam-simulation-page .step-head { display: grid; grid-template-columns: auto 1fr; gap: .65rem; align-items: center; padding: .8rem 1rem; }
+    #exam-simulation-page .step p { padding: .85rem 1rem 1rem; background: var(--background); }
+    #exam-simulation-page .step:nth-child(1) { border-top-color: var(--zap-blue); }
+    #exam-simulation-page .step:nth-child(1) .step-head { background: color-mix(in srgb, var(--zap-blue) 18%, var(--card)); }
+    #exam-simulation-page .step:nth-child(2) { border-top-color: var(--foreground); }
+    #exam-simulation-page .step:nth-child(2) .step-head { background: color-mix(in srgb, var(--foreground) 11%, var(--card)); }
+    #exam-simulation-page .step:nth-child(3) { border-top-color: var(--zap-gold); }
+    #exam-simulation-page .step:nth-child(3) .step-head { background: color-mix(in srgb, var(--zap-gold) 18%, var(--card)); }
+    #exam-simulation-page .step:nth-child(4) { border-top-color: var(--zap-sage); }
+    #exam-simulation-page .step:nth-child(4) .step-head { background: color-mix(in srgb, var(--zap-sage) 18%, var(--card)); }
+    #exam-simulation-page .step-number { width: 1.25rem; height: 1.25rem; display: grid; place-items: center; border-radius: 999px; background: transparent; color: var(--muted-foreground); border: 1px solid var(--border); font-family: &#x27;IBM Plex Mono&#x27;, monospace; }
+    #exam-simulation-page .step p, #exam-simulation-page .feature p { margin: 0; color: var(--muted-foreground); }
+    #exam-simulation-page .feature { display: grid; align-content: start; gap: 0; padding: 0; overflow: hidden; background: var(--background); border-top: 4px solid var(--border); }
+    #exam-simulation-page .feature-head { padding: .8rem 1rem; }
+    #exam-simulation-page .feature &gt; p { padding: .85rem 1rem 1rem; background: var(--background); }
+    #exam-simulation-page .feature:nth-child(1) { border-top-color: var(--zap-blue); }
+    #exam-simulation-page .feature:nth-child(1) .feature-head { background: color-mix(in srgb, var(--zap-blue) 18%, var(--card)); }
+    #exam-simulation-page .feature:nth-child(2) { border-top-color: var(--zap-gold); }
+    #exam-simulation-page .feature:nth-child(2) .feature-head { background: color-mix(in srgb, var(--zap-gold) 18%, var(--card)); }
+    #exam-simulation-page .feature:nth-child(3) { border-top-color: var(--zap-sage); }
+    #exam-simulation-page .feature:nth-child(3) .feature-head { background: color-mix(in srgb, var(--zap-sage) 18%, var(--card)); }
+    #exam-simulation-page .feature-line { display: flex; gap: .5rem; align-items: center; }
+    #exam-simulation-page .feature-line i { color: var(--foreground); }
+    #exam-simulation-page .price-row { justify-content: flex-end; width: 100%; margin-top: .35rem; padding-top: .8rem; border-top: 1px solid var(--border); }
+    #exam-simulation-page .price-emphasis { font-family: &#x27;Fraunces&#x27;, serif; font-size: calc(var(--font-size-base) * 2); font-weight: 500; color: var(--foreground); }
+    #exam-simulation-page .result { display: grid; gap: .8rem; padding: 1rem 0 .75rem; border-block: 1px solid var(--border); }
+    #exam-simulation-page .result-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; align-items: start; }
+    #exam-simulation-page .result-item { display: grid; align-content: start; gap: 0; background: var(--background); border-top: 4px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    #exam-simulation-page .result-head { display: flex; align-items: center; gap: .5rem; padding: .8rem 1rem; }
+    #exam-simulation-page .result-item &gt; p { margin: 0; padding: .65rem .9rem .75rem; background: var(--background); color: var(--muted-foreground); }
+    #exam-simulation-page .result-item:nth-child(1), #exam-simulation-page .result-item:nth-child(3) { border-top-color: var(--zap-blue); }
+    #exam-simulation-page .result-item:nth-child(1) .result-head, #exam-simulation-page .result-item:nth-child(3) .result-head { background: color-mix(in srgb, var(--zap-blue) 18%, var(--card)); }
+    #exam-simulation-page .result-item:nth-child(2) { border-top-color: var(--zap-gold); }
+    #exam-simulation-page .result-item:nth-child(2) .result-head { background: color-mix(in srgb, var(--zap-gold) 18%, var(--card)); }
+    #exam-simulation-page .result-item:nth-child(4) { border-top-color: var(--zap-sage); }
+    #exam-simulation-page .result-item:nth-child(4) .result-head { background: color-mix(in srgb, var(--zap-sage) 18%, var(--card)); }
+    #exam-simulation-page .table-wrap { width: 100%; overflow-x: auto; }
+    #exam-simulation-page table { width: 100%; border-collapse: collapse; min-width: 620px; }
+    #exam-simulation-page th, #exam-simulation-page td { text-align: left; padding: .75rem .55rem; border-top: 1px solid var(--border); }
+    #exam-simulation-page th { font-weight: 500; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .05em; }
+    #exam-simulation-page tbody tr:nth-child(even) { background: var(--muted); }
+    #exam-simulation-page .status { display: inline-flex; align-items: center; gap: .35rem; }
+    #exam-simulation-page .status-dot { width: .5rem; height: .5rem; border-radius: 999px; background: var(--viz-series-1); }
+    #exam-simulation-page .faq { display: grid; gap: .5rem; }
+    #exam-simulation-page .accordion-group { display: grid; gap: .25rem; }
+    #exam-simulation-page .accordion-group details { padding: .9rem 0; }
+    #exam-simulation-page .accordion-content { display: grid; gap: .7rem; padding-top: .7rem; color: var(--muted-foreground); }
+    #exam-simulation-page .accordion-content p { margin: 0; }
+    #exam-simulation-page .exam-timeline { display: grid; gap: .75rem; }
+    #exam-simulation-page .timeline-track { display: grid; grid-template-columns: 1.1fr auto 1.25fr auto .9fr; align-items: stretch; gap: .35rem; }
+    #exam-simulation-page .timeline-segment { display: grid; align-content: start; gap: .2rem; min-width: 0; padding: .65rem .8rem; background: color-mix(in srgb, var(--zap-blue) 13%, var(--card)); border-top: 4px solid var(--zap-blue); border-radius: var(--radius); overflow: hidden; }
+    #exam-simulation-page .timeline-segment.math { background: color-mix(in srgb, var(--zap-gold) 16%, var(--card)); border-top-color: var(--zap-gold); }
+    #exam-simulation-page .timeline-segment span { color: var(--muted-foreground); }
+    #exam-simulation-page .timeline-pause { display: grid; place-items: center; color: var(--muted-foreground); }
+    #exam-simulation-page .timeline-pause::before { content: &quot;&quot;; width: 1px; height: 100%; min-height: 2.5rem; background: var(--border); grid-area: 1 / 1; }
+    #exam-simulation-page .timeline-pause i { grid-area: 1 / 1; background: var(--background); }
+    #exam-simulation-page .timeline-note { display: flex; gap: .5rem; align-items: flex-start; color: var(--muted-foreground); }
+    #exam-simulation-page .after-exam { display: grid; gap: 1rem; }
+    #exam-simulation-page .feedback-flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    #exam-simulation-page .feedback-step { display: grid; align-content: start; gap: 0; background: var(--background); border-top: 4px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    #exam-simulation-page .feedback-head { padding: .8rem 1rem; }
+    #exam-simulation-page .feedback-step &gt; p { padding: .85rem 1rem 1rem; background: var(--background); }
+    #exam-simulation-page .feedback-step:nth-child(1) { border-top-color: var(--zap-blue); }
+    #exam-simulation-page .feedback-step:nth-child(1) .feedback-head { background: color-mix(in srgb, var(--zap-blue) 18%, var(--card)); }
+    #exam-simulation-page .feedback-step:nth-child(2) { border-top-color: var(--zap-gold); }
+    #exam-simulation-page .feedback-step:nth-child(2) .feedback-head { background: color-mix(in srgb, var(--zap-gold) 18%, var(--card)); }
+    #exam-simulation-page .feedback-step:nth-child(3) { border-top-color: var(--zap-sage); }
+    #exam-simulation-page .feedback-step:nth-child(3) .feedback-head { background: color-mix(in srgb, var(--zap-sage) 18%, var(--card)); }
+    #exam-simulation-page details { border-bottom: 1px solid var(--border); padding: .75rem 0; }
+    #exam-simulation-page summary { cursor: pointer; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    #exam-simulation-page summary::after { content: &quot;+&quot;; width: 1.4rem; height: 1.4rem; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 999px; }
+    #exam-simulation-page details[open] summary::after { content: &quot;×&quot;; color: var(--zap-sage); border-color: var(--zap-sage); }
+    #exam-simulation-page details p { margin: .65rem 0 0; color: var(--muted-foreground); max-width: 70ch; }
+    #exam-simulation-page .step:nth-child(1) .step-head,
+    #exam-simulation-page .feature:nth-child(1) .feature-head,
+    #exam-simulation-page .result-item:nth-child(1) .result-head,
+    #exam-simulation-page .result-item:nth-child(3) .result-head,
+    #exam-simulation-page .feedback-step:nth-child(1) .feedback-head { background: color-mix(in srgb, var(--zap-blue) 6%, var(--card)); }
+    #exam-simulation-page .step:nth-child(2) .step-head { background: color-mix(in srgb, var(--foreground) 4%, var(--card)); }
+    #exam-simulation-page .step:nth-child(3) .step-head,
+    #exam-simulation-page .feature:nth-child(2) .feature-head,
+    #exam-simulation-page .result-item:nth-child(2) .result-head,
+    #exam-simulation-page .feedback-step:nth-child(2) .feedback-head { background: color-mix(in srgb, var(--zap-gold) 6%, var(--card)); }
+    #exam-simulation-page .step:nth-child(4) .step-head,
+    #exam-simulation-page .feature:nth-child(3) .feature-head,
+    #exam-simulation-page .result-item:nth-child(4) .result-head,
+    #exam-simulation-page .feedback-step:nth-child(3) .feedback-head { background: color-mix(in srgb, var(--zap-sage) 6%, var(--card)); }
+    #exam-simulation-page .timeline-segment { background: color-mix(in srgb, var(--zap-blue) 4%, var(--card)); }
+    #exam-simulation-page .timeline-segment.math { background: color-mix(in srgb, var(--zap-gold) 5%, var(--card)); }
+    @media (max-width: 680px) {
+      #exam-simulation-page .hero, #exam-simulation-page .result { grid-template-columns: 1fr; }
+      #exam-simulation-page .flow { grid-template-columns: 1fr 1fr; }
+      #exam-simulation-page .feedback-flow { grid-template-columns: 1fr; }
+      #exam-simulation-page .result-list { grid-template-columns: 1fr 1fr; }
+      #exam-simulation-page .timeline-track { grid-template-columns: 1fr; }
+      #exam-simulation-page .timeline-pause { min-height: 1.5rem; }
+      #exam-simulation-page .timeline-pause::before { width: 100%; height: 1px; min-height: 0; }
+    }
+    @media (max-width: 420px) {
+      #exam-simulation-page .flow { grid-template-columns: 1fr; }
+      #exam-simulation-page .result-list { grid-template-columns: 1fr; }
+    }
+  &lt;/style&gt;
+
+  &lt;section class=&quot;hero&quot;&gt;
+    &lt;div class=&quot;hero-copy&quot;&gt;
+      &lt;div class=&quot;eyebrow&quot;&gt;
+        &lt;span class=&quot;viz-badge&quot;&gt;Gymiprüfung 2027&lt;/span&gt;
+        &lt;span class=&quot;text-small text-muted&quot;&gt;6. Klasse · Langgymnasium&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;h1&gt;Prüfungssimulation unter realistischen Bedingungen&lt;/h1&gt;
+      &lt;p&gt;Die echte Prüfungssituation kennenlernen, Zeitmanagement trainieren und gezielt erkennen, wo bis zur Gymiprüfung noch Lernbedarf besteht.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section&quot; id=&quot;ablauf&quot;&gt;
+    &lt;div class=&quot;section-head&quot;&gt;
+      &lt;h2&gt;Ablauf der Prüfungssimulation&lt;/h2&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;flow&quot; aria-label=&quot;Ablauf in vier Schritten&quot;&gt;
+      &lt;div class=&quot;step&quot;&gt;&lt;div class=&quot;step-head&quot;&gt;&lt;span class=&quot;step-number&quot;&gt;1&lt;/span&gt;&lt;h3&gt;Einführung&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Ablauf, Regeln und Material werden kurz erklärt.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;step&quot;&gt;&lt;div class=&quot;step-head&quot;&gt;&lt;span class=&quot;step-number&quot;&gt;2&lt;/span&gt;&lt;h3&gt;Prüfung&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Deutsch und Mathematik unter echten Zeitvorgaben.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;step&quot;&gt;&lt;div class=&quot;step-head&quot;&gt;&lt;span class=&quot;step-number&quot;&gt;3&lt;/span&gt;&lt;h3&gt;Korrektur&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Fachliche Bewertung mit nachvollziehbarer Punktevergabe.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;step&quot;&gt;&lt;div class=&quot;step-head&quot;&gt;&lt;span class=&quot;step-number&quot;&gt;4&lt;/span&gt;&lt;h3&gt;Auswertung&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Stärken, Lücken und nächste Lernschritte werden sichtbar.&lt;/p&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;exam-timeline&quot; aria-label=&quot;Zeitstrahl der Prüfung für die 6. Klasse&quot;&gt;
+      &lt;div class=&quot;timeline-track&quot;&gt;
+        &lt;div class=&quot;timeline-segment german&quot;&gt;&lt;strong&gt;Deutsch Sprachprüfung&lt;/strong&gt;&lt;span&gt;45 Minuten&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;timeline-pause&quot; aria-label=&quot;Pause&quot;&gt;&lt;i data-lucide=&quot;coffee&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/div&gt;
+        &lt;div class=&quot;timeline-segment math&quot;&gt;&lt;strong&gt;Mathematik&lt;/strong&gt;&lt;span&gt;60 Minuten&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;timeline-pause&quot; aria-label=&quot;Pause&quot;&gt;&lt;i data-lucide=&quot;coffee&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/div&gt;
+        &lt;div class=&quot;timeline-segment german&quot;&gt;&lt;strong&gt;Deutsch Aufsatz&lt;/strong&gt;&lt;span&gt;60 Minuten&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;timeline-note&quot;&gt;&lt;i data-lucide=&quot;clock-3&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;Vormittagsprüfung mit prüfungsnaher Sitzordnung, Aufsicht, zugelassenen Hilfsmitteln und Pausen.&lt;/span&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section&quot;&gt;
+    &lt;div class=&quot;section-head&quot;&gt;&lt;h2&gt;Prüfungsnahe Bedingungen&lt;/h2&gt;&lt;/div&gt;
+    &lt;div class=&quot;viz-grid&quot;&gt;
+      &lt;div class=&quot;card feature&quot;&gt;&lt;div class=&quot;feature-head&quot;&gt;&lt;div class=&quot;feature-line&quot;&gt;&lt;i data-lucide=&quot;clock&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Echte Zeitvorgaben&lt;/h3&gt;&lt;/div&gt;&lt;/div&gt;&lt;p&gt;Die Aufgaben werden im vorgesehenen Zeitrahmen und ohne Unterbrechung gelöst.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;card feature&quot;&gt;&lt;div class=&quot;feature-head&quot;&gt;&lt;div class=&quot;feature-line&quot;&gt;&lt;i data-lucide=&quot;file-check-2&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Aufgaben&lt;/h3&gt;&lt;/div&gt;&lt;/div&gt;&lt;p&gt;Aufgabentypen, Umfang und Schwierigkeitsgrad orientieren sich an der Aufnahmeprüfung.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;card feature&quot;&gt;&lt;div class=&quot;feature-head&quot;&gt;&lt;div class=&quot;feature-line&quot;&gt;&lt;i data-lucide=&quot;school&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Ruhige Umgebung&lt;/h3&gt;&lt;/div&gt;&lt;/div&gt;&lt;p&gt;Eine kontrollierte Durchführung hilft, Nervosität und Konzentration realistisch zu erleben.&lt;/p&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;result&quot;&gt;
+    &lt;div class=&quot;section-head&quot;&gt;
+      &lt;h2&gt;Aufsatzkorrektur&lt;/h2&gt;
+      &lt;p&gt;Der Aufsatz wird anhand eines einheitlichen Bewertungsrasters benotet und mit konkreten Korrekturhinweisen versehen.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;result-list&quot;&gt;
+      &lt;div class=&quot;result-item&quot;&gt;&lt;div class=&quot;result-head&quot;&gt;&lt;i data-lucide=&quot;award&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Note&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Gesamtnote des Aufsatzes&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;result-item&quot;&gt;&lt;div class=&quot;result-head&quot;&gt;&lt;i data-lucide=&quot;list-tree&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Inhalt &amp;amp; Aufbau&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Aufgabenbezug, roter Faden und Argumentation&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;result-item&quot;&gt;&lt;div class=&quot;result-head&quot;&gt;&lt;i data-lucide=&quot;languages&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Sprache &amp;amp; Ausdruck&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Wortwahl, Satzbau und Verständlichkeit&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;result-item&quot;&gt;&lt;div class=&quot;result-head&quot;&gt;&lt;i data-lucide=&quot;message-square-text&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;Hinweise&lt;/h3&gt;&lt;/div&gt;&lt;p&gt;Grammatik, Rechtschreibung und markierte Textstellen&lt;/p&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;after-exam&quot;&gt;
+    &lt;div class=&quot;section-head&quot;&gt;
+      &lt;h2&gt;Aufsatzkorrektur im persönlichen Portal&lt;/h2&gt;
+      &lt;p&gt;Die Prüfungsunterlagen nimmt der Schüler nach Hause. Nur der Aufsatz bleibt zur Korrektur beim Team, wird danach gescannt und zusammen mit der fachlichen Rückmeldung dem persönlichen Teilnehmerkonto zugeordnet.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;feedback-flow&quot; aria-label=&quot;Feedbackprozess in drei Schritten&quot;&gt;
+      &lt;div class=&quot;feedback-step&quot;&gt;&lt;div class=&quot;feedback-head&quot;&gt;&lt;div class=&quot;feature-line&quot;&gt;&lt;i data-lucide=&quot;scan-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;1. Digitalisieren&lt;/h3&gt;&lt;/div&gt;&lt;/div&gt;&lt;p class=&quot;text-muted&quot;&gt;Der handschriftliche Aufsatz wird vollständig gescannt.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;feedback-step&quot;&gt;&lt;div class=&quot;feedback-head&quot;&gt;&lt;div class=&quot;feature-line&quot;&gt;&lt;i data-lucide=&quot;message-square-text&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;2. Rückmeldung&lt;/h3&gt;&lt;/div&gt;&lt;/div&gt;&lt;p class=&quot;text-muted&quot;&gt;Die Lehrperson markiert Stärken, Fehler und konkrete Verbesserungen.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;feedback-step&quot;&gt;&lt;div class=&quot;feedback-head&quot;&gt;&lt;div class=&quot;feature-line&quot;&gt;&lt;i data-lucide=&quot;user-check&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;h3&gt;3. Freigeben&lt;/h3&gt;&lt;/div&gt;&lt;/div&gt;&lt;p class=&quot;text-muted&quot;&gt;Der Teilnehmer erhält eine Benachrichtigung und sieht alles nach dem Login.&lt;/p&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section booking-section&quot; id=&quot;termine&quot;&gt;
+    &lt;div class=&quot;section-head&quot;&gt;
+      &lt;h2&gt;Termine&lt;/h2&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;table-wrap&quot;&gt;
+      &lt;table&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Datum&lt;/th&gt;&lt;th&gt;Zeit&lt;/th&gt;&lt;th&gt;Standort&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;&lt;td&gt;Dienstag, 16. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Donnerstag, 18. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Dienstag, 23. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Samstag, 27. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;viz-row price-row&quot;&gt;&lt;span class=&quot;price-emphasis&quot;&gt;CHF 125.–&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;accordion-group&quot;&gt;
+      &lt;details&gt;&lt;summary&gt;Wie viele Simulationen sind sinnvoll?&lt;/summary&gt;&lt;div class=&quot;accordion-content&quot;&gt;&lt;p&gt;Eine erste Simulation zeigt den Standort. Eine zweite kann später prüfen, ob Zeitmanagement und Lernschwerpunkte verbessert wurden.&lt;/p&gt;&lt;/div&gt;&lt;/details&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section&quot;&gt;
+    &lt;div class=&quot;section-head&quot;&gt;&lt;h2&gt;Häufige Fragen&lt;/h2&gt;&lt;/div&gt;
+    &lt;div class=&quot;faq&quot;&gt;
+      &lt;details&gt;&lt;summary&gt;Entsprechen die Aufgaben der echten Gymiprüfung?&lt;/summary&gt;&lt;p&gt;Die Aufgaben orientieren sich an den relevanten Aufgabentypen, Anforderungen und Zeitvorgaben. Es werden keine zukünftigen Originalprüfungen verwendet.&lt;/p&gt;&lt;/details&gt;
+      &lt;details&gt;&lt;summary&gt;Wird die gesamte Prüfung korrigiert?&lt;/summary&gt;&lt;p&gt;Der Aufsatz wird persönlich durch eine Lehrperson korrigiert und mit schriftlichem Feedback ins Portal geladen. Für Mathematik und Deutsch Sprache stehen detaillierte Lösungen zur Selbstkorrektur bereit.&lt;/p&gt;&lt;/details&gt;
+      &lt;details&gt;&lt;summary&gt;Wann erscheint der gescannte Aufsatz im Portal?&lt;/summary&gt;&lt;p&gt;Nach der fachlichen Korrektur wird der Scan dem persönlichen Teilnehmerkonto zugeordnet. Sobald er freigegeben ist, erhält der Teilnehmer eine Benachrichtigung.&lt;/p&gt;&lt;/details&gt;
+      &lt;details&gt;&lt;summary&gt;Wer kann das Feedback sehen?&lt;/summary&gt;&lt;p&gt;Nur berechtigte Personen im geschützten Teilnehmerkonto sowie die zuständigen Lehrpersonen können auf die Prüfungsunterlagen zugreifen.&lt;/p&gt;&lt;/details&gt;
+      &lt;details&gt;&lt;summary&gt;Kann das Feedback mit einer Lehrperson besprochen werden?&lt;/summary&gt;&lt;p&gt;Optional kann ein persönliches Auswertungsgespräch oder eine Nachbesprechung gebucht werden.&lt;/p&gt;&lt;/details&gt;
+      &lt;details&gt;&lt;summary&gt;Kann man auch ohne laufenden Vorbereitungskurs teilnehmen?&lt;/summary&gt;&lt;p&gt;Ja. Die Prüfungssimulation eignet sich auch als unabhängige Standortbestimmung.&lt;/p&gt;&lt;/details&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEv
