@@ -900,6 +900,9 @@ html&gt;body{padding:0}&lt;/style&gt;
     #exam-simulation-page .booking-section { border-top: 1px solid var(--border); padding-top: 1.75rem; }
     #exam-simulation-page .section-head { display: grid; gap: .35rem; max-width: 62ch; }
     #exam-simulation-page .section-head p { margin: 0; color: var(--muted-foreground); }
+    #exam-simulation-page .section-head.numbered { grid-template-columns: auto 1fr; column-gap: .75rem; align-items: center; }
+    #exam-simulation-page .section-head.numbered &gt; p { grid-column: 2; }
+    #exam-simulation-page .section-number { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; color: var(--muted-foreground); font-family: &#x27;IBM Plex Mono&#x27;, monospace; font-size: 13px; }
     #exam-simulation-page .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     #exam-simulation-page .step { display: grid; align-content: start; background: var(--background); border-top: 4px solid var(--border); }
     #exam-simulation-page .step-head { display: grid; grid-template-columns: auto 1fr; gap: .65rem; align-items: center; padding: .8rem 1rem; }
@@ -970,6 +973,16 @@ html&gt;body{padding:0}&lt;/style&gt;
     #exam-simulation-page .feedback-step:nth-child(2) .feedback-head { background: color-mix(in srgb, var(--zap-gold) 18%, var(--card)); }
     #exam-simulation-page .feedback-step:nth-child(3) { border-top-color: var(--zap-sage); }
     #exam-simulation-page .feedback-step:nth-child(3) .feedback-head { background: color-mix(in srgb, var(--zap-sage) 18%, var(--card)); }
+    #exam-simulation-page .flow,
+    #exam-simulation-page .feature,
+    #exam-simulation-page .result-item,
+    #exam-simulation-page .timeline-segment,
+    #exam-simulation-page .feedback-step { border-radius: 0; }
+    #exam-simulation-page .step,
+    #exam-simulation-page .feature,
+    #exam-simulation-page .result-item,
+    #exam-simulation-page .timeline-segment,
+    #exam-simulation-page .feedback-step { border-top-width: 2px; }
     #exam-simulation-page details { border-bottom: 1px solid var(--border); padding: .75rem 0; }
     #exam-simulation-page summary { cursor: pointer; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     #exam-simulation-page summary::after { content: &quot;+&quot;; width: 1.4rem; height: 1.4rem; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 999px; }
@@ -1018,7 +1031,8 @@ html&gt;body{padding:0}&lt;/style&gt;
   &lt;/section&gt;
 
   &lt;section class=&quot;section&quot; id=&quot;ablauf&quot;&gt;
-    &lt;div class=&quot;section-head&quot;&gt;
+    &lt;div class=&quot;section-head numbered&quot;&gt;
+      &lt;span class=&quot;section-number&quot; aria-hidden=&quot;true&quot;&gt;1&lt;/span&gt;
       &lt;h2&gt;Ablauf der Prüfungssimulation&lt;/h2&gt;
     &lt;/div&gt;
     &lt;div class=&quot;flow&quot; aria-label=&quot;Ablauf in vier Schritten&quot;&gt;
@@ -1049,8 +1063,9 @@ html&gt;body{padding:0}&lt;/style&gt;
   &lt;/section&gt;
 
   &lt;section class=&quot;result&quot;&gt;
-    &lt;div class=&quot;section-head&quot;&gt;
-      &lt;h2&gt;Aufsatzkorrektur&lt;/h2&gt;
+    &lt;div class=&quot;section-head numbered&quot;&gt;
+      &lt;span class=&quot;section-number&quot; aria-hidden=&quot;true&quot;&gt;2&lt;/span&gt;
+      &lt;h2&gt;Auswertung und Aufsatzkorrektur&lt;/h2&gt;
       &lt;p&gt;Der Aufsatz wird anhand eines einheitlichen Bewertungsrasters benotet und mit konkreten Korrekturhinweisen versehen.&lt;/p&gt;
     &lt;/div&gt;
     &lt;div class=&quot;result-list&quot;&gt;
@@ -1074,17 +1089,18 @@ html&gt;body{padding:0}&lt;/style&gt;
   &lt;/section&gt;
 
   &lt;section class=&quot;section booking-section&quot; id=&quot;termine&quot;&gt;
-    &lt;div class=&quot;section-head&quot;&gt;
-      &lt;h2&gt;Termine&lt;/h2&gt;
+    &lt;div class=&quot;section-head numbered&quot;&gt;
+      &lt;span class=&quot;section-number&quot; aria-hidden=&quot;true&quot;&gt;3&lt;/span&gt;
+      &lt;h2&gt;Termine und Buchung&lt;/h2&gt;
     &lt;/div&gt;
     &lt;div class=&quot;table-wrap&quot;&gt;
       &lt;table&gt;
         &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Datum&lt;/th&gt;&lt;th&gt;Zeit&lt;/th&gt;&lt;th&gt;Standort&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
         &lt;tbody&gt;
-          &lt;tr&gt;&lt;td&gt;Dienstag, 16. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
-          &lt;tr&gt;&lt;td&gt;Donnerstag, 18. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
-          &lt;tr&gt;&lt;td&gt;Dienstag, 23. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
-          &lt;tr&gt;&lt;td&gt;Samstag, 27. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Dienstag, 16. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich HB&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Donnerstag, 18. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Winterthur&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Dienstag, 23. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Zürich HB&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Samstag, 27. Februar&lt;/td&gt;&lt;td&gt;08.00–11.45&lt;/td&gt;&lt;td&gt;Winterthur&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;status&quot;&gt;&lt;span class=&quot;status-dot&quot;&gt;&lt;/span&gt;Freie Plätze&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot;&gt;Auswählen&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
         &lt;/tbody&gt;
       &lt;/table&gt;
     &lt;/div&gt;
@@ -1108,224 +1124,9 @@ html&gt;body{padding:0}&lt;/style&gt;
 
 &lt;/div&gt;
 
-&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
-&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-(() =&gt; {
-  if (window.FloatingUIDOM == null) {
-    return;
-  }
-  const { autoUpdate, computePosition, flip, offset, shift, size } =
-    window.FloatingUIDOM;
-  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
-  const tooltipId = `codex-visualization-tooltip-${
-    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
-  }`;
-  const tooltipGap = 5;
-  const hoverDelay = 700;
-  const skipDelay = 300;
-  let activeTrigger = null;
-  let pendingTrigger = null;
-  let tooltip = null;
-  let openTimeout = null;
-  let autoUpdateCleanup = null;
-  let positionRequest = 0;
-  let skipDelayUntil = 0;
-
-  const getTrigger = (target) =&gt;
-    target?.nodeType === Node.ELEMENT_NODE
-      ? target.closest(&quot;[data-tooltip]&quot;)
-      : null;
-  const containsTarget = (trigger, target) =&gt;
-    target?.nodeType != null &amp;&amp; trigger.contains(target);
-  const getContent = (trigger) =&gt;
-    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
-  const getPlacement = (trigger) =&gt; {
-    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
-    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
-  };
-  const getTooltip = () =&gt; {
-    if (tooltip == null) {
-      tooltip = document.createElement(&quot;div&quot;);
-      tooltip.id = tooltipId;
-      tooltip.className = &quot;tooltip&quot;;
-      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
-    }
-    return tooltip;
-  };
-  const setDescribedBy = (trigger, described) =&gt; {
-    const ids = new Set(
-      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
-        .split(/\s+/)
-        .filter(Boolean),
-    );
-    if (described) {
-      ids.add(tooltipId);
-    } else {
-      ids.delete(tooltipId);
-    }
-    if (ids.size === 0) {
-      trigger.removeAttribute(&quot;aria-describedby&quot;);
-    } else {
-      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
-    }
-  };
-  const clearOpenTimeout = () =&gt; {
-    if (openTimeout != null) {
-      window.clearTimeout(openTimeout);
-      openTimeout = null;
-    }
-    pendingTrigger = null;
-  };
-  const closeTooltip = (activateSkipDelay = true) =&gt; {
-    clearOpenTimeout();
-    positionRequest += 1;
-    autoUpdateCleanup?.();
-    autoUpdateCleanup = null;
-    if (activeTrigger == null) {
-      return;
-    }
-    setDescribedBy(activeTrigger, false);
-    activeTrigger = null;
-    tooltip?.remove();
-    if (activateSkipDelay) {
-      skipDelayUntil = Date.now() + skipDelay;
-    }
-  };
-  const updatePosition = (trigger, floating) =&gt; {
-    const request = ++positionRequest;
-    void computePosition(trigger, floating, {
-      middleware: [
-        offset(tooltipGap),
-        flip({ padding: tooltipGap }),
-        shift({ padding: tooltipGap }),
-        size({
-          padding: tooltipGap,
-          apply({ availableHeight, availableWidth, elements }) {
-            elements.floating.style.setProperty(
-              &quot;--tooltip-available-width&quot;,
-              `${Math.max(0, availableWidth)}px`,
-            );
-            elements.floating.style.setProperty(
-              &quot;--tooltip-available-height&quot;,
-              `${Math.max(0, availableHeight)}px`,
-            );
-          },
-        }),
-      ],
-      placement: getPlacement(trigger),
-      strategy: &quot;fixed&quot;,
-    })
-      .then(({ x, y }) =&gt; {
-        if (activeTrigger !== trigger || request !== positionRequest) {
-          return;
-        }
-        const scale = window.devicePixelRatio || 1;
-        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
-        floating.style.visibility = &quot;visible&quot;;
-      })
-      .catch(() =&gt; {
-        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
-          closeTooltip(false);
-        }
-      });
-  };
-  const openTooltip = (trigger) =&gt; {
-    const content = getContent(trigger);
-    if (!trigger.isConnected || content.length === 0) {
-      return;
-    }
-    clearOpenTimeout();
-    if (activeTrigger === trigger) {
-      return;
-    }
-    closeTooltip();
-    const floating = getTooltip();
-    floating.textContent = content;
-    floating.style.visibility = &quot;hidden&quot;;
-    floating.style.transform = &quot;translate(0, 0)&quot;;
-    document.body.appendChild(floating);
-    activeTrigger = trigger;
-    setDescribedBy(trigger, true);
-    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
-      updatePosition(trigger, floating);
-    });
-  };
-  const requestOpen = (trigger, immediate = false) =&gt; {
-    if (
-      getContent(trigger).length === 0 ||
-      activeTrigger === trigger ||
-      pendingTrigger === trigger
-    ) {
-      return;
-    }
-    clearOpenTimeout();
-    pendingTrigger = trigger;
-    const delay =
-      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
-        ? 0
-        : hoverDelay;
-    if (delay === 0) {
-      openTooltip(trigger);
-      return;
-    }
-    openTimeout = window.setTimeout(() =&gt; {
-      openTimeout = null;
-      pendingTrigger = null;
-      openTooltip(trigger);
-    }, delay);
-  };
-  const handlePointerOpen = (event) =&gt; {
-    if (event.pointerType === &quot;touch&quot;) {
-      return;
-    }
-    const trigger = getTrigger(event.target);
-    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
-      return;
-    }
-    requestOpen(trigger);
-  };
-  const handleLeave = (event) =&gt; {
-    const trigger = getTrigger(event.target);
-    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
-      return;
-    }
-    if (activeTrigger === trigger || pendingTrigger === trigger) {
-      closeTooltip();
-    }
-  };
-  const handleFocusIn = (event) =&gt; {
-    const trigger = getTrigger(event.target);
-    if (trigger?.matches(&quot;:focus-visible&quot;)) {
-      requestOpen(trigger, true);
-    }
-  };
-  const handleKeyDown = (event) =&gt; {
-    if (event.key === &quot;Escape&quot;) {
-      closeTooltip();
-    }
-  };
-  const handleContextMenu = (event) =&gt; {
-    const trigger = getTrigger(event.target);
-    if (activeTrigger === trigger || pendingTrigger === trigger) {
-      closeTooltip();
-    }
-  };
-  const destroy = () =&gt; {
-    closeTooltip(false);
-    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
-    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
-    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
-    document.removeEventListener(&quot;focusout&quot;, handleLeave);
-    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
-    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
-    tooltip = null;
-  };
-
-  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
-  document.addEventListener(&quot;pointerout&quot;, handleLeave);
-  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
-  document.addEventListener(&quot;focusout&quot;, handleLeave);
-  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
-  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
-  window.addEv
+&lt;/body&gt;
+&lt;/html&gt;
+">
+</iframe>
+</body>
+</html>
