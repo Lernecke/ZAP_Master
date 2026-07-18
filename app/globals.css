@@ -114,6 +114,31 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Marken-Fachfarben — nur innerhalb von .brand-marketing sinnvoll belegt */
+  --color-subject-de: var(--subject-de);
+  --color-subject-de-pale: var(--subject-de-pale);
+  --color-subject-de-foreground: var(--subject-de-foreground);
+  --color-subject-ma: var(--subject-ma);
+  --color-subject-ma-pale: var(--subject-ma-pale);
+  --color-subject-ma-foreground: var(--subject-ma-foreground);
+  --color-subject-fr: var(--subject-fr);
+  --color-subject-fr-pale: var(--subject-fr-pale);
+  --color-subject-fr-foreground: var(--subject-fr-foreground);
+  --color-subject-nmg: var(--subject-nmg);
+  --color-subject-nmg-pale: var(--subject-nmg-pale);
+  --color-subject-nmg-foreground: var(--subject-nmg-foreground);
+  --color-rust: var(--rust);
+  --color-steel: var(--steel);
+  --color-brand-on-dark: var(--brand-on-dark);
+  --color-ink-pale: var(--ink-pale);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-pale: var(--tertiary-pale);
+
+  /* Marken-Fonts, von next/font in app/layout.tsx als Variablen bereitgestellt */
+  --font-serif-marketing: var(--font-fraunces), serif;
+  --font-sans-marketing: var(--font-inter), sans-serif;
+  --font-mono-marketing: var(--font-ibm-plex-mono), monospace;
 }
 
 @layer base {
@@ -123,4 +148,106 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/*
+ * Marken-Theme für den Marketing-Bereich (Startseite, künftige Kursseiten).
+ * Bewusst NICHT in :root/.dark — Dashboard, Login, Admin etc. bleiben auf der
+ * bestehenden generischen Palette, bis sie Teil einer eigenen Migration sind.
+ * Werte aus design-reference/architektur-briefing-kursseiten.md Abschnitt 1.
+ * Innerhalb von .brand-marketing greifen shadcn-Primitives (Button, Badge,
+ * Card ...) automatisch auf diese Werte zu, da sie dieselben semantischen
+ * --color-* Utilities aus @theme inline nutzen.
+ */
+.brand-marketing {
+  --background: #F5F6F1;        /* paper */
+  --foreground: #16233F;        /* ink */
+  --card: #FFFFFE;
+  --card-foreground: #16233F;
+  --popover: #FFFFFE;
+  --popover-foreground: #16233F;
+  --border: #DBDDD2;            /* line */
+  --input: #DBDDD2;
+  --primary: #16233F;           /* ink — Original-CTAs sind navy, nicht sage */
+  --primary-foreground: #FFFFFF;
+  --secondary: #4E6E54;         /* sage-deep — Hover/"freie Plätze"/Fach Deutsch */
+  --secondary-foreground: #FFFFFF;
+  --muted: #EAEAE4;
+  --muted-foreground: #3C4A68;  /* ink-soft */
+  --accent: #C89B3C;            /* gold — Fach Mathematik, Preis-Akzente */
+  --accent-foreground: #16233F;
+  --destructive: #B23A3A;
+  --destructive-foreground: #FFFFFF;
+  --ring: #4E6E54;
+
+  --subject-de: #6B8F71;
+  --subject-de-pale: #E4EBE3;
+  --subject-de-foreground: #35523B;
+  --subject-ma: #C89B3C;
+  --subject-ma-pale: #F3E8D2;
+  --subject-ma-foreground: #67480D;
+  --subject-fr: #B5676F;
+  --subject-fr-pale: #F3E1E4;
+  --subject-fr-foreground: #6F3039;
+  --subject-nmg: #5C7A9E;
+  --subject-nmg-pale: #E1E8F0;
+  --subject-nmg-foreground: #304A69;
+  --rust: #B5674D;
+  --steel: #5C7A9E;
+  --brand-on-dark: #8CB392;
+  --ink-pale: #E4E6ED;
+  --tertiary: #2F5D8A;
+  --tertiary-pale: #E1EAF2;
+
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans-marketing);
+}
+
+.brand-marketing.dark,
+.dark .brand-marketing {
+  --background: #101827;
+  --foreground: #F3F4ED;
+  --card: #172238;
+  --card-foreground: #F3F4ED;
+  --popover: #172238;
+  --popover-foreground: #F3F4ED;
+  --border: #34425A;
+  --input: #34425A;
+  --primary: #F2F3EA;
+  --primary-foreground: #16233F;
+  --secondary: #8EAD92;
+  --secondary-foreground: #102019;
+  --muted: #222E43;
+  --muted-foreground: #B8C1D0;
+  --accent: #E0B85B;
+  --accent-foreground: #241A07;
+  --destructive: #E47777;
+  --destructive-foreground: #260808;
+  --ring: #9BBCA0;
+
+  --subject-de: #8EAD92;
+  --subject-de-pale: #24372C;
+  --subject-de-foreground: #BBD0BE;
+  --subject-ma: #E0B85B;
+  --subject-ma-pale: #3B301B;
+  --subject-ma-foreground: #F0D28D;
+  --subject-fr: #D9919A;
+  --subject-fr-pale: #42272C;
+  --subject-fr-foreground: #F0BBC1;
+  --subject-nmg: #86A3C8;
+  --subject-nmg-pale: #263548;
+  --subject-nmg-foreground: #BDD0E7;
+  --rust: #D99176;
+  --steel: #86A3C8;
+  --brand-on-dark: #A7C7AB;
+  --ink-pale: #34425A;
+  --tertiary: #86A3C8;
+  --tertiary-pale: #263548;
+}
+
+.brand-marketing h1,
+.brand-marketing h2,
+.brand-marketing h3 {
+  font-family: var(--font-serif-marketing);
 }

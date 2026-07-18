@@ -9,7 +9,7 @@ import { MathBackground } from "@/app/components/zap/math-background"
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-background">
+    <main className="brand-marketing relative min-h-screen bg-background">
       <Suspense fallback={null}>
         <MathBackground />
         {/* Blur separation layer between decorative background and content */}

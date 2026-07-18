@@ -268,19 +268,19 @@ function KursKarte({ kurs, isExpanded, onToggle, onAnmelden }: KursKarteProps) {
     switch (kurs.status) {
       case 'offen':
         return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-secondary/15 text-secondary">
             {plaetzeVerfuegbar} Plätze frei
           </span>
         )
       case 'wenige-plaetze':
         return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-subject-ma-pale text-subject-ma-foreground">
             Nur noch {plaetzeVerfuegbar} Plätze!
           </span>
         )
       case 'ausgebucht':
         return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-destructive/10 text-destructive">
             Ausgebucht
           </span>
         )
@@ -386,7 +386,7 @@ function KursKarte({ kurs, isExpanded, onToggle, onAnmelden }: KursKarteProps) {
               {kurs.highlights.length > 0 && (
                 <div className="rounded-xl border border-border bg-background p-4">
                   <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Star className="h-4 w-4 text-amber-500" />
+                    <Star className="h-4 w-4 text-accent" />
                     Highlights
                   </h4>
                   <ul className="space-y-1.5">

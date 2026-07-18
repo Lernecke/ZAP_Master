@@ -28,26 +28,30 @@ export const FACH_LABELS: Record<Fach, string> = {
   'natur-mensch-gesellschaft': 'Natur, Mensch, Gesellschaft',
 }
 
+// Fach-Farbcodierung folgt dem markenweiten System aus
+// design-reference/architektur-briefing-kursseiten.md Abschnitt 1:
+// Sage=Deutsch, Gold=Mathematik, Rost/Rosé=Französisch, Steel=NMG.
+// Setzt .brand-marketing als Vorfahren voraus (siehe app/globals.css).
 export const FACH_FARBEN: Record<Fach, { bg: string; text: string; border: string }> = {
   mathematik: {
-    bg: 'bg-blue-100 dark:bg-blue-900/30',
-    text: 'text-blue-700 dark:text-blue-300',
-    border: 'border-blue-200 dark:border-blue-800',
+    bg: 'bg-subject-ma-pale',
+    text: 'text-subject-ma-foreground',
+    border: 'border-subject-ma/40',
   },
   deutsch: {
-    bg: 'bg-amber-100 dark:bg-amber-900/30',
-    text: 'text-amber-700 dark:text-amber-300',
-    border: 'border-amber-200 dark:border-amber-800',
+    bg: 'bg-subject-de-pale',
+    text: 'text-subject-de-foreground',
+    border: 'border-subject-de/40',
   },
   franzoesisch: {
-    bg: 'bg-rose-100 dark:bg-rose-900/30',
-    text: 'text-rose-700 dark:text-rose-300',
-    border: 'border-rose-200 dark:border-rose-800',
+    bg: 'bg-subject-fr-pale',
+    text: 'text-subject-fr-foreground',
+    border: 'border-subject-fr/40',
   },
   'natur-mensch-gesellschaft': {
-    bg: 'bg-emerald-100 dark:bg-emerald-900/30',
-    text: 'text-emerald-700 dark:text-emerald-300',
-    border: 'border-emerald-200 dark:border-emerald-800',
+    bg: 'bg-subject-nmg-pale',
+    text: 'text-subject-nmg-foreground',
+    border: 'border-subject-nmg/40',
   },
 }
 

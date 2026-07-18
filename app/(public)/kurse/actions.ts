@@ -70,18 +70,21 @@ export async function submitIntensivwocheAnmeldung(
     }
   }
 
-  const { error } = await supabase
-    .from('intensivwoche_anmeldungen')
-    .insert({
-      kurs_id: kursId,
-      child_firstname: parsed.data.child_firstname.trim(),
-      child_lastname: parsed.data.child_lastname.trim(),
-      child_class_level: parsed.data.child_class_level.trim(),
-      child_gender: parsed.data.child_gender,
-      parent_email: parsed.data.parent_email.trim().toLowerCase(),
-      parent_phone: parsed.data.parent_phone.trim(),
-      notes: parsed.data.notes?.trim() || null,
-    })
+  // Schreibt ausschliesslich über die atomare Datenbankfunktion
+  // (supabase/migrations/014_atomic_booking_function.sql): sperrt den Kurs,
+  // prüft Aktivität/Kapazität/Doppelanmeldung und snapshotted den Preis.
+  // Direkte Inserts sind seit dieser Migration per REVOKE nicht mehr erlaubt
+  // (verifiziert live am 18.07.2026 über den Supabase-Connector).
+  const { error } = await supabase.rpc('book_intensivwoche_kurs', {
+    p_kurs_id: kursId,
+    p_child_firstname: parsed.data.child_firstname.trim(),
+    p_child_lastname: parsed.data.child_lastname.trim(),
+    p_child_class_level: parsed.data.child_class_level.trim(),
+    p_child_gender: parsed.data.child_gender,
+    p_parent_email: parsed.data.parent_email.trim().toLowerCase(),
+    p_parent_phone: parsed.data.parent_phone.trim(),
+    p_notes: parsed.data.notes?.trim() || undefined,
+  })
 
   if (error) {
     console.error('Supabase Anmeldung Error:', {
@@ -91,22 +94,28 @@ export async function submitIntensivwocheAnmeldung(
       hint: error.hint,
     })
 
-    switch (error.code) {
-      case '23503':
+    switch (error.message) {
+      case 'kurs_nicht_gefunden':
         return {
           success: false,
           error: 'Der ausgewählte Kurs existiert nicht oder ist nicht mehr verfügbar.',
           fieldErrors: { kurs_id: ['Bitte wähle einen anderen Kurs.'] },
         }
-      case '23505':
+      case 'bereits_angemeldet':
         return {
           success: false,
           error: 'Du bist bereits für diesen Kurs angemeldet.',
         }
-      case '42501':
+      case 'kurs_inaktiv':
         return {
           success: false,
           error: 'Der Kurs ist leider nicht mehr für Anmeldungen verfügbar.',
+        }
+      case 'voll':
+        return {
+          success: false,
+          error: 'Dieser Kurs ist inzwischen ausgebucht.',
+          fieldErrors: { kurs_id: ['Bitte wähle einen anderen Kurs.'] },
         }
       default:
         return {

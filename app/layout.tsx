@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AuthStoreSync } from "@/components/providers/AuthStoreSync";
 import { ProgressStoreSync } from "@/components/providers/ProgressStoreSync";
@@ -20,6 +20,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Marken-Fonts für den Marketing-Bereich (.brand-marketing) — additiv, ersetzt
+// Geist nicht global. Siehe design-reference/architektur-briefing-kursseiten.md Abschnitt 1.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "ZAP - Zentrale Aufnahmeprüfung",
   description: "Deine Lernplattform für die Zentrale Aufnahmeprüfung",
@@ -34,7 +52,7 @@ export default function RootLayout({
     <html lang="de" suppressHydrationWarning>
       <Suspense fallback={null}>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable} antialiased`}
         >
           <ThemeProvider
             attribute="class"

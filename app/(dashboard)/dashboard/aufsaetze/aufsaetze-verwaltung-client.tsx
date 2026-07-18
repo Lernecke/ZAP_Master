@@ -33,6 +33,13 @@ const STATUS_CONFIG = {
 
 const GRADE_OPTIONS = ['6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1']
 
+async function fetchEssayOverview(status: string, subject: string) {
+  return Promise.all([
+    getAllSubmittedEssays({ status: status || undefined, subject: subject || undefined }),
+    getEssayStats(),
+  ])
+}
+
 export function AufsaetzeVerwaltungClient() {
   const [essays, setEssays] = useState<EssayWithStudent[]>([])
   const [stats, setStats] = useState<{ total: number; submitted: number; inReview: number; reviewed: number; returned: number } | null>(null)
@@ -75,16 +82,27 @@ export function AufsaetzeVerwaltungClient() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
-    const [essaysResult, statsResult] = await Promise.all([
-      getAllSubmittedEssays({ status: statusFilter || undefined, subject: subjectFilter || undefined }),
-      getEssayStats(),
-    ])
+    const [essaysResult, statsResult] = await fetchEssayOverview(statusFilter, subjectFilter)
     if (essaysResult.success && essaysResult.data) setEssays(essaysResult.data)
     if (statsResult.success && statsResult.data) setStats(statsResult.data)
     setIsLoading(false)
   }, [statusFilter, subjectFilter])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => {
+    let cancelled = false
+
+    void fetchEssayOverview(statusFilter, subjectFilter).then(([essaysResult, statsResult]) => {
+      if (cancelled) return
+
+      if (essaysResult.success && essaysResult.data) setEssays(essaysResult.data)
+      if (statsResult.success && statsResult.data) setStats(statsResult.data)
+      setIsLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [statusFilter, subjectFilter])
 
   const filteredEssays = essays.filter(essay => {
     if (!searchTerm) return true

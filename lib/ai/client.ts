@@ -1,24 +1,25 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-// Lazy-initialisiert damit der Build nicht fehlschlägt wenn ANTHROPIC_API_KEY fehlt
+const MISSING_API_KEY_MESSAGE =
+  'ANTHROPIC_API_KEY ist nicht gesetzt. Setze ANTHROPIC_API_KEY oder konfiguriere `LLM_PROVIDER=bfh`.'
+
+const rejectMissingApiKey: typeof fetch = () =>
+  Promise.reject(new Error(MISSING_API_KEY_MESSAGE))
+
+// Lazy-initialisiert; ohne Schlüssel bleibt der Client importierbar und lehnt API-Aufrufe lokal ab.
 let _client: Anthropic | null = null
 
 export function getAnthropicClient(): Anthropic {
   if (!_client) {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY ist nicht in den Umgebungsvariablen gesetzt.')
-    }
-    _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    _client = apiKey
+      ? new Anthropic({ apiKey })
+      : new Anthropic({ apiKey: 'missing', fetch: rejectMissingApiKey })
   }
   return _client
 }
 
-export const anthropic = {
-  messages: {
-    create: (...args: Parameters<Anthropic['messages']['create']>) =>
-      getAnthropicClient().messages.create(...args),
-  },
-}
+export const anthropic = getAnthropicClient()
 
 export const AI_MODEL = 'claude-sonnet-4-6'
 export const AI_MAX_TOKENS = 4096

@@ -304,11 +304,11 @@ function KursPreview({ kurs, onKursClick, onAnmelden, onClose }: KursPreviewProp
           <div className="flex justify-between text-muted-foreground">
             <span>Plätze:</span>
             <span className={`font-medium ${
-              kurs.status === 'ausgebucht' 
-                ? 'text-red-600 dark:text-red-400' 
+              kurs.status === 'ausgebucht'
+                ? 'text-destructive'
                 : kurs.status === 'wenige-plaetze'
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-green-600 dark:text-green-400'
+                  ? 'text-subject-ma-foreground'
+                  : 'text-secondary'
             }`}>
               {plaetzeVerfuegbar} / {kurs.maxTeilnehmer}
             </span>

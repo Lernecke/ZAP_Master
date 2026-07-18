@@ -122,8 +122,8 @@ export function AnmeldungModal({ kurs, onClose }: AnmeldungModalProps) {
           className="w-full max-w-md bg-card rounded-2xl shadow-xl p-8 text-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
-            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+          <div className="mx-auto w-16 h-16 bg-secondary/15 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-8 h-8 text-secondary" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">
             Anmeldung erfolgreich!

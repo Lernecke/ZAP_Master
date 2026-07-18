@@ -7,6 +7,16 @@ interface Props {
   email: string | null | undefined
 }
 
+type ThemePreference = 'light' | 'dark' | 'system' | null
+
+function normalizeThemePreference(value: string | null): ThemePreference {
+  if (value === 'light' || value === 'dark' || value === 'system') {
+    return value
+  }
+
+  return null
+}
+
 export async function ProfilData({ userId, token, email }: Props) {
   const supabase = createAuthenticatedSupabaseClient(token)
 
@@ -18,21 +28,26 @@ export async function ProfilData({ userId, token, email }: Props) {
   const completedExams = progressData?.filter((p) => p.completed_at).length || 0
   const totalAttempts = progressData?.length || 0
 
-  const profileData = profile || {
-    id: userId,
-    email: email ?? null,
-    first_name: null,
-    last_name: null,
-    avatar_url: null,
-    bio: null,
-    school_name: null,
-    class_level: null,
-    birth_date: null,
-    gender: null,
-    role: 'user',
-    theme_preference: 'light' as const,
-    created_at: null,
-  }
+  const profileData = profile
+    ? {
+        ...profile,
+        theme_preference: normalizeThemePreference(profile.theme_preference),
+      }
+    : {
+        id: userId,
+        email: email ?? null,
+        first_name: null,
+        last_name: null,
+        avatar_url: null,
+        bio: null,
+        school_name: null,
+        class_level: null,
+        birth_date: null,
+        gender: null,
+        role: 'user',
+        theme_preference: 'light' as const,
+        created_at: null,
+      }
 
   return (
     <ProfilClient

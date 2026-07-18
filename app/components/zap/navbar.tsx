@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, Zap } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/app/components/ui/button"
+import { ThemeToggle } from "@/app/components/zap/theme-toggle"
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -57,9 +58,10 @@ export function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           <Link href="/login">
             <Button size="sm" className="rounded-full px-6">
-              Jetzt starten
+              Anmelden
             </Button>
           </Link>
         </div>
@@ -96,8 +98,9 @@ export function Navbar() {
               ))}
               <div className="flex items-center gap-3">
                 <Link href="/login" className="flex-1">
-                  <Button className="w-full rounded-full">Jetzt starten</Button>
+                  <Button className="w-full rounded-full">Anmelden</Button>
                 </Link>
+                <ThemeToggle />
               </div>
             </div>
           </motion.div>

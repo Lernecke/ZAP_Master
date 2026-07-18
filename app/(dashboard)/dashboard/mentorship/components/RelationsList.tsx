@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MentorshipRelation } from '@/types/mentorship'
+import { MentorshipRelation, MentorshipRelationWithProfiles } from '@/types/mentorship'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
@@ -69,7 +69,7 @@ export function RelationsList({ relations, currentUserId }: RelationsListProps) 
 }
 
 interface RelationCardProps {
-  relation: MentorshipRelation
+  relation: MentorshipRelation & Partial<MentorshipRelationWithProfiles>
   currentUserId: string
 }
 
@@ -79,9 +79,7 @@ function RelationCard({ relation, currentUserId }: RelationCardProps) {
   const [endReason, setEndReason] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  // Extract the related profiles
-  const mentor = (relation as any).mentor
-  const mentee = (relation as any).mentee
+  const { mentor, mentee } = relation
 
   const isMentor = relation.mentor_id === currentUserId
   const partner = isMentor ? mentee : mentor
@@ -109,7 +107,7 @@ function RelationCard({ relation, currentUserId }: RelationCardProps) {
     })
   }
 
-  const getInitials = (firstName?: string, lastName?: string) => {
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
     if (!firstName && !lastName) return '?'
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
   }

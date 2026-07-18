@@ -9,7 +9,7 @@ import { Suspense } from "react"
 
 export default function NotFound() {
   return (
-    <main className="relative min-h-screen bg-background">
+    <main className="brand-marketing relative min-h-screen bg-background">
       <Suspense fallback={null}>
         <MathBackground />
         <div className="pointer-events-none fixed inset-0 z-[1] backdrop-blur-[1px]" aria-hidden="true" />

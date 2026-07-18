@@ -6,7 +6,7 @@ import { KurseHeader } from './kurse-header'
 
 export default function KursePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="brand-marketing min-h-screen flex flex-col bg-background">
       <KurseHeader />
       
       <main className="flex-1 px-6 py-8">

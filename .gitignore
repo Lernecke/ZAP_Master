@@ -31,11 +31,12 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
+!.env.example
+!.env*.example
+
+# Python virtual environment
+/venv/
 
 # vercel
 .vercel

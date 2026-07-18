@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react"
 
 const SYMBOLS = [
   // Math symbols
@@ -51,9 +51,11 @@ function generateSymbols(count: number): FloatingSymbol[] {
   return symbols
 }
 
+const subscribeToHydration = () => () => undefined
+
 export function MathBackground() {
-  const [symbols, setSymbols] = useState<FloatingSymbol[]>([])
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(subscribeToHydration, () => true, () => false)
+  const symbols = useMemo(() => (mounted ? generateSymbols(18) : []), [mounted])
   const containerRef = useRef<HTMLDivElement>(null)
   const mouseRef = useRef({ x: -9999, y: -9999 })
   const symbolRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -63,54 +65,45 @@ export function MathBackground() {
   const REPEL_RADIUS = 120
   const REPEL_STRENGTH = 12
 
-  // Generate symbols only on client to avoid hydration mismatch
   useEffect(() => {
-    const generatedSymbols = generateSymbols(18)
-    setSymbols(generatedSymbols)
-    offsetsRef.current = generatedSymbols.map(() => ({ x: 0, y: 0 }))
-    setMounted(true)
-  }, [])
+    function animate() {
+      const mx = mouseRef.current.x
+      const my = mouseRef.current.y
 
-  const animate = useCallback(() => {
-    const mx = mouseRef.current.x
-    const my = mouseRef.current.y
+      for (let i = 0; i < symbols.length; i++) {
+        const el = symbolRefs.current[i]
+        if (!el) continue
 
-    for (let i = 0; i < symbols.length; i++) {
-      const el = symbolRefs.current[i]
-      if (!el) continue
+        const rect = el.getBoundingClientRect()
+        const cx = rect.left + rect.width / 2
+        const cy = rect.top + rect.height / 2
 
-      const rect = el.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
+        const dx = cx - mx
+        const dy = cy - my
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const offsets = offsetsRef.current[i] ?? (offsetsRef.current[i] = { x: 0, y: 0 })
 
-      const dx = cx - mx
-      const dy = cy - my
-      const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < REPEL_RADIUS && dist > 0) {
+          const force = (1 - dist / REPEL_RADIUS) * REPEL_STRENGTH
+          const targetX = (dx / dist) * force
+          const targetY = (dy / dist) * force
+          offsets.x += (targetX - offsets.x) * 0.06
+          offsets.y += (targetY - offsets.y) * 0.06
+        } else {
+          offsets.x *= 0.96
+          offsets.y *= 0.96
+        }
 
-      const offsets = offsetsRef.current[i]
-
-      if (dist < REPEL_RADIUS && dist > 0) {
-        const force = (1 - dist / REPEL_RADIUS) * REPEL_STRENGTH
-        const targetX = (dx / dist) * force
-        const targetY = (dy / dist) * force
-        offsets.x += (targetX - offsets.x) * 0.06
-        offsets.y += (targetY - offsets.y) * 0.06
-      } else {
-        offsets.x *= 0.96
-        offsets.y *= 0.96
+        if (Math.abs(offsets.x) > 0.1 || Math.abs(offsets.y) > 0.1) {
+          el.style.transform = `translate(${offsets.x}px, ${offsets.y}px)`
+        } else {
+          el.style.transform = ""
+        }
       }
 
-      if (Math.abs(offsets.x) > 0.1 || Math.abs(offsets.y) > 0.1) {
-        el.style.transform = `translate(${offsets.x}px, ${offsets.y}px)`
-      } else {
-        el.style.transform = ""
-      }
+      rafRef.current = requestAnimationFrame(animate)
     }
 
-    rafRef.current = requestAnimationFrame(animate)
-  }, [symbols])
-
-  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY }
     }
@@ -128,7 +121,7 @@ export function MathBackground() {
       window.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseleave", handleMouseLeave)
     }
-  }, [animate, mounted])
+  }, [symbols, mounted])
 
   // Don't render anything on server to avoid hydration mismatch
   if (!mounted) {

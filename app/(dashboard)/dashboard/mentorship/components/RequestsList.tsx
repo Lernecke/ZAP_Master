@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MentorshipRequest } from '@/types/mentorship'
+import { MentorshipRequest, MentorshipRequestWithProfiles } from '@/types/mentorship'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
@@ -69,7 +69,7 @@ export function RequestsList({ requests, type }: RequestsListProps) {
 }
 
 interface RequestCardProps {
-  request: MentorshipRequest
+  request: MentorshipRequest & Partial<MentorshipRequestWithProfiles>
   type: 'incoming' | 'outgoing'
 }
 
@@ -80,10 +80,7 @@ function RequestCard({ request, type }: RequestCardProps) {
   const [isPending, startTransition] = useTransition()
   const [isAccepting, setIsAccepting] = useState(false)
 
-  // Access the related profiles and listing
-  const requester = (request as any).requester
-  const target = (request as any).target
-  const listing = (request as any).listing
+  const { requester, target, listing } = request
 
   const person = type === 'incoming' ? requester : target
   const createdAt = formatDistanceToNow(new Date(request.created_at), {
@@ -162,7 +159,7 @@ function RequestCard({ request, type }: RequestCardProps) {
     })
   }
 
-  const getInitials = (firstName?: string, lastName?: string) => {
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
     if (!firstName && !lastName) return '?'
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
   }
