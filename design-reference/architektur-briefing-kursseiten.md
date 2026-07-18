@@ -1,5 +1,50 @@
 # Architektur-Briefing: Marketing- und Kursseiten-Migration nach Next.js
 
+> **Live-Datenbank-Abgleich 18.07.2026 (via Supabase-MCP-Connector, Projekt ZAP_25):** Der reale
+> Zustand der Live-Datenbank wurde erstmals direkt geprüft, nicht nur über die lokal eingecheckten
+> Migrationsdateien. Ergebnis: Die Live-DB wurde nie durch Abspielen der lokalen Dateien
+> `001`–`008` aufgebaut — ihre echte Migrationshistorie besteht aus 17 anders benannten, lokal
+> nicht vorhandenen Einträgen. Abschnitt 2.10 beschreibt deshalb teils Zustände, die so nur in den
+> lokalen Migrationsdateien bestehen, nicht mehr auf der Live-DB: `subjects`/
+> `mentor_skills.subject_id` sind live bereits korrekt und identisch typisiert (`bigint`),
+> `intensivwoche_kurse.created_by` existiert live bereits. Andere dort beschriebene Lücken waren
+> dagegen bis heute real und sind jetzt geschlossen: Die View `intensivwoche_kurse_mit_anmeldungen`
+> hat seit Migration `014` `security_invoker = true`; die `teacher`/`student`-Rollenwerte in den
+> `mentor_skills`-/`mentorship_listings`-INSERT-Policies (blockierten live jede Neuanlage) sind seit
+> Migration `012` auf `lehrperson`/`user` korrigiert; die atomare Buchungsfunktion
+> `book_intensivwoche_kurs()` samt partiellem Unique-Index existiert seit Migration `014`,
+> `app/(public)/kurse/actions.ts` ruft ausschliesslich sie auf. `lib/supabase/database.types.ts`
+> wurde als ungenutzte, zusätzlich veraltete zweite Typgenerierung entfernt; `types/database.ts` ist
+> direkt aus dem Live-Schema regeneriert und kanonisch. Schritt 1 des Ausführungsplans sollte
+> dennoch den Live-Zustand erneut über denselben Supabase-Connector prüfen, statt sich allein auf
+> die lokalen Migrationsdateien zu verlassen — diese bleiben strukturell hilfreich für neue additive
+> Migrationen, sind aber kein verlässliches Abbild des tatsächlichen Schemas. Zusätzlicher Fund ohne
+> Bezug zu dieser Migration: Die Live-DB enthält ein zweites Tabellenpaar
+> `courses`/`course_occurrences`, das weiterhin keine Code-Referenz besitzt, am 18.07.2026 aber
+> **4 bzw. 8 Zeilen** enthält. Es ist daher weder „leer“ noch ohne separate fachliche Prüfung
+> löschbar. Nicht mit `intensivwoche_kurse` verwechseln und nicht als Ziel des in 2.10 erwähnten
+> historischen `public.courses`-FK behandeln. Der aktuelle, nicht personenbezogene Live-Snapshot
+> umfasst ausserdem 8 aktive `intensivwoche_kurse`, 48 `intensivwoche_anmeldungen`, 10 `subjects`
+> und 3 `mentor_skills`. Diese Zahlen sind nur ein datierter Kontrollwert; Schritt 0/1 inventarisiert
+> sie vor jeder Migration erneut.
+
+> **Ergänzender Live-Strukturabgleich 18.07.2026:** Die REST-exponierte OpenAPI-Struktur bestätigt
+> ausdrücklich, dass das Live-Projekt noch nicht das in Abschnitt 2.11–2.15 definierte Zielmodell
+> besitzt. Von 27 geprüften Zieltabellen sind nur `profiles`, `subjects`,
+> `intensivwoche_kurse`, `intensivwoche_anmeldungen` und `learning_materials` vorhanden. Es fehlen
+> die 22 Zieltabellen `offers`, `offer_editions`, `course_sessions`, `material_areas`,
+> `self_study_enrollments`, `material_access_grants`, `release_content_catalog`, `course_days`,
+> `daily_releases`, `daily_release_items`, `teacher_assignments`, `work_entries`,
+> `teacher_rate_agreements`, `payroll_periods`, `payroll_snapshots`, `payroll_snapshot_lines`,
+> `financial_events`, `expense_entries`, `financial_periods`, `budgets`,
+> `financial_adjustments` und `audit_log`. Zusätzlich fehlen
+> `intensivwoche_anmeldungen.idempotency_key`, `edition_id`, `session_id` sowie
+> `learning_materials.area_id`; `booked_price_rappen` und `currency` sind bereits vorhanden. Dieser
+> Befund ist der erwartete Ausgangszustand für additive Migrationen, keine Aufforderung zu einem
+> Remote-`db push`. Vollständige Constraints, Trigger, Grants, RLS und Storage-Policies müssen im
+> Baseline-Gate über `pg_catalog`, Schema-Dump und pgTAP bewiesen werden; OpenAPI allein reicht dafür
+> nicht aus.
+
 > **Migrations-Readiness-Abgleich 16.07.2026:** Der Referenzbestand wurde erneut vollständig
 > inventarisiert. Er umfasst jetzt 37 HTML-Dateien (nicht 23): Startseite, sieben Angebots-
 > Hauptseiten, 13 reguläre Kursdetailseiten, drei Selbststudium-Seiten, drei
@@ -11,7 +56,8 @@
 > `Layout_BMS_Intensivkurs_Unterseite.html` die verbindliche Kurs-Unterseite. Die zuvor fehlende
 > `Layout_BMS_Selbststudium_Unterseite.html` wurde auf Basis der 6.-Klasse-Vorlage mit
 > BMS-spezifischen Inhalten ergänzt. Abschnitt 2 und 6 behandeln BMS/Matura als eigene Zielgruppen.
-> `href="#"` bleibt in 23 Dateien an 80 Stellen vorhanden und
+> `href="#"` bleibt in 33 Dateien an 99 Stellen vorhanden (erneut gemessen am 18.07.2026, nach Auflösung des
+> „Termin wählen"-Ankers auf der BMS-Prüfungssimulationsseite auf `#buchung`) und
 > darf nie in produktives Next.js-Markup übernommen werden; Abschnitt 6 ordnet diese Platzhalter
 > realen Aktionen oder bewusst nicht klickbaren Elementen zu.
 
@@ -61,16 +107,20 @@ Anbindung ans bestehende Repo) entscheidet die Umsetzung im Projektkontext.
 - **Startseite:** `app/page.tsx` rendert Komponenten aus `app/components/zap`, darunter die
   Client-Komponente `app/components/zap/navbar.tsx`. Dieser App-Bestand besitzt bereits ein mobiles
   Aufklappmenü und einen Login-CTA („Jetzt starten"), wird aber durch die neue lokalisierte
-  Marketing-Startseite ersetzt. Die aktualisierte Referenz `Startseite.html` ist dafür verbindlich:
-  flache Direktnavigation zu allen sieben Zielgruppen, kompakte Nav-Labels, Nachhilfe, Über uns,
-  EN, Kontakt und Login — ohne Angebot-Dropdown.
+  Marketing-Startseite ersetzt. `Startseite.html` ist die visuelle Referenz für die flache
+  Direktnavigation zu allen sieben Zielgruppen, die kompakten Nav-Labels, Nachhilfe, Über uns,
+  Kontakt und Login — ohne Angebot-Dropdown. Ihr sichtbarer EN-Eintrag ist nur ein
+  Prototyp-Platzhalter; beim verbindlichen Deutsch-only-Launch wird kein Sprachumschalter
+  gerendert. Die Abgrenzung zwischen HTML-Prototyp und produktiver `SiteNav` steht in Abschnitt 1b.
 - **Öffentliche Kursseite:** `/kurse` existiert unter `app/(public)/kurse`. Sie liest aktive Kurse
   über `getPublicKurse()` aus der Supabase-View `intensivwoche_kurse_mit_anmeldungen`, cached sie
   derzeit 300 Sekunden und besitzt bereits Modal, Zod-Validierung und Server Action für
   Anmeldungen in `intensivwoche_anmeldungen`.
 - **Datenbank:** Supabase ist mit `@supabase/ssr` und `@supabase/supabase-js` angebunden. Vorhanden
   sind unter anderem `intensivwoche_kurse`, `intensivwoche_anmeldungen` und die genannte View samt
-  RLS-Migrationen. Das neue Angebotsmodell muss diese Struktur prüfen und migrieren/erweitern;
+  RLS-Migrationen. Der Live-Strukturabgleich bestätigt ausserdem `profiles`, `subjects` und
+  `learning_materials`, aber keine der 22 oben aufgelisteten Zieltabellen. Das neue Angebotsmodell
+  muss diese Struktur prüfen und additiv migrieren/erweitern;
   ein unverbundenes zweites Kurssystem ist nicht zulässig. Migration 003 fügt sechs als Beispiel
   bezeichnete Kurse in vier Fächern ein; Migration 006 referenziert sie mit lokalen Testdaten,
   während Nutzung und Inhalt im entfernten Projekt unbekannt sind. Der lokale Verlauf ist nicht
@@ -101,11 +151,47 @@ Anbindung ans bestehende Repo) entscheidet die Umsetzung im Projektkontext.
   Autorisierungsquelle werden. Auch der Login ignoriert aktuell `callbackUrl` und leitet immer
   nach `/dashboard`. Die generierten DB-Typen enthalten `learning_materials`, im eingecheckten
   lokalen Migrationsverlauf fehlt jedoch ihre kanonische `CREATE TABLE`-/RLS-Baseline.
-- **Referenzbestand:** `design-reference/` ist flach und enthält 37 HTML-Dateien, zwei Markdown-
+- **Referenzbestand:** `design-reference/` ist flach und enthält 37 HTML-Dateien, vier Markdown-
   Dokumente und `SessionTable.jsx`. Alle 37 HTML-Dateien enthalten ein `<nav>`; acht vollständige
   öffentliche Seiten enthalten zusätzlich `<header>` und `<footer>`. Die vier Admin-Referenzen
   besitzen eigene Dashboard-Header ohne Marketing-Footer. Dieses
   Prototyp-Markup ist keine Quelle für das künftige Layout und wird nicht seitenweise übernommen.
+
+### Verbindliche Supabase-Baseline-Strategie vor jeder Fachmigration
+
+Der lokale Ordner `supabase/migrations/` ist **kein deploybarer Spiegel der Live-Historie**. Die
+Dateien `001`–`008` beschreiben historische Teilstände, laufen auf einer leeren Datenbank nicht
+deterministisch durch und dürfen weder umbenannt noch gesammelt auf das Live-Projekt gepusht
+werden. `012`–`014` dokumentieren bereits live angewandte Reparaturen, sind aber ebenfalls kein
+Ersatz für eine reproduzierbare Baseline.
+
+Vor dem ersten fachlichen Migrationsschritt gilt deshalb zwingend:
+
+1. Live-Schema, Migrationstabelle und nicht personenbezogene Counts read-only inventarisieren und
+   als datierten Bericht unter `docs/migration-evidence/` ablegen; keine Schlüssel oder Kundendaten
+   protokollieren. Der Bericht enthält zusätzlich eine Soll-/Ist-Matrix aller 27 Zieltabellen und
+   der bekannten offenen Spalten (`idempotency_key`, `edition_id`, `session_id`, `area_id`). Eine
+   Abweichung vom datierten Stand wird als Drift gemeldet und niemals automatisch durch Löschen,
+   Zurücksetzen oder Remote-Schreiben korrigiert.
+2. Einen **neuen lokalen Baseline-Strang** aus einem geprüften Schema-Dump des aktuellen
+   Live-Schemas erzeugen. Historische Dateien bleiben unverändert unter
+   `supabase/legacy-migrations/` als Referenz erhalten und werden von `supabase db reset --local`
+   nicht mehr ausgeführt. Die kanonische Baseline enthält Schema, Funktionen, Views, RLS, Grants
+   und Storage-Policies, aber keine Geschäfts-, Auth- oder Testdaten.
+3. `supabase/seed.sql` enthält ausschliesslich synthetische lokale Fixtures. Die produktive
+   Migrationstabelle wird nicht per `migration repair` an lokale Fantasieversionen angepasst.
+4. Ab der Baseline erhält jede neue Migration ein UTC-Zeitstempelpräfix
+   `YYYYMMDDHHMMSS_beschreibung.sql`. Eine bereits live registrierte Datei wird niemals umbenannt
+   oder inhaltlich verändert; Korrekturen erfolgen ausschliesslich additiv.
+5. Der Dump muss Constraints, Indizes, Trigger, Funktionen, Views samt Optionen, Grants, RLS und
+   Storage-Policies abdecken; die PostgREST-OpenAPI-Struktur gilt dafür nicht als ausreichender
+   Nachweis. Lokaler Reset, Schema-Diff und pgTAP müssen grün sein, **bevor** neue Marketingtabellen
+   geschrieben werden. Der erste Live-Rollout verwendet nur die nach der Baseline neu erzeugten,
+   vorab einzeln geprüften additiven Migrationen. `db push` bleibt bis zu einer separaten,
+   dokumentierten Freigabe verboten.
+
+Damit gibt es keine widersprüchliche Anweisung mehr, die defekten Dateien `001`–`014` zugleich
+umzubenennen, lokal abzuspielen und remote unverändert zu lassen.
 
 ---
 
@@ -344,7 +430,7 @@ UI-Dateien anschließend einzeln prüfen.
 Grundlage für alle Layout- und Interaktionsbausteine, die sich unabhängig vom Kurs-Inhalt
 über die 13 regulären Kursdetailseiten sowie die weiteren Marketingseiten wiederholen; die zwei
 exportierten ZAP-Prüfungssimulationsdateien sind die Ausreisser aus Abschnitt 4. Die Grundlage gilt
-**ebenso für Startseite und Platzhalterseiten**
+**ebenso für Startseite, Kontakt- und Rechtstextseiten**
 (Abschnitt 6). Diese Ebene liegt **unter** den domänenspezifischen Komponenten aus Abschnitt 3
 — `CourseCard`, `AddOnCourses` und `SessionTable` etc. sollten aus diesen Primitives zusammengesetzt
 werden, nicht eigenes Card-/Button-Markup duplizieren.
@@ -402,11 +488,19 @@ einer neuen `BookingButton`-Anbindung zu prüfen und nach Möglichkeit zu erweit
 zweite, unabhängige Buchungsmodalität nur für die neuen Marketingseiten gebaut. Die `#`-Links in
 den HTML-Referenzen bilden den realen Repository-Bestand nicht ab.
 
-**Revidiert durch die aktualisierte Startseite:** Die Hauptnavigation ist eine flache Reihe
-direkter Links und besitzt kein „Angebot"-Dropdown mehr. Für Desktop genügt deshalb semantisches
+### Verbindliche Trennung: HTML-Prototypnavigation und produktive `SiteNav`
+
+| Ebene | Zweck | Verbindlicher Stand |
+|---|---|---|
+| Statische HTML-Referenzen | Klickbare Design- und Inhaltsprüfung, keine Komponentenschnittstelle | Alle 37 Dateien behalten ihr eigenes `<nav>`-Markup. 26 Kurs-, Zielgruppen- und Prüfungssimulationsreferenzen verwenden bewusst die nachträglich ergänzte kompakte Navigation mit Logo, Klassenstufen-Dropdown, BMS, Matura, Nachhilfe, Über uns und Kontakt sowie Breadcrumb/Skip-Link — ohne EN, Login und redundanten Startseiten-Link. Nur `Startseite.html` enthält noch den visuellen EN-Platzhalter und einen `/login`-Link. Diese Unterschiede werden nicht vereinheitlicht oder in produktives Markup kopiert. |
+| Spätere Next.js-Anwendung | Einheitliche Navigation aller öffentlichen Marketingseiten | `SiteNav` wird genau einmal im Marketing-Layout gerendert. Desktop verwendet eine flache Reihe ohne Dropdown: Logo, alle sieben `Audience`-Ziele, Nachhilfe, Über uns und Kontakt sowie Login als separaten CTA. Das mobile `Sheet` enthält dieselben Ziele und denselben Login-CTA. Beim Deutsch-only-Launch wird kein EN-Schalter gerendert. Lerncoaching, Tipps, Distance Learning und Simulationsprüfung bleiben ausserhalb der Top-Level-Navigation. |
+
+**Revidiert durch die aktualisierte Startseite:** Die produktive Hauptnavigation ist eine flache Reihe
+direkter Links und besitzt kein „Angebot"- oder Klassenstufen-Dropdown. Für Desktop genügt deshalb semantisches
 Nav-Markup mit Next-`Link` und einem responsiven Flex-Layout; Radix `NavigationMenu` oder
 `DropdownMenu` wird für `SiteNav` nicht benötigt. Die sieben Zielgruppen verwenden die kompakten
-Labels `4.Kl`, `5.Kl`, `6.Kl`, `1.Sek`, `2./3.Sek`, `BMS` und `Matura`.
+Labels `4.Kl`, `5.Kl`, `6.Kl`, `1.Sek`, `2./3.Sek`, `BMS` und `Matura`; hinzu kommen
+`Nachhilfe`, `Über uns` und `Kontakt`.
 
 **Mobile Navigation (löst Offene Frage 8):** Die aktualisierte HTML-Referenz verwendet unter
 820px einen CSS-Checkbox-Hamburger. In Next.js wird dasselbe Verhalten zugänglich mit shadcn
@@ -461,9 +555,10 @@ zuvor `ProcessSteps`, `CourseContent` hiess `ContentAccordion`, `WhyUsGrid` hies
 
 ## 2. Datenmodell
 
-Zwölf Teilbereiche decken Klassenstufen, Offer-Varianten, Preise, Buchung/Verfügbarkeit,
-Zusatzangebote, Nachhilfe-Abos, gemeinsame Inhaltsmodelle, vollständige Seiten-View-Models sowie
-die Zuordnung zu Datenbank/Komponenten und die verlustfreie Übernahme der Bestandskurse ab.
+Fünfzehn Teilbereiche decken Klassenstufen, Offer-Varianten, Preise, Buchung/Verfügbarkeit,
+Zusatzangebote, Nachhilfe-Abos, gemeinsame Inhaltsmodelle, vollständige Seiten-View-Models,
+Bestandsübernahme, Materialrechte, Jahresverwaltung, Tagesfreigaben, Arbeitszeit/Lohn und Finanzen
+ab.
 
 ### 2.1 Zielgruppe ist keine 1:1-Beziehung zu einer Klassenstufe
 
@@ -555,15 +650,14 @@ type OfferBase = {
   laufzeit: string;            // "6 Monate (März–Juli)"
   dateSummary: string[];               // Card-Datumszeilen, kein zusammengesetztes HTML
   features: string[];                  // CourseCard-Aufzählung
-  regularPrice: number;        // NIE als Text, immer Zahl — siehe Preis-Bugs unten
-  earlyBirdPrice?: number;
+  regularPriceRappen: number;  // ganze Rappen; NIE Text oder CHF-Float
+  earlyBirdPriceRappen?: number;
   earlyBirdDeadline?: string;          // ISO-Datum YYYY-MM-DD
   currency: "CHF";
   priceUnit?: string;          // "pro Teilnahme", "Zugang bis März 2027" — optional
   overviewBullets: string[];
   whyUs: Feature[];
   testimonials?: Testimonial[];
-  booking: BookingCopy;
 };
 
 type CourseOffer = OfferBase & {
@@ -572,6 +666,7 @@ type CourseOffer = OfferBase & {
   contentSections: ContentSection[];
   weekOptions?: WeekOption[];           // nur wenn tatsächlich filterbar
   distanceLearningAvailable?: boolean; // nur geeignete Intensivkurse
+  booking: BookingCopy;
   faq?: never;
   examTimeline?: never;
 };
@@ -581,6 +676,7 @@ type ExamSimulationOffer = OfferBase & {
   flowSteps: FlowStep[];
   examTimeline: ExamTimelineSegment[];
   faq: FaqItem[];
+  booking: BookingCopy;
   contentSections?: never;
   weekOptions?: never;
   distanceLearningAvailable?: never;
@@ -588,6 +684,10 @@ type ExamSimulationOffer = OfferBase & {
 
 type SelfStudyOffer = OfferBase & {
   kurstyp: "selbststudium";
+  materialAreaId: MaterialAreaId;
+  access: AccessCopy;
+  earlyBirdPriceRappen?: never;
+  earlyBirdDeadline?: never;
   flowSteps?: never;
   contentSections?: never;
   examTimeline?: never;
@@ -602,8 +702,9 @@ type Offer = CourseOffer | ExamSimulationOffer | SelfStudyOffer;
 Preis-Anzeige immer **berechnet**, nie als fertiger Satz gepflegt:
 
 ```
-{offer.earlyBirdPrice != null && offer.earlyBirdDeadline
-  ? `Frühbucherrabatt bis ${offer.earlyBirdDeadline} · regulär ${offer.currency} ${offer.regularPrice}`
+{offer.earlyBirdPriceRappen != null && offer.earlyBirdDeadline
+  ? formatEarlyBirdPrice(offer.earlyBirdPriceRappen, offer.regularPriceRappen,
+      offer.earlyBirdDeadline, offer.currency, locale)
   : null}
 ```
 
@@ -629,8 +730,8 @@ unverbundene Preisquelle einzuführen. Die Muster unten bleiben für den Compone
   **alle fünf** Halbjahreskurs-/Vorkurs-Unterseiten den Frühbucherhinweis, und die CSS-Regel ist
   überall vorhanden — der Bug ist behoben, unabhängig von diesem Dokument. **Klare Regel fürs neue
   Modell (weiterhin gültig, jetzt als Bestätigung des bereits erreichten Zustands statt als
-  Korrektur):** Hauptseite und Unterseite lesen `earlyBirdPrice`/`earlyBirdDeadline` aus demselben
-  `Offer`-Datensatz und zeigen den Hinweis **immer**, wenn `earlyBirdPrice` gesetzt ist — kein
+  Korrektur):** Hauptseite und Unterseite lesen `earlyBirdPriceRappen`/`earlyBirdDeadline` aus demselben
+  `Offer`-Datensatz und zeigen den Hinweis **immer**, wenn `earlyBirdPriceRappen` gesetzt ist — kein
   optionaler Textblock, der pro Seite manuell gepflegt wird. Das verhindert auch ein Wiederauftreten
   wie beim neuen 5.-Klasse-Wochenkurs-Bug oben.
 
@@ -663,7 +764,6 @@ type AvailabilityStatus = "frei" | "wenige" | "voll";
 
 type SessionAvailability = {
   status: AvailabilityStatus;
-  capacity: number;
   bookedCount: number;
   remainingPlaces: number;
   updatedAt: string;           // ISO-Timestamp; volatile, nicht mit dem Katalog cachen
@@ -674,21 +774,22 @@ type BookingAction =
   | { kind: "link"; label: string; href: string }
   | { kind: "disabled"; label: string; disabledReason: string };
 
-type SessionSource =
-  | { kind: "intensivwoche_kurse"; kursId: number }
-  | { kind: "marketing_session"; sessionId: string };
+type SessionSource = { kind: "intensivwoche_kurse"; kursId: number };
+
+type CourseLocation = "Zürich HB" | "Winterthur";
 
 type SessionDefinition = {
-  id: string;               // GLOBALE eindeutige Kurs-ID, nicht pro Stufe neu vergeben
+  id: number;               // intensivwoche_kurse.id; global und nie neu nummerieren
                              // (Buchstaben wie "Kurs I", "Kurs N" laufen stufenübergreifend weiter)
   offerId: string;
+  capacity: number;          // stabiler gespeicherter Sessionwert; keine Belegung
   source: SessionSource;     // erhält bei Bestandskursen die echte numerische FK-/Buchungs-ID
   kurs: string;              // Anzeige, z.B. "Kurs A"
   dateLabel: string;         // sichtbare Datumsangabe
   startAt?: string;          // ISO-Timestamp, wenn ein einzelner Startzeitpunkt existiert
   endAt?: string;            // ISO-Timestamp
   timeLabel: string;         // sichtbare Zeit-/Rhythmusangabe
-  standort: string;          // freier Text — "Zürich HB", "Stadelhofen", "Winterthur", "online"
+  standort: CourseLocation;  // exakt einer der zwei freigegebenen physischen Standorte
   deliveryModes: ("onsite" | "online")[];
   weekId?: string;           // verbindet die Zeile mit WeekFilter/WeekOption
   ablauf: Ablauf;
@@ -706,9 +807,17 @@ request-time durch Verbindung mit `SessionAvailability` und der daraus abgeleite
 `BookingAction`; es darf niemals aus einer Funktion mit `'use cache'` zurückgegeben werden.
 `WeekFilter` filtert über
 `weekId`, `BookingButton` rendert ausschliesslich `bookingAction`, und `StatusBadge` erhält
-`availability.status`. Der Mapper berechnet `remainingPlaces = max(capacity - bookedCount, 0)` und
+`availability.status`. Der Mapper berechnet
+`remainingPlaces = max(session.capacity - bookedCount, 0)` und
 leitet daraus `status` ab; diese drei Werte werden nicht unabhängig voneinander redaktionell
 gepflegt.
+
+**Verbindliche Standortentscheidung:** Sämtliche Kurse und Prüfungssimulationen verwenden als
+physischen Standort ausschliesslich `Zürich HB` oder `Winterthur`. `online` ist kein Standort,
+sondern ausschliesslich ein Wert in `deliveryModes`; Distance Learning kann daher an eine Session
+eines der beiden physischen Standorte gekoppelt sein. Admin-Formulare bieten für `standort` nur
+diese zwei Werte an. Bestehende Daten mit anderen `ort`-Werten werden nicht still umgeschrieben,
+sondern bleiben erhalten und landen bis zur redaktionellen Korrektur in `needs_review`.
 
 ### 2.5 Addon-Angebote nach Zielgruppen-Fähigkeiten
 
@@ -740,16 +849,17 @@ type SubscriptionPlan = {
   description: string;
   lessons: number;         // 10, 20
   lessonMinutes: number;   // 45
-  pricePerLesson: number;  // Zahlenfeld, wie bei Offer — nie als Text berechnet
-  discountPercent?: number; // 10 beim 20er — Rabatt wird ANGEZEIGT, nicht in pricePerLesson einberechnet
+  pricePerLessonRappen: number; // ganze Rappen
+  discountPercent?: number; // 10 beim 20er — Rabatt wird ANGEZEIGT, nicht in pricePerLessonRappen einberechnet
   currency: "CHF";
   features: string[];
   recommended?: boolean;
-  cta: LinkAction;
+  cta: UserAction;
 };
 ```
 
-Anzeige-Preis wird berechnet, nicht dupliziert: `pricePerLesson * lessons * (1 - (discountPercent ?? 0) / 100)`
+Anzeige-Preis wird in Rappen berechnet und erst danach lokalisiert formatiert:
+`round(pricePerLessonRappen * lessons * (1 - (discountPercent ?? 0) / 100))`
 — derselbe Grundsatz wie beim Frühbucherrabatt (Abschnitt 2.3), nur mit anderem Rabatt-Trigger
 (Menge statt Datum). Kein `audienceId`, kein `kurstyp` — dieser Typ ist bewusst unabhängig
 vom Klassenstufen-Datenmodell, da das Abo für alle Stufen gleich ist.
@@ -766,6 +876,15 @@ type LinkAction = {
   ariaLabel?: string;
   external?: boolean;
 };
+
+type DisabledAction = {
+  label: string;
+  disabledReason: string;
+};
+
+type UserAction =
+  | ({ kind: "link" } & LinkAction)
+  | ({ kind: "disabled" } & DisabledAction);
 
 type AudienceHeroContent = {
   eyebrow?: string;
@@ -800,6 +919,15 @@ type Testimonial = {
   quote: string;
   author: string;
   role?: string;
+  avatar?: ImageAsset;          // nur freigegebenes Asset mit passendem Alt-Text
+};
+
+type ImageAsset = {
+  id: string;
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
 };
 
 type FaqItem = { id: string; question: string; answer: string };
@@ -832,11 +960,17 @@ type BookingCopy = {
   emptyState: string;
 };
 
+type AccessCopy = {
+  title: string;
+  description?: string;
+  note?: string;
+};
+
 type ServiceCardModel = {
   id: string;
   title: string;
   description: string;
-  action: LinkAction;
+  action: LinkAction; // alle Startseiten-Services besitzen eine reale Inhaltsroute
   eligibleFor?: AudienceId[];
   subject?: Subject;
 };
@@ -852,6 +986,7 @@ type TeamGroup = {
   id: string;
   title: string;
   description: string;
+  image?: ImageAsset;
 };
 
 type NavItem = {
@@ -886,7 +1021,7 @@ type ExistingCourseCardModel = {
   classLabels: string[];              // Originalwerte verlustfrei behalten
   teacher: string;
   highlights: string[];
-  regularPrice: number;
+  regularPriceRappen: number;
   currency: "CHF";
   session: SessionDefinition;        // stabil; Availability wird request-time ergänzt
 };
@@ -946,6 +1081,7 @@ type SelfStudyPageModel = {
   audience: Audience;
   hero: AudienceHeroContent;
   offer: SelfStudyOffer;
+  accessAction: UserAction;
 };
 
 type SubscriptionPageModel = {
@@ -978,11 +1114,28 @@ type AboutPageModel = {
   storySections: ContentSection[];
   principles: Feature[];
   teamGroups: TeamGroup[];
-  cta: LinkAction; // erst setzen, wenn ein reales Beratungs-/Kontaktziel existiert
+  cta?: LinkAction; // nur setzen, wenn ein reales Beratungs-/Kontaktziel existiert
 };
 
-type PlaceholderPageModel = {
+type ContactChannel = {
+  id: string;
+  kind: "email" | "phone" | "address";
+  label: string;
+  value: string;
+  href?: string;
+};
+
+type ContactPageModel = {
   hero: AudienceHeroContent;
+  channels: ContactChannel[];
+  officeHours?: string;
+  note?: string;
+};
+
+type LegalPageModel = {
+  title: string;
+  updatedAt: string;
+  sections: ContentSection[];
 };
 ```
 
@@ -1019,14 +1172,15 @@ Callbacks und UI-State wie `activeWeek`/`onChange` sind Component-State, keine D
 | `ServiceCard`, `ServiceSubgroup`, `FeaturedTestimonial` | `HomePageModel`, `ServiceCardModel`, `ServiceSubgroupModel`, `Testimonial` |
 | `TargetedAudiencePicker`, zielgruppenspezifische Service-Inhalte | `TargetedServicePageModel`, `Audience`, `FlowStep`, `ContentSection`, `Feature`, `FaqItem`, `LinkAction` |
 | `SubscriptionCard` | `SubscriptionPageModel`, `SubscriptionPlan`, `LinkAction` |
-| Selbststudium-Zielseiten | `SelfStudyPageModel`, `SelfStudyOffer`, `AudienceHeroContent` |
+| Selbststudium-Zielseiten | `SelfStudyPageModel`, `SelfStudyOffer`, `MaterialAreaId`, `AccessCopy`, `UserAction`, `AudienceHeroContent` |
 | `OfferEditionForm`, `SessionEditor`, `EditionPreview`, `PublicationChecklist` | `OfferEdition`, `CourseSessionDefinition`, stabiles `Offer`, Validierungsfehler und Audit-Metadaten gemäss Abschnitt 2.12 |
-| `DailyReleaseManager`, `CourseDayPicker`, `ReleaseMaterialSelector`, `StudentReleasePreview` | `CourseDay`, `DailyRelease`, `DailyReleaseItem`, kanonische Content-Items und Audit-Metadaten gemäss Abschnitt 2.13 |
+| `DailyReleaseManager`, `CourseDayPicker`, `ReleaseMaterialSelector`, `StudentReleasePreview` | `CourseDay`, `DailyRelease`, `DailyReleaseItem`, `ReleaseContentItem` und Audit-Metadaten gemäss Abschnitt 2.13 |
 | `TeacherWorkEntryForm`, `WorkTimeOverview`, `PayrollReviewPanel` | `WorkEntry`, `TeacherAssignment`, `TeacherRateAgreement`, `PayrollPeriod`, `PayrollSnapshot` gemäss Abschnitt 2.14 |
 | `FinancialCockpit`, `OfferProfitabilityTable`, `RevenueCostChart` | `FinancialEvent`, `ExpenseEntry`, `FinancialPeriod`, `Budget`, serverseitige Monats- und Angebotsaggregate gemäss Abschnitt 2.15 |
 | `TipCategorySection`, `TipCard`, `FaqAccordion` | `TipsPageModel`, `TipCategory`, `TipPreview`, `FaqItem`, optionaler `LinkAction` |
 | Über-uns-Seite | `AboutPageModel`, `ContentSection`, `Feature`, `TeamGroup`, `LinkAction` |
-| Kontakt-Platzhalter | `PlaceholderPageModel`, `AudienceHeroContent` |
+| Kontaktseite | `ContactPageModel`, `ContactChannel`, `AudienceHeroContent` |
+| Impressum/Datenschutz | `LegalPageModel`, `ContentSection` |
 
 Layout-Primitives aus Abschnitt 1a (`PageContainer`, `Section`, `ResponsiveGrid` usw.) haben nur
 Darstellungs-/Children-Props und benötigen bewusst kein persistiertes Domänenmodell. Damit bleibt
@@ -1049,19 +1203,27 @@ werden:
   `002_create_intensivwoche_anmeldungen.sql` referenziert beim `CREATE TABLE` die im Repository
   nicht angelegte Tabelle `public.courses`. Migration 003 würde den FK erst später auf
   `intensivwoche_kurse` umstellen, kann bei einem frischen Reset aber nicht erreicht werden, wenn
-  Migration 002 bereits fehlschlägt. Die Baseline muss deshalb vor neuen Migrationen in eine
-  eindeutige, auf leerer DB ausführbare Reihenfolge gebracht werden: `kurs_id` wird zunächst ohne
-  falschen FK angelegt, der korrekte FK entsteht nach der Kurstabelle. Vor einem Abgleich mit einem
+  Migration 002 bereits fehlschlägt. Die historischen Dateien werden nicht nachträglich
+  umnummeriert, sondern gemäss Baseline-Strategie aus dem ausführbaren Strang entfernt. Der neue
+  geprüfte Baseline-Dump enthält ausschliesslich den korrekten FK auf `intensivwoche_kurse`. Vor einem Abgleich mit einem
   entfernten Projekt ist dessen Migrationshistorie read-only zu inventarisieren; kein spontanes
   `migration repair`, Umbenennen bereits remote registrierter Versionen oder `db push`.
+  **(Live-Abgleich 18.07.2026:** `public.courses` existiert auf der Live-DB tatsächlich — als
+  eigenständiges Tabellenpaar mit `course_occurrences`, ohne aktuelle Code-Referenz, aber mit
+  4 bzw. 8 Zeilen. Es ist nicht Ziel dieses FK und darf nicht ohne Fachentscheid gelöscht werden.
+  Der beschriebene lokale Reihenfolgefehler bleibt für einen `db reset --local` auf den
+  eingecheckten Dateien trotzdem gültig.)
 - Die Baseline ist darüber hinaus unvollständig: `001_create_trainer_tables.sql` setzt
   `public.profiles` voraus; `005_create_mentorship_tables.sql` setzt `public.subjects` voraus und
   verwendet für `subject_id` eine UUID, während vorhandene Typen/Seeds numerische Subject-IDs
-  zeigen. Vor jeder fachlichen Migration muss ein leerer Reset deshalb die kanonischen
-  `profiles`-/`subjects`-Definitionen in korrekter Reihenfolge bereitstellen oder die betreffenden
-  Migrationen nachweislich an die bereits kanonische Definition anbinden. Der FK-Typ muss exakt
+  zeigen. Der neue Baseline-Dump muss die kanonischen `profiles`-/`subjects`-Definitionen in
+  korrekter Reihenfolge bereitstellen. Der FK-Typ muss exakt
   `public.subjects.id` entsprechen. Ein Schema, das nur gegen eine historisch manuell vorbereitete
   Remote-Datenbank läuft, ist nicht akzeptabel.
+  **(Live-Abgleich 18.07.2026:** Auf der tatsächlichen Live-DB sind `subjects.id` und
+  `mentor_skills.subject_id` bereits identisch `bigint` typisiert und per FK verbunden — der
+  UUID-Konflikt betrifft ausschliesslich diese lokalen Dateien, falls sie je gegen eine leere DB
+  laufen.)
 - `006_seed_test_data.sql` darf nicht Teil der regulären Migrationskette bleiben. Die darin
   enthaltenen Auth-Benutzer und der gemeinsame Passwort-Hash werden aus allen deploybaren
   Migrationen entfernt. Ausschliesslich lokale, synthetische Daten liegen in
@@ -1071,9 +1233,11 @@ werden:
   sind Geschäfts-/Buchungsreferenzen. Sie werden nicht neu nummeriert, nicht durch Slugs ersetzt
   und nicht über Textvergleich neu zugeordnet.
 - `/kurse` liest aktive Zeilen über `getPublicKurse()` aus
-  `intensivwoche_kurse_mit_anmeldungen`; das Anmeldeformular schreibt direkt nach
-  `intensivwoche_anmeldungen`. Dashboard-CRUD und Kalender greifen ebenfalls auf dieselben Tabellen
-  zu. Diese Pfade bleiben funktionsfähig, bis ihre Ablösung separat verifiziert und freigegeben ist.
+  `intensivwoche_kurse_mit_anmeldungen`; das Anmeldeformular schreibt seit Migration `014`
+  (18.07.2026) nicht mehr direkt, sondern ausschliesslich über die atomare Funktion
+  `book_intensivwoche_kurs()` nach `intensivwoche_anmeldungen`. Dashboard-CRUD und Kalender greifen
+  weiterhin lesend auf dieselben Tabellen zu. Diese Pfade bleiben funktionsfähig, bis ihre Ablösung
+  separat verifiziert und freigegeben ist.
 - Die geschützte Seite `/intensivkurse` liest Kurse und Anmeldungen derzeit separat. Dabei zählt sie
   auch stornierte Anmeldungen und setzt „wenige Plätze“ bei drei Restplätzen, während die View
   stornierte Datensätze ausschliesst und den Status erst bei zwei Restplätzen setzt. Der Zielmapper
@@ -1082,16 +1246,15 @@ werden:
 - `types/kurs.ts` enthält zusätzlich `MOCK_KURSE`. Diese Kopie ist keine dritte Datenquelle und
   darf nicht in die neue Persistenz importiert werden; massgeblich sind die vorhandenen
   Supabase-Zeilen. Nach Umstellung wird das Mock nur noch als Test-Fixture verwendet oder entfernt.
-- Der Dashboard-Code und die generierten Datenbanktypen erwarten
-  `intensivwoche_kurse.created_by`, aber keine eingecheckte Migration legt die Spalte/Funktion
-  vollständig an. Dieser Schema-Drift wird vor fachlichen Erweiterungen mit einer additiven,
-  idempotenten Reparaturmigration geschlossen; vorhandene Zeilen bleiben mit `NULL` erhalten und
-  werden nicht einer erfundenen Lehrperson zugeordnet.
-- Es liegen zwei Datenbanktyp-Dateien vor: produktive Imports verwenden `types/database.ts`,
-  `lib/supabase/database.types.ts` ist derzeit eine nicht importierte zweite Generierung. Vor dem
-  Backfill werden beide gegen das lokale Schema verglichen; danach wird genau `types/database.ts`
-  kanonisch regeneriert und die ungenutzte Kopie entfernt oder eindeutig als generiertes Alias
-  ersetzt. Zwei divergierende Schema-Wahrheiten sind nicht zulässig.
+- `intensivwoche_kurse.created_by` existiert live inklusive FK auf `auth.users`, obwohl keine
+  historische eingecheckte Migration die Spalte vollständig anlegt. Die neue kanonische Baseline
+  muss diesen Live-Bestand reproduzieren; es wird keine zweite Remote-Reparaturmigration dafür
+  erzeugt. Vorhandene `NULL`-Werte bleiben erhalten und werden keiner erfundenen Lehrperson
+  zugeordnet.
+- `types/database.ts` wurde am 18.07.2026 direkt aus dem Live-Schema regeneriert und ist die einzige
+  kanonische Datenbanktyp-Datei. Die frühere, nicht importierte zweite Generierung
+  `lib/supabase/database.types.ts` wurde entfernt und darf nicht wieder angelegt werden. Nach jedem
+  lokalen Schemaabschnitt wird ausschliesslich `types/database.ts` neu generiert.
 
 **Verbindliche Rollenverteilung:** `intensivwoche_kurse` bleibt die kanonische Tabelle für
 buchbare Durchführungen und Kapazitäten; `intensivwoche_anmeldungen` bleibt die kanonische
@@ -1109,12 +1272,12 @@ ihre Klassenstufe eindeutig gemappt ist.
 | `beschreibung` / `detail_beschreibung` | `description` / `detailDescription`; kein HTML und kein Wegwerfen der Detailbeschreibung |
 | `start_datum` / `end_datum` | SQL-`DATE` bleibt zunächst ISO-Datum (`YYYY-MM-DD`) für Labels; `SessionDefinition.startAt`/`endAt` nur setzen, wenn Datum, Uhrzeit und Zeitzone (`Europe/Zurich`) validiert gemeinsam geparst wurden |
 | `uhrzeit` | zunächst verlustfrei `SessionRow.timeLabel`; erst nach validierter Parser-Migration in getrennte Zeiten zerlegen |
-| `ort` | `SessionRow.standort`; `deliveryModes` nur bei eindeutigem Wert ableiten, sonst `onsite` |
-| `preis` | `regularPrice`, `currency = "CHF"`; `earlyBirdPrice`/`earlyBirdDeadline` bleiben `undefined` |
-| `max_teilnehmer` | `SessionAvailability.capacity` |
+| `ort` | Auf `SessionRow.standort` nur bei exakter Zuordnung zu `Zürich HB` oder `Winterthur` mappen. Andere Bestandswerte unverändert erhalten und als `needs_review` sperren; `online` wird ausschliesslich nach fachlicher Prüfung als `deliveryModes`-Wert übernommen, nie als Standort. |
+| `preis` | mit expliziter Rundung `round(preis * 100)` nach `regularPriceRappen`, `currency = "CHF"`; `earlyBirdPriceRappen`/`earlyBirdDeadline` bleiben `undefined` |
+| `max_teilnehmer` | `SessionDefinition.capacity`; Belegung bleibt in `SessionAvailability` |
 | View `aktuelle_teilnehmer` | `bookedCount`; nur nicht stornierte Anmeldungen zählen |
 | View `status` | `offen→frei`, `wenige-plaetze→wenige`, `ausgebucht→voll`; `wenige` bei 1–2 Restplätzen, `voll` bei 0; überall aus derselben Kapazitäts-/Buchungsregel ableiten |
-| `klassenstufen` | Originalarray behalten; bekannte Werte `5. Klasse→5`, `6. Klasse→6`; 7.–9. Klasse oder freie Werte in einen Prüfbericht `needs_review`, nicht still verwerfen |
+| `klassenstufen` | Originalarray behalten; live verifizierte und eindeutig abbildbare Werte `4. Klasse→4`, `5. Klasse→5`, `6. Klasse→6`; `7. Klasse`, `8. Klasse`, `9. Klasse` oder freie Werte mangels Ziel-Audience in einen Prüfbericht `needs_review`, nicht still verwerfen |
 | `lehrer` / `highlights` | `teacher` / `highlights` im Bestandskartenmodell |
 | `ist_aktiv` | bestimmt öffentliche Sichtbarkeit; inaktive Zeilen bleiben für Dashboard/Historie erhalten |
 | `created_by` | Owner-FK nach Reparaturmigration; bestehendes `NULL` bleibt zulässig |
@@ -1125,11 +1288,11 @@ ihre Klassenstufe eindeutig gemappt ist.
    Kurse, Anzahl `NULL`-FKs sowie gruppierten Anmeldestatus protokollieren. Zusätzlich alle
    Kurs-IDs mit Anzahl ihrer Anmeldungen exportieren; keine personenbezogenen Formulardaten in
    Logs oder Repository schreiben.
-2. Zuerst die Baseline vollständig reparieren: eindeutige Versionen, `profiles` vor dem ersten
-   `ALTER`, `subjects` vor Mentorship, identischer PK-/FK-Typ für `subject_id`, Anmeldungen ohne
-   falschen `public.courses`-FK, Kurstabelle danach und anschliessend korrekter FK. Danach
-   Schema-Drift (`created_by`, Owner-FK/Funktionen, fehlende Indizes) additiv reparieren und erst
-   dann Katalogfelder/-tabellen ergänzen. Kein `DROP TABLE`, Neu-Seed oder `TRUNCATE`; Backfills
+2. Zuerst das Baseline-Gate aus Schritt 0 abschliessen: geprüfter aktueller Schema-Dump,
+   historische Dateien unverändert ausserhalb des ausführbaren Strangs, synthetischer Seed und
+   erfolgreicher leerer Reset. Danach verbleibende Schema-Drift additiv mit timestamp-basierten
+   Migrationen reparieren und erst dann Katalogfelder/-tabellen ergänzen. Kein `DROP TABLE`,
+   Neu-Seed oder `TRUNCATE`; Backfills
    verwenden stabile IDs und sind wiederholbar (`ON CONFLICT` bzw. `WHERE ... IS NULL`).
 3. Die sechs lokalen Seed-Zeilen und alle bereits vorhandenen Remote-Zeilen werden aus der DB
    gemappt. Mockup-Inhalte dürfen neue Angebote ergänzen, aber niemals eine bestehende Zeile allein
@@ -1144,6 +1307,9 @@ ihre Klassenstufe eindeutig gemappt ist.
    PostgreSQL-Version oder gleichwertige RLS-sichere RPC/Query) neu erstellt. Die Aussage aus
    `004_fix_rls_policies.sql`, Views erbten Policies automatisch, ist nicht als Sicherheitsbeweis
    ausreichend. Doppelte alte Policies werden anhand ihrer tatsächlichen Namen bereinigt.
+   **(Erledigt am 18.07.2026:** `intensivwoche_kurse_mit_anmeldungen` hat seit Migration `014`
+   `security_invoker = true`, per `ALTER VIEW` gehärtet statt neu angelegt, um bestehende Grants
+   nicht zu verlieren.)
 6. Owner-RLS entspricht dem vorhandenen Dashboard-Verhalten: Lehrpersonen dürfen eigene Kurse
    lesen/ändern, Admins alle; anonyme Nutzer lesen nur aktive Kurse und dürfen nur für einen
    existierenden aktiven Kurs anmelden. Anonyme Nutzer dürfen Anmeldungen niemals lesen oder
@@ -1153,19 +1319,45 @@ ihre Klassenstufe eindeutig gemappt ist.
    Rollenwerte werden dabei auf die tatsächlich verwendeten Werte `lehrperson`, `admin` und `user`
    vereinheitlicht; Policies mit `teacher` oder `student` sind zu migrieren und durch pgTAP zu
    belegen, nicht parallel beizubehalten.
+   **(Live-Abgleich 18.07.2026:** Die Owner-RLS auf `intensivwoche_kurse`/`intensivwoche_anmeldungen`
+   war bereits korrekt gescoped, keine Änderung nötig. Echte `teacher`/`student`-Reste fanden sich
+   stattdessen in `mentor_skills_insert_own`/`listings_insert_own` — dort blockierten sie live jede
+   Neuanlage für alle Nutzer und wurden mit Migration `012` auf `lehrperson`/`user` korrigiert.
+   `/intensivkurse` verwendet weiterhin seine eigene, abweichende Belegungsberechnung — bleibt
+   offen, siehe Schritt 5 im Ausführungsplan.)
 7. Anmeldungen laufen ausschliesslich über eine atomare Datenbankfunktion, die den Kursdatensatz
    mit `SELECT ... FOR UPDATE` sperrt, Aktivität prüft, nur nicht stornierte Anmeldungen zählt,
-   Kapazität prüft, eine aktive Doppelanmeldung verhindert und erst dann einfügt. Eine partielle
-   Unique-Constraint bzw. ein funktionaler Unique-Index sichert mindestens `(kurs_id,
-   lower(email))` für nicht stornierte Anmeldungen. Die Funktion verwendet einen festen leeren
+   Kapazität prüft, eine aktive Doppelanmeldung verhindert und erst dann einfügt. Mehrere Kinder
+   derselben Familie dürfen denselben Kurs buchen. Deshalb wird der bestehende, zu grobe Index auf
+   `(kurs_id, lower(parent_email))` ersetzt durch einen partiellen funktionalen Unique-Index auf
+   `(kurs_id, lower(parent_email), lower(trim(child_firstname)), lower(trim(child_lastname)))` für
+   nicht stornierte Anmeldungen. Zusätzlich besitzt jeder Request einen vom Server akzeptierten
+   `idempotency_key`-UUID mit eigener Eindeutigkeit, damit Wiederholungen desselben Requests keine
+   zweite Buchung erzeugen. Die Funktion verwendet einen festen leeren
    `search_path`, minimale Grants und gibt fachlich unterscheidbare Fehler für `voll`, `inaktiv`
    und `bereits_angemeldet` zurück. Beide Buchungsoberflächen rufen dieselbe Funktion auf; direkte
-   Client-Inserts sind danach nicht mehr erlaubt. Ein Parallelitätstest mit zwei gleichzeitigen
+   Client-Inserts sind danach nicht mehr erlaubt. Da die RPC von `anon` direkt aufrufbar ist, ist
+   Zod in der Server Action **keine Sicherheitsgrenze**: DB-Constraints bzw. die Funktion prüfen
+   erlaubte Geschlechtswerte, Pflichtfelder, normalisierte E-Mail, maximale Längen (Vor-/Nachname
+   50, Klassenstufe 20, Telefon 20, Notiz 500), gültige Kurs-ID und eine begrenzte Payload. Die
+   öffentliche Server Action verwendet zusätzlich einen dauerhaften Rate-Limiter auf gehashter,
+   rotierter Netzwerkkennung und ein Honeypot-Feld; Roh-IP, CAPTCHA-Token und Secrets werden nicht
+   in Anmeldungen oder Logs gespeichert. Ein Parallelitätstest mit zwei gleichzeitigen
    Buchungen auf den letzten Platz muss exakt einen Erfolg und eine Ablehnung ergeben.
+   **(Teilweise erledigt am 18.07.2026:** `book_intensivwoche_kurs()` und der partielle Unique-Index
+   `idx_anmeldungen_kurs_email_unique` existieren seit Migration `014`; `actions.ts` ruft
+   ausschliesslich diese Funktion auf, direkte Inserts sind per `REVOKE` entzogen. Der
+   Parallelitätstest, familienfähiger Duplikatschlüssel, Idempotenzschlüssel, DB-Längenprüfungen
+   und Rate-Limit sind noch nicht vollständig umgesetzt — sie sind Pflicht in Schritt 0/5 und
+   werden in Schritt 12 automatisiert geprüft.)
 8. Rollback entfernt höchstens neu hinzugefügte, noch ungenutzte Katalogstrukturen. Bestehende
    Kurs-/Anmeldungszeilen, IDs, Statuswerte und FK-Beziehungen werden niemals zurückgesetzt. Vor dem
    Umschalten der neuen Seiten muss der Vorher-Nachher-Abgleich exakt dieselben Kurs- und
    Anmeldungs-IDs sowie dieselben Anmeldungszahlen je Kurs nachweisen.
+9. `booked_price_rappen`, `currency`, `edition_id`, `session_id` und `idempotency_key` sind nach
+   dem INSERT unveränderliche Buchungsfakten. Ein `BEFORE UPDATE`-Trigger lehnt Änderungen dieser
+   Spalten ab; Korrekturen erfolgen als auditierte Gegen-/Neubuchung. Auch Admin- und Service-Role-
+   Pfade umgehen diese Invariante nicht stillschweigend.
 
 ### 2.11 Vier geschützte Materialbereiche und Einschreibungsrechte
 
@@ -1265,9 +1457,9 @@ type OfferEdition = {
   publicTitle: string;
   tagline: string;
   description: string;
-  regularPrice: number;
+  regularPriceRappen: number;
   earlyBirdEnabled: boolean;
-  earlyBirdPrice: number | null;
+  earlyBirdPriceRappen: number | null;
   earlyBirdDeadline: string | null; // ISO-Datum
   currency: "CHF";
   registrationOpensAt?: string;
@@ -1281,7 +1473,6 @@ type OfferEdition = {
 
 type CourseSessionDefinition = SessionDefinition & {
   editionId: string;
-  capacity: number;
   registrationStatus: "bookable" | "waitlist" | "cancelled";
 };
 ```
@@ -1300,14 +1491,24 @@ werden; Auswertungen verwenden stets den tatsächlich gespeicherten Sessionwert.
 Prüfungssimulationen ist Kapazität zwar für Buchungsgrenzen zulässig, aber keine fachliche
 Auslastungs-KPI und wird im Finanz-Cockpit nicht als Prozentwert dargestellt.
 
-Persistenz: `offers` hält den stabilen fachlichen Schlüssel (`audience_id`, `kurstyp`, `slug`),
-`offer_editions` die jährlich veränderlichen Texte und Preise, `course_sessions` Termine,
-Standorte und Kapazitäten. Eine Durchführung gehört genau einem Offer; eine Session genau einer
+Persistenz: `offers` hält den stabilen fachlichen Schlüssel (`audience_id`, `kurstyp`, `slug`) und
+`offer_editions` die jährlich veränderlichen Texte und Preise. `course_sessions` ist **keine zweite
+Durchführungstabelle**, sondern eine optionale 1:1-Erweiterung der kanonischen
+`intensivwoche_kurse`-Zeile: `course_sessions.id` ist zugleich PK und FK auf
+`intensivwoche_kurse.id`. Name, Datum, Standort, Kapazität, Aktivität und Buchungs-FK bleiben
+kanonisch in `intensivwoche_kurse`; die Erweiterung speichert `edition_id`, normalisierte
+Delivery-/Publikationsmetadaten und Versionsstand. Jede neue buchbare Session wird transaktional
+zusammen mit genau einer `intensivwoche_kurse`-Zeile angelegt; jede Anmeldung verweist weiterhin
+über `kurs_id` auf diese Zeile. `intensivwoche_kurse.ort` wird für neue Zeilen durch
+Check/validierte RPC auf `Zürich HB` und `Winterthur` begrenzt; Online-Teilnahme liegt getrennt in
+`delivery_modes`. Historische abweichende Orte bleiben erhalten und `needs_review`. Eine
+Durchführung gehört genau einem Offer; eine Session genau einer
 Durchführung. Für dieselbe Kombination `(offer_id, school_year, edition_key)` gilt eine
 Eindeutigkeitsregel. Eine neue Jahresperiode wird über „Vorjahr duplizieren“ als `draft` erzeugt,
 nicht durch Überschreiben der veröffentlichten Vorjahreszeile.
 
-Jede Buchung speichert zusätzlich `edition_id`, `session_id`, `booked_price` und `currency` als
+Jede Buchung speichert zusätzlich `edition_id`, `session_id` (identisch zur kanonischen `kurs_id`),
+`booked_price_rappen` und `currency` als
 unveränderlichen Snapshot. Spätere Preis- oder Terminänderungen dürfen historische Buchungen und
 Belege nicht verändern. Sessions mit bestehenden Anmeldungen werden nicht gelöscht; Absage und
 Terminänderung sind explizite, auditierte Aktionen.
@@ -1338,7 +1539,7 @@ type DailyReleaseStatus = "draft" | "scheduled" | "active" | "revoked";
 
 type CourseDay = {
   id: string;
-  sessionId: string;
+  sessionId: number;
   sequence: number;                 // 1–5, eindeutig pro Session
   courseDate: string;               // lokales Kursdatum
 };
@@ -1360,15 +1561,22 @@ type DailyReleaseItem = {
   contentItemId: string;
   position: number;
 };
+
+type ReleaseContentItem = {
+  id: string;
+  kind: "exercise" | "trainer_exam";
+  sourceId: number;
+  title: string;
+};
 ```
 
 Persistenz: `course_days` gehört zu genau einer `course_session`; `(session_id, sequence)` und
 `(session_id, course_date)` sind eindeutig. `daily_releases` besitzt höchstens eine aktuelle
-Freigabe pro Kurstag. `daily_release_items` verknüpft die Freigabe mit dem kanonischen
-Inhaltskatalog für Übungen und Prüfungen; `(release_id, content_item_id)` ist eindeutig. Vor der
-Migration wird inventarisiert, ob die vorhandenen Übungs-/Prüfungstabellen direkt über einen
-gemeinsamen Content-FK referenzierbar sind. Es werden weder polymorphe IDs ohne Integritätsprüfung
-noch Materialkopien angelegt.
+Freigabe pro Kurstag. Eine schmale Registry `release_content_catalog` besitzt eine UUID sowie
+entweder `exercise_id` oder `trainer_exam_id`; ein XOR-Check verlangt exakt eine Quelle und beide
+Spalten besitzen echte FKs auf die vorhandenen Tabellen. `daily_release_items.content_item_id`
+verweist auf diese Registry; `(release_id, content_item_id)` ist eindeutig. Damit bleibt
+`ReleaseContentItem` gemeinsam renderbar, ohne ungesicherte polymorphe IDs oder Materialkopien.
 
 `scheduled` benötigt keinen unzuverlässigen Browser-Timer: Der effektive Status wird serverseitig
 aus `status`, `opens_at`, `closes_at` und Datenbankzeit bestimmt. Zeitpunkte werden als
@@ -1390,8 +1598,8 @@ Zeitpunkt, Kursgruppe, Kurstag, Aktion und Vorher-/Nachher-Diff ohne Teilnehmerd
 ### 2.14 Arbeitszeiten und Lohnvorbereitung
 
 `Layout_Admin_Zeiterfassung.html` ist die verbindliche Admin-Referenz für Soll-/Ist-Stunden,
-Genehmigung und Monatsabschluss. Die Lernpersonenansicht nutzt dasselbe Modell unter
-`/arbeitszeiten`: Eine Lernperson sieht nur eigene Einträge, bestätigt automatisch aus
+Genehmigung und Monatsabschluss. Die Lehrpersonenansicht nutzt dasselbe Modell unter
+`/arbeitszeiten`: Eine Lehrperson sieht nur eigene Einträge, bestätigt automatisch aus
 `course_sessions` vorgeschlagene Unterrichtszeiten und erfasst Zusatzaufwand wie Aufsatzfeedback,
 Vorbereitung, Coaching oder Administration. Geplante Kursdauer ist ein Vorschlag und niemals
 automatisch eine genehmigte Lohnposition.
@@ -1427,16 +1635,56 @@ type TeacherRateAgreement = {
   version: number;
   createdBy: string;
 };
+
+type TeacherAssignment = {
+  id: string;
+  teacherId: string;
+  sessionId: number;                 // intensivwoche_kurse.id / course_sessions.id
+  role: "lead" | "assistant" | "exam_supervisor";
+  validFrom: string;
+  validUntil?: string;
+};
+
+type PayrollPeriod = {
+  id: string;
+  year: number;
+  month: number;
+  status: "open" | "review" | "locked";
+  version: number;
+  lockedAt?: string;
+  lockedBy?: string;
+};
+
+type PayrollSnapshotLine = {
+  id: string;
+  snapshotId: string;
+  workEntryId: string;
+  rateAgreementId: string;
+  durationMinutes: number;
+  hourlyRateRappen: number;
+  amountRappen: number;
+};
+
+type PayrollSnapshot = {
+  id: string;
+  periodId: string;
+  teacherId: string;
+  totalMinutes: number;
+  totalAmountRappen: number;
+  currency: "CHF";
+  createdAt: string;
+  lines: PayrollSnapshotLine[];
+};
 ```
 
-Persistenz: `teacher_assignments` verknüpft Lernpersonen mit `course_sessions` und einer Rolle.
+Persistenz: `teacher_assignments` verknüpft Lehrpersonen mit `course_sessions` und einer Rolle.
 `work_entries` enthält die tatsächlich geleistete Zeit. Genau eine fachliche Quelle darf je
 Eintrag gesetzt sein; Check-Constraints verhindern negative/Null-Minuten, unzulässige
 Statusübergänge und überlappende Unterrichtseinträge. Der Administrator vereinbart den Lohn mit
-der Lernperson und erfasst ihn ausschliesslich in `teacher_rate_agreements`: Stundensatz in ganzen
-Rappen sowie `valid_from`/`valid_until`. Zeiträume derselben Lernperson dürfen sich nicht
+der Lehrperson und erfasst ihn ausschliesslich in `teacher_rate_agreements`: Stundensatz in ganzen
+Rappen sowie `valid_from`/`valid_until`. Zeiträume derselben Lehrperson dürfen sich nicht
 überschneiden. Eine Änderung erzeugt eine neue zeitlich gültige Vereinbarung und überschreibt nie
-einen früheren Satz. Das Lernpersonen-Dashboard besitzt keine Mutation für Lohnsätze.
+einen früheren Satz. Das Lehrpersonen-Dashboard besitzt keine Mutation für Lohnsätze.
 `payroll_periods` steuert `open/review/locked`, und ein transaktionaler
 Monatsabschluss erzeugt `payroll_snapshots` samt unveränderlichen Snapshot-Zeilen aus genehmigten
 Minuten und dem am Leistungsdatum gültigen Satz. Pro Snapshot-Zeile gilt
@@ -1444,7 +1692,7 @@ Minuten und dem am Leistungsdatum gültigen Satz. Pro Snapshot-Zeile gilt
 Vereinbarungs-ID werden mitgespeichert. Die eigentliche Lohnbuchhaltung bleibt extern; der Export
 enthält geprüfte Summen und stabile Quell-IDs.
 
-Lernpersonen dürfen per RLS eigene `draft`-/`rejected`-Einträge lesen und bearbeiten sowie eigene
+Lehrpersonen dürfen per RLS eigene `draft`-/`rejected`-Einträge lesen und bearbeiten sowie eigene
 Einträge einreichen. Nach `submitted` sind Änderungen nur nach Rückweisung möglich. Administratoren
 sehen alle Einträge, genehmigen oder weisen mit Begründung zurück und sperren Perioden. Genehmigte
 oder abgeschlossene Werte werden nie überschrieben; Korrekturen erfolgen als auditierte Gegen-/
@@ -1470,14 +1718,57 @@ type FinancialEvent = {
   eventType: FinancialEventType;
   sourceKind: string;
   sourceId: string;
-  amountRappen: number;              // positiver Ganzzahlbetrag; Richtung aus eventType
+  eventVersion: number;              // Teil des Idempotenzschlüssels
+  amountRappen: number;              // vorzeichenbehaftet; Einnahme +, Aufwand/Refund -
   currency: "CHF";
   occurredAt: string;
   recognizedAt: string;
   editionId?: string;
-  sessionId?: string;
+  sessionId?: number;
   audienceId?: string;
   status: "pending" | "confirmed" | "cancelled";
+};
+
+type ExpenseEntry = {
+  id: string;
+  category: "room" | "material" | "marketing" | "external_service" | "overhead";
+  amountRappen: number;              // positiver Aufwandbetrag; Ledger-Ereignis wird negativ
+  currency: "CHF";
+  serviceDate: string;
+  editionId?: string;
+  sessionId?: number;
+  receiptRef?: string;
+  status: "draft" | "approved" | "cancelled";
+};
+
+type FinancialPeriod = {
+  id: string;
+  year: number;
+  status: "open" | "review" | "locked";
+  version: number;
+  lockedAt?: string;
+  lockedBy?: string;
+};
+
+type Budget = {
+  id: string;
+  periodId: string;
+  category: string;
+  amountRappen: number;
+  currency: "CHF";
+  version: number;
+};
+
+type AuditEvent = {
+  id: string;
+  actorUserId: string | null;        // null nur für eindeutig bezeichnete Systemereignisse
+  entityType: string;
+  entityId: string;
+  action: string;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  occurredAt: string;
+  correlationId: string;
 };
 
 type OfferFinancialSummary = {
@@ -1497,12 +1788,19 @@ type OfferFinancialSummary = {
 
 `financial_events` ist ein idempotenter, append-only Reporting-Ledger mit eindeutigem
 `(source_kind, source_id, event_type, event_version)`. Buchungen verwenden den unveränderlichen
-`booked_price`-Snapshot, Zahlungen und Rückerstattungen die Provider-Transaktionen, Lohnkosten nur
+`booked_price_rappen`-Snapshot, Zahlungen und Rückerstattungen die Provider-Transaktionen, Lohnkosten nur
 abgeschlossene `payroll_snapshot_lines`. `expense_entries` erfasst Räume, Material, Werbung,
 externe Leistungen und Betriebskosten mit Belegreferenz, Leistungsdatum, Freigabestatus und
 optionalem `edition_id`/`session_id`. `financial_periods`, `budgets` und auditierte
 `financial_adjustments` vervollständigen den Abschlussprozess. Abgeschlossene Perioden bleiben
 unverändert; spätere Korrekturen werden als neue Ereignisse gebucht.
+
+`audit_log` ist die gemeinsame append-only Audit-Tabelle für alle Admin- und Systemmutationen.
+Sie entspricht `AuditEvent`, besitzt Indizes auf `(entity_type, entity_id, occurred_at)` und
+`actor_user_id`, ist für reguläre Benutzer nicht lesbar und kann von Anwendungsrollen weder
+aktualisiert noch gelöscht werden. Vorher-/Nachher-Daten enthalten keine Secrets, Tokens,
+Passwörter oder unnötigen personenbezogenen Buchungsfelder. Jede transaktionale Fachmutation
+schreibt Audit- und Fachdaten in derselben Datenbanktransaktion.
 
 **Angebotsauswertung:** Die Tabelle zeigt pro `OfferEdition` mindestens Angebot/Zielgruppe,
 Teilnehmer, Kursgruppen, Auslastung, Umsatz, direkte Kosten, Durchschnittsumsatz pro Teilnehmer,
@@ -1565,25 +1863,25 @@ Lohnperioden und nicht zugeordnete Kosten werden sichtbar markiert, nicht heraus
 | `Testimonials` / `TestimonialCard` | `testimonials: Testimonial[]` | Alle 13 regulären Detailseiten im aktuellen Bestand; kein Carousel nötig |
 | `ExamSimTimeline` *(neu)* | `segments: ExamTimelineSegment[]` | Nur Prüfungssimulation |
 | `FaqAccordion` | `items: FaqItem[]` | Nur Prüfungssimulation |
-| `SiteNav` *(neu)* | `model: SiteNavModel` | Ausschliesslich `app/[locale]/(marketing)/layout.tsx`, dort genau einmal — flache Flex-Navigation mit direkten Links ab `md:`, darunter shadcn `Sheet`; Login kommt aus `model.login` und bleibt `/login`; kein Import im globalen `app/layout.tsx` und kein seitenweises Rendering |
+| `SiteNav` *(neu)* | `model: SiteNavModel` | Ausschliesslich `app/[locale]/(marketing)/layout.tsx`, dort genau einmal — flache Flex-Navigation mit sieben Audience-Zielen, Nachhilfe, Über uns und Kontakt ab `md:`, darunter shadcn `Sheet` mit denselben Zielen; Login kommt aus `model.login` und bleibt `/login`; beim Deutsch-only-Launch kein EN-Schalter; kein Import im globalen `app/layout.tsx` und kein seitenweises Rendering |
 | `SiteFooter` *(neu)* | `model: SiteFooterModel` | Ausschliesslich im öffentlichen Marketing-Layout, nach `children`; übernimmt das wiederkehrende Footer-Muster der acht vollständigen Referenzseiten und enthält nur reale interne Ziele |
 | `KlassenPicker` *(neu)* | `audiences: Audience[]` | Nur Startseite (Hero), filtert `placements.includes("heroPicker")`; liest dieselbe Quelle wie `SiteNav` |
 | `ServiceCard` *(neu)* | `service: ServiceCardModel` | Nur Startseite — ganze Karte klickbar über `service.action`, Zielgruppe über `eligibleFor`; `ariaLabel` liegt im Modell |
 | `ServiceSubgroup` *(neu)* | `group: ServiceSubgroupModel` | Nur Startseite — fasst Karten mit gemeinsamer Zielgruppen-Einschränkung zusammen |
 | `FeaturedTestimonial` *(neu)* | `testimonial: Testimonial` | Nur Startseite — einzelnes grosses Zitat, andere Darstellung als `Testimonials` (3er-Grid) |
 | `TargetedAudiencePicker` *(neu)* | `audiences: Audience[]` | Landingpages Prüfungssimulation und Distance Learning — Auswahl wird aus `TargetedServicePageModel.eligibleAudiences` gespeist; keine duplizierte Zielgruppenliste |
-| `SubscriptionCard` *(neu)* | `plan: SubscriptionPlan` | Nur `/nachhilfe` — Empfehlung und CTA liegen im Plan; Preis wird berechnet, nicht als Text gepflegt |
+| `SubscriptionCard` *(neu)* | `plan: SubscriptionPlan` | Nur `/nachhilfe` — Empfehlung und `UserAction` liegen im Plan; ohne reales Ziel wird ein erklärter deaktivierter Zustand statt eines Links gerendert; Preis wird aus Rappen berechnet |
 | `TipCategorySection` *(neu)* | `category: TipCategory` | Nur `/tipps` — gruppiert redaktionelle Vorschauen nach der im Mockup vorgesehenen Kategorie |
 | `TipCard` *(neu)* | `tip: TipPreview` | Nur `/tipps` — ohne reale Artikelseite ist die Karte semantischer Inhalt ohne Link/CTA; erst eine vorhandene und getestete Zielroute setzt `tip.action` |
 | `OfferEditionForm` *(neu)* | `offer`, `edition`, `sessions?` | Zielgruppenunabhängige geschützte Kursverwaltung gemäss `Layout_Admin_Kursangebot_Maske.html`; alle sieben Zielgruppen und alle verwalteten Angebotstypen, Abschnitte Grundlagen, Preise, optionale Termine und Veröffentlichung |
-| `SessionEditor` *(neu)* | `sessions: CourseSessionDefinition[]` | Nur für terminbasierte Angebote; fügt Termine hinzu, bearbeitet Standort/Kapazität, filtert die Bearbeitungsansicht dynamisch nach Standort und markiert Absagen statt belegte Sessions zu löschen; Selbststudium rendert keinen leeren Pflichttermin-Editor |
+| `SessionEditor` *(neu)* | `sessions: CourseSessionDefinition[]` | Nur für terminbasierte Angebote; fügt Termine hinzu, wählt den Standort ausschliesslich aus `Zürich HB`/`Winterthur`, bearbeitet Kapazität, filtert nach diesen beiden Werten und markiert Absagen statt belegte Sessions zu löschen; Selbststudium rendert keinen leeren Pflichttermin-Editor |
 | `EditionPreview` *(neu)* | `edition: OfferEdition`, `sessions` | Sticky Zusammenfassung in der Admin-Maske; reine Vorschau, keine zweite Datenquelle |
 | `PublicationChecklist` *(neu)* | `edition`, `sessions`, `issues` | Blockiert Veröffentlichung bei fehlenden Pflichtfeldern, ungültigen Preisen/Fristen oder fehlenden buchbaren Terminen |
 | `DailyReleaseManager` *(neu)* | `edition`, `session`, `days`, `contentItems` | Geschützte Tagesfreigabe gemäss `Layout_Admin_Tagesfreigaben.html`; orchestriert Auswahl, Entwurf, Planung, Freigabe und Notfallsperre |
 | `CourseDayPicker` *(neu)* | `days: CourseDay[]`, `activeDayId`, `onChange` | Zeigt die fünf Kurstage und ihren effektiven Status; Status bleibt serverseitig autoritativ |
 | `ReleaseMaterialSelector` *(neu)* | `items`, `selectedIds`, `onChange` | Durchsuchbare Auswahl kanonischer Übungen/Prüfungen; speichert IDs und Reihenfolge, keine Materialkopien |
 | `StudentReleasePreview` *(neu)* | `day`, `selectedItems` | Rein redaktionelle Vorschau innerhalb der Admin-Maske; verleiht keinen Zugriff und umgeht keine RLS |
-| `TeacherWorkEntryForm` *(neu)* | `teacher`, `period`, `assignments`, `entries` | Lernpersonen-Dashboard: eigene Kurszeitvorschläge bestätigen, Zusatzaufwand erfassen und Monat einreichen |
+| `TeacherWorkEntryForm` *(neu)* | `teacher`, `period`, `assignments`, `entries` | Lehrpersonen-Dashboard: eigene Kurszeitvorschläge bestätigen, Zusatzaufwand erfassen und Monat einreichen |
 | `WorkTimeOverview` *(neu)* | `period`, `teacherSummaries`, `filters` | Admin-Übersicht gemäss `Layout_Admin_Zeiterfassung.html`; Soll/Ist, Status, Abweichungen und genehmigte Lohnprognose |
 | `PayrollReviewPanel` *(neu)* | `teacher`, `entries`, `rateAgreements`, `issues` | Admin pflegt zeitlich gültigen vereinbarten Stundensatz, genehmigt/weist Zeiten zurück und bereitet den unveränderlichen Snapshot vor |
 | `FinancialCockpit` *(neu)* | `period`, `basis`, `kpis`, `monthlySeries`, `offerSummaries` | Admin-Jahresübersicht gemäss `Layout_Admin_Finanzcockpit.html`; gebucht/bezahlt/verdient bleiben getrennte Sichten |
@@ -1615,8 +1913,8 @@ unverändert.
 
 **Nachträglich entschieden:** „Simulationsprüfung" und „Distance Learning" wurden aus `SiteNav`
 entfernt/nie aufgenommen (bleiben `ServiceCard`s auf der Startseite), weil sie nur für einen Teil
-der Zielgruppen gelten. Die flache Navigation enthält `Nachhilfe`, `Über uns` und alle sieben
-Zielgruppen aus `Audience[]`, also auch BMS und Matura. Lerncoaching und Tipps bleiben über die
+der Zielgruppen gelten. Die flache Navigation enthält `Nachhilfe`, `Über uns`, `Kontakt` und alle
+sieben Zielgruppen aus `Audience[]`, also auch BMS und Matura. Lerncoaching und Tipps bleiben über die
 Startseiten-Kacheln beziehungsweise inhaltliche Verlinkungen auffindbar, aber nicht im Top-Level-Nav.
 Auffindbarkeit von
 Simulationsprüfung und Distance Learning bleibt über die Startseiten-Kachel und (bei
@@ -1696,40 +1994,46 @@ Bestehende unlokalisierte Auth-/Dashboard-/API-Routen bleiben grundsätzlich aus
 Marketing-Routings. Die neue Admin-Referenz wird als ausdrückliche Ausnahme aufgeführt und
 erweitert die vorhandene unlokalisierte Kursverwaltung.
 
-**Stand des statischen Prototyps (16.07.2026):** Die 37 HTML-Dateien sind über relative
-Dateilinks verbunden. Siebzehn eindeutig auflösbare Dateilinks/Platzhalter wurden korrigiert.
-23 Dateien enthalten weiterhin zusammen 80 `href="#"`-Platzhalter. Es gibt keine fehlenden
-relativen HTML-Dateiziele oder Anker. Das beschreibt nur den Prototyp: Im Repository existiert auf
-`/kurse` bereits ein funktionierender Intensivwochen-Anmelde-Flow mit Modal und Supabase Server
-Action. Für die Next.js-Umsetzung gelten die Routen in der folgenden Tabelle; vorhandene
-Anmeldelogik wird geprüft und wiederverwendet bzw. erweitert, nicht durch `#` ersetzt.
+**Stand des statischen Prototyps (16.07.2026, gegengeprüft am 16.07.2026 gegen den tatsächlichen
+Dateibestand):** Die 37 HTML-Dateien sind über relative Dateilinks verbunden. Siebzehn eindeutig
+auflösbare Dateilinks/Platzhalter wurden korrigiert. Der „Termin wählen"-Link auf
+`Layout_BMS_Pruefungssimulation_Seite.html` wurde zusätzlich von `href="#"` auf `href="#buchung"`
+aufgelöst (Ziel-`id="buchung"` liegt auf dem zugehörigen Preis-&-Anmeldung-Abschnitt). Damit
+verbleiben 33 Dateien mit zusammen **99** `href="#"`-Platzhaltern (am 18.07.2026 erneut vollständig
+ausgezählt). Die Aufschlüsselung unten summiert sich ebenfalls auf 99. Es gibt keine
+fehlenden relativen HTML-Dateiziele oder Anker. Das beschreibt nur den Prototyp: Im Repository
+existiert auf `/kurse` bereits ein funktionierender Intensivwochen-Anmelde-Flow mit Modal und
+Supabase Server Action. Für die Next.js-Umsetzung gelten die Routen in der folgenden Tabelle;
+vorhandene Anmeldelogik wird geprüft und wiederverwendet bzw. erweitert, nicht durch `#` ersetzt.
 
-**Verbindliche Auflösung der 80 verbleibenden `href="#"` (keiner wird kopiert):**
+**Verbindliche Auflösung der verbleibenden 99 `href="#"` (keiner wird kopiert):**
 
 | Anzahl / Label | Next.js-Ziel oder Rendering-Regel |
 |---|---|
 | 45 × „Anmelden" | `BookingButton` aus `bookingAction`; Modal/RPC oder disabled, niemals Fallback-Link |
 | 13 × „Weiterlesen →" | `TipPreview.action` bleibt leer; ohne echte Artikelroute kein `<a>` rendern |
-| 7 × „EN" | beim Deutsch-only-Launch gar nicht rendern |
-| 7 × „Kontakt" | lokalisierter Link `/de/kontakt` über den next-intl-Navigationswrapper |
+| 1 × „EN" | beim Deutsch-only-Launch gar nicht rendern |
+| 33 × „Kontakt" | lokalisierter Link `/de/kontakt` über den next-intl-Navigationswrapper |
 | 3 × Beratungs-CTA | ebenfalls `/de/kontakt`, bis ein eigener Terminbuchungsflow existiert |
 | 2 × „Zugang erhalten" | nur mit realem Self-Study-Checkout/Zugang; bis dahin disabled bzw. nicht als Link rendern |
 | 2 × „Abo buchen" | nur mit realem Nachhilfe-Checkout; bis dahin disabled bzw. nicht als Link rendern |
-| 1 × „Termin wählen" | Sprungziel `#buchung` auf der BMS-Prüfungssimulationsseite; Zielsektion erhält diese ID |
+| 1 × „Termin wählen" (bereits erledigt) | War Sprungziel `#buchung` auf der BMS-Prüfungssimulationsseite; `href="#buchung"` und `id="buchung"` sind seit 16.07.2026 in der Referenzdatei gesetzt — zählt nicht zu den 99 offenen `href="#"`. |
 
 | Quelldatei | Vorgeschlagene Route | Seitentyp | Angebot / Zweck | Besondere Elemente |
 |---|---|---|---|---|
 | `Layout_Admin_Kursangebot_Maske.html` | `/dashboard/kurse/[offerId]/durchfuehrungen/[editionId]` | Geschützte Admin-Maske, **ohne Locale-Präfix** | Jährliche Preise, Termine, Kapazität und Veröffentlichung | Erweitert vorhandenes `/dashboard/kurse`; `OfferEditionForm`, `SessionEditor`, `EditionPreview`, `PublicationChecklist`; Administrator-Rolle, Audit-Log, Preis-Snapshots und transaktionales Publizieren gemäss Abschnitt 2.12 |
 | `Layout_Admin_Tagesfreigaben.html` | `/dashboard/kurse/[offerId]/durchfuehrungen/[editionId]/tagesfreigaben` | Geschützte Admin-Maske, **ohne Locale-Präfix** | Übungen und Prüfungen kursgruppen- und tageweise freigeben | `DailyReleaseManager`, `CourseDayPicker`, `ReleaseMaterialSelector`, `StudentReleasePreview`; Einschreibungsprüfung, RLS, Zeitfenster, Audit-Log und Notfallsperre gemäss Abschnitt 2.13 |
 | `Layout_Admin_Zeiterfassung.html` | `/dashboard/arbeitszeiten` | Geschützte Admin-Maske, **ohne Locale-Präfix** | Vereinbarten Stundensatz pflegen, Stunden prüfen/genehmigen und Monatsabschluss vorbereiten | `WorkTimeOverview`, `PayrollReviewPanel`; Minuten-/Rappenwerte, zeitliche Satzhistorie, Periodensperre, Snapshot und Audit gemäss Abschnitt 2.14 |
-| *(gleicher Flow, kein separates Mockup)* | `/arbeitszeiten` | Geschütztes Lernpersonen-Dashboard, **ohne Locale-Präfix** | Eigene Zeiten bestätigen, Zusatzaufwand erfassen und einreichen | `TeacherWorkEntryForm`; RLS nur für eigene Einträge, keine Satz-/Lohndaten anderer Personen |
+| *(gleicher Flow, kein separates Mockup)* | `/arbeitszeiten` | Geschütztes Lehrpersonen-Dashboard, **ohne Locale-Präfix** | Eigene Zeiten bestätigen, Zusatzaufwand erfassen und einreichen | `TeacherWorkEntryForm`; RLS nur für eigene Einträge, keine Satz-/Lohndaten anderer Personen |
 | `Layout_Admin_Finanzcockpit.html` | `/dashboard/finanzen` | Geschützte Admin-Maske, **ohne Locale-Präfix** | Jahresübersicht sowie Teilnehmer, Umsatz und Kosten pro Angebot | `FinancialCockpit`, `OfferProfitabilityTable`, `RevenueCostChart`; Admin-only Reporting gemäss Abschnitt 2.15 |
-| `Startseite.html` | `/` | Startseite, **ersetzt die bestehende Startseite komplett** (nicht ergänzen) | Zielgruppen-Übersicht + Zusatzangebote | `SiteNav` mit sieben kompakten Zielgruppen-Direktlinks, Nachhilfe, Über uns und Login-Button zur bestehenden Route `/login`; `KlassenPicker`, `ServiceCard`-Grid, `FeaturedTestimonial`; **EN-Sprachumschalter → i18n-Umsetzung siehe Abschnitt 8**; Mobile-Navigation via `Sheet` gemäss Abschnitt 1b/3 |
+| `Startseite.html` | `/` | Startseite, **ersetzt die bestehende Startseite komplett** (nicht ergänzen) | Zielgruppen-Übersicht + Zusatzangebote | `SiteNav` mit sieben kompakten Zielgruppen-Direktlinks, Nachhilfe, Über uns, Kontakt und Login-Button zur bestehenden Route `/login`; `KlassenPicker`, `ServiceCard`-Grid, `FeaturedTestimonial`; der EN-Eintrag im HTML ist nur Prototyp und bleibt beim Deutsch-only-Launch ausgeblendet; Mobile-Navigation via `Sheet` mit denselben Zielen gemäss Abschnitt 1b/3 |
 | `Layout_Pruefungssimulation_Landingpage.html` | `/pruefungssimulation` | Auswahl-Landingpage (löst Offene Frage 6) | Erklärt Angebot + Eignung, verzweigt zu 6. Klasse/2.–3. Sek | `TargetedServicePageModel`; wiederverwendet `.aufbau/.phase`, `.features`, `TargetedAudiencePicker` (2 Optionen) und `FaqAccordion` |
 | `Layout_Lerncoaching_Seite.html` | `/lerncoaching` | Zusatzangebot-Seite | Lerncoaching-Erklärung (Konzept, kein Preis) | `TargetedServicePageModel`; eigene Texte, stark gekürzt gegenüber Referenzseite; `relatedActions` verweist auf `/nachhilfe` |
 | `Layout_Nachhilfe_Seite.html` | `/nachhilfe` | Zusatzangebot-Seite | Nachhilfe-Abo (10er/20er) | **Neuer Angebotstyp**, siehe `SubscriptionPlan`/Abschnitt 2.6 — bewusst von Lerncoaching getrennt (unterschiedliche Kaufabsicht, unterschiedliches Datenmodell); eigener Nav-Eintrag + eigene Startseiten-Kachel |
 | `Layout_DistanceLearning_Seite.html` | `/distance-learning` | Erklärseite (kein Nav-Eintrag) | Video-Teilnahme am Intensivkurs-Sportferien | `TargetedServicePageModel`; nur 6. Klasse & 2./3. Sek, nur deren Intensivkurs (nicht Halbjahreskurs) — siehe `distanceLearningAvailable`-Hinweis bei `ServiceCard` (Abschnitt 3); `TargetedAudiencePicker`, kein Preis |
-| *(kein Mockup — Platzhalter, siehe Frage 7)* | `/kontakt` | Platzhalterseite | Kontaktinfos | `PlaceholderPageModel`; nur `PageContainer` + `PageIntro`; echtes Formular erst nach Abschnitt 1b-Entscheidung |
+| *(kein Mockup)* | `/kontakt` | Kontaktseite | Verifizierte Kontaktkanäle | `ContactPageModel`; `PageContainer` + `PageIntro` + semantische Kanalliste; Formular optional und erst nach eigener Spam-/Datenschutzentscheidung |
+| *(kein Mockup; freigegebener Rechtstext erforderlich)* | `/impressum` | Rechtliche Inhaltsseite | Anbieter-/Verantwortlichkeitsangaben | `LegalPageModel`; Footer-Ziel, Veröffentlichung nur nach fachlicher Freigabe |
+| *(kein Mockup; freigegebener Rechtstext erforderlich)* | `/datenschutz` | Rechtliche Inhaltsseite | Datenschutzinformation inklusive eingesetzter Dienste und Aufbewahrung | `LegalPageModel`; Footer-Ziel, Veröffentlichung nur nach fachlicher Freigabe |
 | `Layout_Tipps_Uebersichtsseite.html` | `/tipps` | Redaktionelle Übersichtsseite | Kategorisierte Tipp-Vorschauen + FAQ | `TipsPageModel` mit `TipCategory`/`TipPreview`; Kategorien Prüfung&Planung/Lernen&Motivation/Deutsch/Mathematik/Förderbedarfe; einzelne Artikelseiten noch nicht gebaut |
 | `Layout_UeberUns_Seite.html` | `/ueber-uns` | Marketingseite | Über uns | Vollständiges Mockup; kein Platzhalter mehr, zentrale `SiteNav`/`SiteFooter` statt dupliziertem Layout-Markup |
 | `Layout_BMS_Hauptseite.html` | `/kurse/bms` | Zielgruppen-Hauptseite | BMS-Aufnahmeprüfung | Kurs-CTAs verwenden verbindlich die Intensivkurs-Unterseite; zusätzlich Prüfungssimulation und Selbststudium |
@@ -1754,7 +2058,7 @@ Anmeldelogik wird geprüft und wiederverwendet bzw. erweitert, nicht durch `#` e
 | `Layout_5_Klasse_Intensivkurs_Unterseite.html` | `/kurse/5-klasse/lerncamp-sportferien` | Kursdetail, Ferienkurs | Ferien-Lerncamp | Strukturell praktisch identisch mit 4. Klasse, 4 Terminzeilen |
 | `Layout_6_Klasse_Hauptseite.html` | `/kurse/6-klasse` | Zielgruppen-Hauptseite | Vorbereitung Gymiprüfung 2027 | 4 Karten; Halbjahreskurs empfohlen; Zusatzangebote Prüfungssimulation und Selbststudium |
 | `Layout_6_Klasse_Halbjahreskurs_Unterseite.html` | `/kurse/6-klasse/halbjahreskurs` | Kursdetail, Halbjahreskurs | Deutsch & Mathematik | 3 Phasen im Kursaufbau (korrigiert, siehe Hinweis unten), Fachinhalte, Testimonials, 5 Terminzeilen |
-| `Layout_6_Klasse_Intensivkurs_Unterseite.html` | `/kurse/6-klasse/intensivkurs-sportferien` | Kursdetail, Ferienkurs | Prüfungsaufgaben trainieren | 3 Phasen, Testimonials, 8 Terminzeilen (korrigiert — 3 Standorte: Zürich HB, Stadelhofen, Winterthur), Tagesplan mit hervorgehobenem Prüfungssimulations-Tag |
+| `Layout_6_Klasse_Intensivkurs_Unterseite.html` | `/kurse/6-klasse/intensivkurs-sportferien` | Kursdetail, Ferienkurs | Prüfungsaufgaben trainieren | 3 Phasen, Testimonials, 8 Terminzeilen an den zwei verbindlichen Standorten Zürich HB und Winterthur, Tagesplan mit hervorgehobenem Prüfungssimulations-Tag |
 | `Layout_6_Klasse_Pruefungssimulation.html` | `/kurse/6-klasse/pruefungssimulation` | Eigenständiges Zusatzangebot | Prüfungssimulation | **Neu aufzubauen** — Quelldatei nutzt fremdes Design-System (siehe Abschnitt 4), nicht direkt migrierbar |
 | `Layout_6_Klasse_Selbststudium_Unterseite.html` | `/kurse/6-klasse/selbststudium` | Eigenständiges Zusatzangebot | Selbststudium 6. Klasse | Vorhandenes Mockup über `SelfStudyPageModel`; Checkout/Zugang nur mit realem Ziel |
 | `Layout_2_Sek_Selbststudium_Unterseite.html` | `/kurse/2-3-sek/selbststudium` | Eigenständiges Zusatzangebot | Selbststudium 2./3. Sek | Vorhandenes Mockup über `SelfStudyPageModel`; Checkout/Zugang nur mit realem Ziel |
@@ -1764,10 +2068,11 @@ Mockup-Stand):**
 
 - **Kursaufbau hat bei allen fünf Halbjahreskurs-/Vorkurs-Unterseiten (4./5./6. Klasse, 1. Sek,
   2./3. Sek) durchgängig 3 Schritte, nicht 4.** Frühere Fassungen dieser Tabelle nannten „4 Phasen"
-  — das `CourseFlow`-Bausteine sollte für `steps` daher generisch bleiben (Länge aus den Daten,
+  — der `CourseFlow`-Baustein sollte für `steps` daher generisch bleiben (Länge aus den Daten,
   nicht fest auf 4 auslegen). Bei den Intensivkurs-Unterseiten war die Angabe „3 Phasen" bereits
   korrekt.
-- **6. Klasse Intensivkurs hat 8 Terminzeilen, nicht 7** (Kurs A–H, weiterhin 3 Standorte).
+- **6. Klasse Intensivkurs hat 8 Terminzeilen, nicht 7** (Kurs A–H, verteilt auf die zwei
+  verbindlichen Standorte Zürich HB und Winterthur).
 - **Dateiname-Korrektur 1. Sek:** Die tatsächlich hochgeladene Datei heisst
   `Layout_1_Sek_Halbjahesrkurs_Unterseite.html` (Tippfehler im Dateinamen selbst — „Halbjahesrkurs"
   statt „Halbjahreskurs"), nicht `Layout_1_Sek_Vorkurs_Unterseite.html` wie in einer früheren
@@ -1883,6 +2188,8 @@ app/[locale]/(marketing)/distance-learning/page.tsx
 app/[locale]/(marketing)/pruefungssimulation/page.tsx
 app/[locale]/(marketing)/kontakt/page.tsx
 app/[locale]/(marketing)/ueber-uns/page.tsx
+app/[locale]/(marketing)/impressum/page.tsx
+app/[locale]/(marketing)/datenschutz/page.tsx
 
 i18n/routing.ts, request.ts, navigation.ts
 messages/de.json
@@ -1931,7 +2238,7 @@ und API-nahe Bereiche frei von der öffentlichen Marketing-Navigation.
 - Solange nur Deutsch aktiv ist, bleibt `<html lang="de">` im globalen Root-Layout korrekt. Vor
   Aktivierung von `en` ist ein eigener Architektur-Schritt Pflicht, der den Dokument-Sprachwert
   pro Locale setzt (request-aware Root-Layout oder getrennte Root-Layouts) und gleichzeitig die
-  bestehenden globalen Provider/Fonds/Styles für Marketing, Auth und Dashboard erhält. Ein
+   bestehenden globalen Provider/Fonts/Styles für Marketing, Auth und Dashboard erhält. Ein
   englischer Pfad unter `<html lang="de">` darf nicht live gehen.
 - Der Login-Button bleibt bewusst `/login`, nicht `/de/login` oder `/en/login`.
 - Für den Deutsch-only-Launch wird kein Sprachumschalter gerendert. Bei einer späteren EN-
@@ -1945,15 +2252,20 @@ Im Projekt existiert bereits `proxy.ts` mit NextAuth-Tokenprüfung. Sein Matcher
 fehlendem Token wird nach `/login?callbackUrl=...` umgeleitet, bei fehlendem Supabase-Access-Token
 zum erneuten Login. Zusätzlich schützt `app/(dashboard)/layout.tsx` seine gesamte Route Group per
 `auth()` und `redirect('/login')`. next-intl darf weder den Proxy noch diesen Layout-Guard
-ersetzen. Die gemeinsame Proxy-Funktion entscheidet anhand des Pfads:
+ersetzen. Im Zielstand wird der Auth-Matcher auf alle Seiten der geschützten `(dashboard)`-Route-
+Group erweitert, insbesondere `/aufsaetze`, `/intensivkurse`, `/materialien` und `/arbeitszeiten`.
+Damit erzeugt bereits der Proxy den sicheren Rücksprung; der Layout-Guard bleibt eine zweite
+Schutzschicht. Die gemeinsame Proxy-Funktion entscheidet anhand des Pfads:
 
 1. Auth-/Protected-Pfad → unveränderte bestehende Auth-Logik.
 2. Lokalisierter Marketingpfad bzw. Startseiten-Locale-Negotiation → next-intl-Handler.
 3. `/api`, `/_next`, statische Dateien und sonstige bestehende Pfade → `NextResponse.next()`.
 
 Der gemeinsame `config.matcher` muss beide benötigten Pfadgruppen erfassen und technische Pfade
-ausschliessen. Bestehende Callback-URLs und Redirect-Ziele wie `/login` und `/dashboard` bleiben
-unverändert. Vor jeder Änderung ist die vorhandene `proxy.ts` vollständig zu lesen; ihre
+ausschliessen. `callbackUrl` enthält den internen Pfad und zulässige Query-Parameter, wird vor der
+Verwendung erneut als relativer Same-Origin-Pfad validiert und verwirft Protokoll-relative,
+absolute, Backslash- oder kodierte externe Ziele. Redirect-Ziele wie `/login` und `/dashboard`
+bleiben unlokalisiert. Vor jeder Änderung ist die vorhandene `proxy.ts` vollständig zu lesen; ihre
 Tokenprüfung darf weder dupliziert noch entfernt werden.
 
 ### 8.4 Inhalte
@@ -1969,14 +2281,15 @@ Tokenprüfung darf weder dupliziert noch entfernt werden.
 
 ## 9. Festgelegte Ausführungsentscheidungen
 
-1. **Selbststudium:** Die beiden in Abschnitt 6 definierten Selbststudium-Zielrouten werden als
+1. **Selbststudium:** Die drei in Abschnitt 6 definierten Selbststudium-Zielrouten für 6. Klasse,
+   2./3. Sek und BMS werden als
    minimale, aber vollständige Seiten aus den vorhandenen Primitives umgesetzt und verlinkt. Ein
    späteres individuelles Layout ersetzt nur die Darstellung, nicht Route oder Domainmodell.
 2. **Preise:** Widersprüchliche Mockup-Preise werden nicht als Produktionswahrheit importiert.
    Für jedes Angebot existiert genau ein zentraler numerischer Preisdatensatz mit dokumentierter
    Quelle und Freigabestatus. Bis zur fachlichen Freigabe wird das betroffene Angebot nicht
    buchbar veröffentlicht; UI, Seed und Datenbank dürfen keine verschiedenen Werte enthalten.
-   Ein Frühbucherpreis wird nur bei aktivem `earlyBirdEnabled`, vorhandenem `earlyBirdPrice` und
+   Ein Frühbucherpreis wird nur bei aktivem `earlyBirdEnabled`, vorhandenem `earlyBirdPriceRappen` und
    einer noch gültigen `earlyBirdDeadline` angezeigt beziehungsweise gebucht.
 3. **Zielgruppen:** Diese Migration unterstützt verbindlich sieben Gruppen: fünf
    Gymiprüfungsgruppen plus BMS und Matura. Daten unbekannter Stufen/Zielgruppen bleiben erhalten
@@ -1996,14 +2309,38 @@ Tokenprüfung darf weder dupliziert noch entfernt werden.
    Optionen statt 5), nicht direkt eine der beiden `AddOnCourses`-Routen. Grund: löst gleichzeitig
    die Copy-Inkonsistenz „Ergänzend zu jeder Klassenstufe" in Abschnitt 3 (`ServiceCard`).
 7. ~~Für „Lerncoaching", „Distance Learning", „Tipps" und „Über uns" liegt noch kein Mockup vor~~
-   **Geklärt:** Alle vier sowie Nachhilfe besitzen echte Mockups. Nur Kontakt bleibt als allgemeine
-   Marketing-Platzhalterseite. Das BMS-Selbststudium besitzt jetzt mit
+   **Geklärt:** Alle vier sowie Nachhilfe besitzen echte Mockups. Kontakt besitzt kein Mockup und
+   wird als schlanke, datengetriebene `ContactPageModel`-Seite mit verifizierten Kanälen umgesetzt.
+   Das BMS-Selbststudium besitzt jetzt mit
    `Layout_BMS_Selbststudium_Unterseite.html` ein vollständiges Mockup. Die BMS-Kurs-Unterseite
    ist verbindlich `Layout_BMS_Intensivkurs_Unterseite.html`.
 8. ~~Die Startseite definiert keine Mobile-Navigation...~~ **Geklärt:** shadcn `Sheet`
    (Hamburger-Drawer) unterhalb des Breakpoints, flache Direktlinks darüber — beide aus derselben
    `Audience[]`-Datenquelle. Siehe Abschnitt 1b und die aktualisierte `SiteNav`-Zeile in
    Abschnitt 3.
+
+### 9.1 Redaktionelle Publikationsgates
+
+Die folgenden Punkte blockieren **nicht** Komponentenbau, Routing, Typen oder technische Tests.
+Sie blockieren ausschliesslich die Veröffentlichung der jeweils betroffenen Inhalte oder aktiven
+Kauf-/Buchungsaktion. Ungeklärte Angaben werden weder erraten noch aus einer widersprüchlichen
+Mockup-Stelle ausgewählt. Bis zur Freigabe bleibt der betroffene Teil verborgen, neutral als
+Vorschau gekennzeichnet oder technisch nicht buchbar.
+
+| Bereich | Offene redaktionelle Freigabe | Verbindliches Verhalten bis zur Freigabe |
+|---|---|---|
+| Widersprüchliche Kurspreise | Ein zentraler, fachlich bestätigter Zahlenwert samt Quelle für die in Abschnitt 2.3 aufgeführten Angebote | Angebot darf als Vorschau sichtbar sein, aber Preis und Buchungsaktion werden nicht produktiv veröffentlicht; kein stilles Auswählen eines Mockup-Werts. |
+| BMS-Halbjahreskurs | Freigegebener Detailinhalt oder ausdrückliche Entscheidung, das Angebot nicht anzubieten; aktuell existiert keine eigene Detailreferenz | Keine erfundene Detailroute und keine aktive Halbjahreskurs-Buchung. Die übrigen BMS-Angebote bleiben unabhängig davon umsetzbar und veröffentlichbar. |
+| Kontakt | Verifizierte Kontaktkanäle und redaktionell freigegebener Seitentext | `/kontakt` und die zentrale Navigation dürfen technisch gebaut werden. Vor öffentlicher Freigabe muss die Seite mindestens echte Kontaktinformationen enthalten; ein Formular oder Terminbuchungsflow ist dafür nicht zwingend. |
+| Impressum/Datenschutz | Fachlich freigegebene Rechtstexte, Verantwortliche, eingesetzte Dienste, Aufbewahrung und Kontakt | Routen und `LegalPageModel` dürfen technisch gebaut werden; öffentlicher Cutover bleibt blockiert, bis beide Seiten reale Inhalte besitzen und im Footer verlinkt sind. Keine erfundenen Rechtstexte. |
+| Über-uns-Kennzahlen | Tatsächliche, belegbare Werte statt der ausdrücklich als Platzhalter markierten Zahlen | Platzhalterzahlen niemals produktiv anzeigen. Die Sektion wird bis zur Freigabe ausgeblendet oder ohne Zahlen formuliert; die übrige Über-uns-Seite bleibt nutzbar. |
+| Team-/Testimonial-Bilder | Echte, freigegebene Bilddateien inklusive Nutzungs-/Einwilligungsfreigabe und passender Alternativtexte | Keine generierten Avatare als vermeintlich echte Personenfotos veröffentlichen. Bis zur Freigabe neutrale, klar nicht-fotografische Platzhalter verwenden oder den Bildslot ausblenden. |
+| Selbststudium | Realer, Ende-zu-Ende getesteter Checkout-/Grant-/Login-/Entzugsflow gemäss Abschnitt 2.11 | Inhaltsseiten dürfen erscheinen; „Zugang erhalten“ bleibt disabled beziehungsweise wird nicht als Link gerendert. Kein Zugangsversprechen ohne funktionsfähigen Grant. |
+| Nachhilfe-Abo | Realer, getesteter Checkout oder ein ausdrücklich freigegebener alternativer Kontaktflow | Inhalts- und Preisdarstellung darf nach Preisfreigabe erscheinen; „Abo buchen“ bleibt ohne reales Ziel disabled beziehungsweise wird nicht als Link gerendert. |
+
+Jede Freigabe wird mit Datum, verantwortlicher Person beziehungsweise fachlicher Quelle und dem
+konkret freigegebenen Wert/Text/Asset dokumentiert. Eine allgemeine Aussage wie „Mockup geprüft“
+ersetzt keine Preis-, Inhalts-, Bild- oder Checkout-Freigabe.
 
 **Hinweis für die Implementierung:** `Startseite.html` **ersetzt** die bestehende
 Startseite vollständig, sie wird nicht ergänzt. Der aktuelle Bestand ist bekannt:
@@ -2051,8 +2388,9 @@ umgangen werden.
   wie `/login`, `/register` und bis zur Ablösung `/kurse` werden als explizite Ausnahmen geführt.
 - Da `supabase/config.toml` im Bestand fehlt, wird die lokale CLI-Konfiguration einmalig mit
   der lokal fixierten CLI (`npm exec -- supabase init`) angelegt. `supabase/seed.sql` enthält nur
-  synthetische lokale Fixtures; `006_seed_test_data.sql` und Auth-Testnutzer werden aus der
-  deploybaren Migrationskette entfernt. Unter `supabase/tests/database/` werden pgTAP-Tests für Migrationen
+  synthetische lokale Fixtures; die historischen Dateien `001`–`014` inklusive
+  `006_seed_test_data.sql` werden unverändert unter `supabase/legacy-migrations/` aufbewahrt und
+  sind nicht Teil der ausführbaren Baseline. Unter `supabase/tests/database/` werden pgTAP-Tests für Migrationen
   und RLS ergänzt. Sie prüfen mindestens: anonymes Lesen nur aktiver Kurse, erlaubte anonyme
   Anmeldung, verbotenes anonymes Lesen/Ändern von Anmeldungen, erlaubte Owner-Mutation des eigenen
   Kurses, verbotene Mutation eines fremden Kurses sowie erlaubte Admin-Zugriffe. Sie prüfen auch
@@ -2105,7 +2443,7 @@ identischen Vorher-Nachher-Bestand ist das Gate nicht bestanden.
   `/login?callbackUrl=<ursprünglicher Pfad>` umgeleitet.
 - Authentifiziert: `/login` und `/register` führen nach `/dashboard`; geschützte Routen bleiben
   erreichbar und behalten ihren unlokalisierten Pfad.
-- Lernpersonen: `/arbeitszeiten` ist nur für kanonische Lernpersonen-/Adminrollen erreichbar und
+- Lehrpersonen: `/arbeitszeiten` ist nur für kanonische Lehrpersonen-/Adminrollen erreichbar und
   liefert ausschliesslich eigene Zeiteinträge. `/dashboard/arbeitszeiten` und
   `/dashboard/finanzen` bleiben Admin-only; Schüler, Eltern und gewöhnliche Benutzer erhalten 403.
 - Öffentlich: alle aktivierten `/{locale}/...`-Routen liefern Erfolg, die Root-Weiterleitung folgt
@@ -2119,6 +2457,51 @@ Die pgTAP-/RLS-Suite umfasst zusätzlich Arbeitszeit-, Payroll- und Finanzregeln
 2.14/2.15: eigene gegenüber fremden Einträgen, Statusübergänge/Periodensperre, unveränderliche
 Snapshots, idempotente Finanzereignisse sowie rechnerische Abstimmung von Teilnehmer-, Umsatz-,
 Kosten-, Deckungsbeitrags- und Jahreswerten.
+
+### 10.4 Produktions-, Datenschutz-, SEO- und Betriebs-Gate
+
+Vor dem öffentlichen Cutover gelten zusätzlich folgende verbindliche Lieferobjekte:
+
+- **Staging und Backup:** Struktur- und Datenbackup des Live-Projekts mit dokumentiertem
+  Wiederherstellungstest; alle neuen Migrationen zuerst auf einer isolierten Staging-Kopie mit
+  anonymisierten/synthetischen Daten. Keine Kundendaten in lokalen Dumps oder CI-Artefakten.
+- **Feature-Flag/Cutover:** Die neuen Marketingrouten werden über ein serverseitiges Release-Flag
+  aktiviert. Der Rollback schaltet zunächst auf die bisherige Start-/Kursroute zurück und entfernt
+  keine neuen Daten. Destruktive Cleanup-Migrationen sind ein späterer, separat freizugebender
+  Schritt nach Beobachtungsfrist.
+- **Umgebungswerte:** Produktion, Staging, Test und Local besitzen getrennte Supabase-/Auth-/Mail-
+  Werte. Service-Role-Keys bleiben serverseitig, werden nie an Client-Bundles oder Logs gegeben und
+  nach vermutetem Leak rotiert. CI prüft auf Remote-URLs im Local-only-Gate und auf eingecheckte
+  Secrets.
+- **SEO:** Jede öffentliche Seite hat eindeutige lokalisierte Metadata, Canonical URL,
+  OpenGraph/Twitter-Daten und sinnvolle Social-Fallbackbilder. `sitemap.ts` enthält nur
+  veröffentlichte kanonische DE-Routen; `robots.ts` sperrt Dashboard/Auth/API und Staging.
+  Kursdetailseiten erhalten nur dann schema.org-`Course`/`Event`-JSON-LD, wenn Preis, Anbieter,
+  Termine und Verfügbarkeit aus denselben kanonischen Daten stammen; keine Mockupwerte.
+- **Rechtliche Ziele:** `SiteFooterModel.legal` enthält nur fachlich freigegebene reale Routen für
+  mindestens Impressum und Datenschutz. Solange diese Inhalte fehlen, werden keine toten Links
+  gerendert und der öffentliche Launch bleibt blockiert. Analytics oder Marketing-Cookies werden
+  erst nach dokumentierter Consent-/Datenschutzentscheidung aktiviert; technisch notwendige
+  Cookies werden getrennt beschrieben.
+- **Datenschutz und Aufbewahrung:** Für Anmeldungen, Einladungen, Zugriffsgrants, Audit-Logs,
+  Rate-Limit-Daten und Exporte sind Zweck, minimale Felder, Zugriffsrollen, Aufbewahrungsdauer,
+  Lösch-/Anonymisierungsablauf und Verantwortlichkeit dokumentiert. Logs maskieren E-Mail, Telefon,
+  Namen, Tokens und Notizen. Support- und Exportpfade sind Admin-only und auditiert.
+- **E-Mail/Benachrichtigung:** Eine Buchung gilt nicht wegen erfolgreichem Mailversand als
+  gespeichert. Bestätigungsmails laufen idempotent über Outbox/Retry, enthalten keine unnötigen
+  personenbezogenen Daten und machen dauerhafte Zustellfehler im Admin sichtbar.
+- **Observability:** Strukturierte, PII-arme Logs, Fehlertracking, Metriken für Buchungsfehler,
+  RPC-/Rate-Limit-Ablehnungen, Mailfehler und Verfügbarkeitsdrift sowie Alarmgrenzen sind vor dem
+  Cutover aktiv. Ein Runbook benennt Verantwortliche und Rollbackschritte.
+- **Abnahme:** Accessibility-Prüfung nach WCAG 2.2 AA für Navigation, Dialoge, Formfehler,
+  Tastatur/Fokus, Kontrast, Reduced Motion und Screenreader; Performance-Budgets für LCP, CLS und
+  JS; Browser-/Mobile-Testmatrix. Die visuelle Prüfung allein ersetzt diese Tests nicht.
+
+Die Buchungs-Tests umfassen zusätzlich: direkte anonyme RPC mit ungültigen/überlangen Werten wird
+abgelehnt, wiederholter `idempotency_key` erzeugt genau eine Anmeldung, zwei Geschwister mit
+gleicher Eltern-E-Mail können separat buchen, identische aktive Kinderbuchung wird abgelehnt,
+Snapshot-Spalten sind per UPDATE unveränderlich, Rate-Limit greift ohne Kundendaten zu protokollieren
+und Parallelbuchung auf den letzten Platz hat exakt einen Erfolg.
 
 Der Abschlussbericht listet jeden Befehl, Exit-Code und die Zahl der ausgeführten Route-, Link-
 und Datenbanktests auf. Ein fehlender Befehl oder ein übersprungener Test bedeutet: Verifikation

@@ -21,6 +21,10 @@
 > Anmeldungen werden nun über ein verbindliches Inventar-, Mapping-, Backfill- und
 > Vorher-Nachher-Gate berücksichtigt; IDs/FKs bleiben unverändert und Französisch/NMG werden nicht
 > ausgefiltert.
+> Der ergänzende Live-Strukturabgleich vom 18.07.2026 bestätigt 5 von 27 Zieltabellen als vorhanden
+> und 22 als noch nicht angelegt. Die vollständige Soll-/Ist-Matrix steht in
+> `datenmodell-review.md`; sie ist verbindlicher Startzustand und darf nicht als bereits migriertes
+> Zielschema missverstanden werden.
 > Schritt 12 enthält nun ein verbindliches, fehlerschließendes Gate für TypeScript, ESLint,
 > Produktions-Build, lokale Supabase-Migrationen/RLS sowie automatisierte Redirect-, Routen- und
 > Linktests; eine rein manuelle Sichtprüfung reicht nicht mehr aus.
@@ -68,6 +72,45 @@ Schritt 2) — das ersetzt aber nicht die schrittweise, von euch gesteuerte Ausf
 
 ---
 
+## Schritt 0 — Sicherheits- und Baseline-Gate (Plan Mode, zwingend vor `/init`)
+
+```
+Lies den Live-Abgleich und die „Verbindliche Supabase-Baseline-Strategie“ am Anfang von
+@design-reference/architektur-briefing-kursseiten.md vollständig. Ändere noch keine Live-Daten.
+
+1. Inventarisiere read-only das aktuelle Live-Schema, die echte Supabase-Migrationshistorie und
+   ausschliesslich nicht personenbezogene Counts. Datierter Kontrollstand vom 18.07.2026:
+   8 aktive intensivwoche_kurse, 48 intensivwoche_anmeldungen, 10 subjects, 3 mentor_skills,
+   4 courses und 8 course_occurrences. Abweichungen sind Drift und werden dokumentiert, nicht durch
+   Löschen oder Rücksetzen „korrigiert“.
+2. Bestätige, dass `courses`/`course_occurrences` keine Code-Referenz haben, aber nicht leer sind.
+   Keine Tabelle als löschbar klassifizieren, bevor Herkunft und Besitzer fachlich geklärt sind.
+3. Gleiche die vollständige Soll-/Ist-Matrix aus `datenmodell-review.md` ab. Erwarteter Stand:
+   `profiles`, `subjects`, `intensivwoche_kurse`, `intensivwoche_anmeldungen` und
+   `learning_materials` vorhanden; 22 Katalog-, Materialzugriffs-, Tagesfreigabe-, Arbeitszeit-,
+   Payroll-, Finanz- und Audit-Tabellen fehlen. In `intensivwoche_anmeldungen` fehlen
+   `idempotency_key`, `edition_id`, `session_id`, in `learning_materials` fehlt `area_id`.
+   Abweichungen nur dokumentieren; keine Zieltabellen in Schritt 0 remote anlegen.
+4. Lege einen Plan für einen neuen lokalen Baseline-Strang aus einem geprüften Schema-Dump des
+   Live-Schemas vor. Die historischen Dateien 001–014 werden unverändert nach
+   `supabase/legacy-migrations/` verschoben und nicht mehr von `db reset --local` ausgeführt.
+   Baseline und neue Migrationen enthalten keine Geschäfts-, Auth- oder Testdaten.
+5. Ab der Baseline nur UTC-Zeitstempelpräfixe `YYYYMMDDHHMMSS_*.sql`. Kein `migration repair`,
+   kein Umbenennen remote registrierter Versionen, kein `db push` und keine Live-Mutation.
+6. Plane die offenen Härtungen der öffentlichen Buchung: familienfähiger Duplikatschlüssel,
+   `idempotency_key`, DB-seitige Eingabe-/Längenchecks, unveränderliche Snapshot-Spalten,
+   dauerhafter Rate-Limiter und automatisierter Parallelitätstest.
+
+Zeige zuerst Live-Inventar, Baseline-Dateistruktur, Diff-/Rollback-Strategie und genaue lokale
+Befehle. Ohne Freigabe keine Dateien verschieben und keine SQL-Migration anwenden. Schritt 0 endet
+erst, wenn der Dump Constraints, Indizes, Trigger, Funktionen, View-Optionen, Grants, RLS und
+Storage-Policies umfasst und `supabase db reset --local`, DB-Lint, pgTAP sowie ein
+Baseline-Schema-Diff gegen den anonymisierten Live-Strukturstand lokal reproduzierbar sind. Die
+PostgREST-OpenAPI-Struktur allein erfüllt dieses Gate nicht.
+```
+
+---
+
 ## Schritt 1 — Bestandsaufnahme (Plan Mode)
 
 ```
@@ -78,21 +121,24 @@ Validiere den datierten Repository-Bestand am Anfang von
    `next@16.1.6` vs. `@next/bundle-analyzer@^16.2.2`; gleiche sie vor dem ersten Build auf eine
    bewusst freigegebene Version ab, ohne im Zuge der Migration still Next.js zu aktualisieren.
 2. Bestehende Startseite und `app/components/zap/navbar.tsx`: Mobile-Menü und Login-CTA sind
-   vorhanden. Vergleiche sie mit der aktualisierten Referenz `Startseite.html`: verbindlich sind
-   sieben flache Zielgruppen-Direktlinks mit kompakten Labels, Nachhilfe, Über uns, EN, Kontakt
-   und Login — kein Angebot-Dropdown.
+   vorhanden. Vergleiche sie mit der aktualisierten Referenz `Startseite.html`: Für die spätere
+   `SiteNav` verbindlich sind sieben flache Zielgruppen-Direktlinks mit kompakten Labels,
+   Nachhilfe, Über uns, Kontakt und Login — kein Angebot- oder Klassenstufen-Dropdown. Der
+   EN-Eintrag in `Startseite.html` ist nur ein Prototyp-Platzhalter und wird beim Deutsch-only-
+   Launch nicht gerendert. Die kompakten Dropdown-Navigationen der 26 übrigen HTML-Referenzen
+   dienen ausschliesslich der klickbaren Designprüfung und sind keine Implementierungsvorgabe.
 3. Tailwind-4-CSS-first-Setup und alle Dateien unter `app/components/ui`; `components.json` und
    die fünf im Briefing genannten Primitives fehlen laut Snapshot.
 4. i18n ist noch nicht installiert; `app/[locale]`, `i18n/` und `messages/` fehlen.
 5. Supabase ist bereits im Code verdrahtet: prüfe `intensivwoche_kurse`,
    `intensivwoche_anmeldungen`, die View, RLS, `/kurse`, Modal, Zod-Schema und Server Action.
-   Klassifiziere zusätzlich die sechs durch Migration 003 angelegten Beispielkurszeilen anhand
-   ihrer Referenzen als Bestand oder lokale Demo. Inventarisiere alle aktuellen Kurs-/Anmeldungs-
+   Klassifiziere zusätzlich die sechs durch Migration 003 historisch beschriebenen Beispielkurszeilen anhand
+   ihrer Referenzen als Bestand oder lokale Demo. Verwechsle sie nicht mit dem Live-Snapshot von
+   derzeit 8 aktiven Kursen. Inventarisiere alle aktuellen Kurs-/Anmeldungs-
    IDs und Counts, die vier Bestandsfächer, Klassenstufenwerte sowie den Drift um
    `created_by` (im Code/DB-Typ vorhanden, im eingecheckten Migrationsverlauf nicht angelegt).
-   Vergleiche auch `types/database.ts` mit der derzeit ungenutzten zweiten Generierung
-   `lib/supabase/database.types.ts`; dokumentiere Drift und bestimme `types/database.ts` als
-   kanonische Importquelle.
+   Bestätige, dass `types/database.ts` die einzige kanonische Generierung ist und die entfernte
+   zweite Datei `lib/supabase/database.types.ts` weder existiert noch importiert wird.
    Prüfe die doppelte Migrationsversion `002` und den ungültigen initialen FK
    `intensivwoche_anmeldungen.kurs_id -> public.courses(id)`; `public.courses` wird im lokalen
    Verlauf nicht angelegt. Prüfe ausserdem, dass `profiles` und `subjects` vor ihrer ersten
@@ -105,12 +151,13 @@ Validiere den datierten Repository-Bestand am Anfang von
    `/dashboard`; die Materialseite lädt alle `is_public`-Zeilen ohne Einschreibungsrecht;
    `class_levels` ist nur ein Clientfilter und kennt im Upload nur 5./6. Klasse; eine kanonische
    eingecheckte `learning_materials`-Baseline/RLS-Migration fehlt.
-7. Referenzbestand: 37 HTML-Dateien, zwei Markdown-Dateien und `SessionTable.jsx`; alle HTML-
-   Dateien besitzen Navigation, acht öffentliche Seiten zusätzlich Header/Footer. Die Admin-
-   Die vier `Layout_Admin_*.html`-Referenzen besitzen Dashboard-Header ohne Marketing-
+7. Referenzbestand: 37 HTML-Dateien, vier Markdown-Dateien und `SessionTable.jsx`; alle HTML-
+   Dateien besitzen Navigation, acht öffentliche Seiten zusätzlich Header/Footer. Die vier
+   `Layout_Admin_*.html`-Referenzen besitzen Dashboard-Header ohne Marketing-
    Footer. Prüfe ausserdem alle relativen
-   `.html`-Links und Anker. Erwarteter Restbestand: keine fehlenden Datei-/Ankerziele und 80
-   `href="#"`-Platzhalter in 23 Dateien; jede Abweichung ist zu melden.
+   `.html`-Links und Anker. Erwarteter Restbestand (erneut geprüft am 18.07.2026, nach Korrektur des
+   BMS-„Termin wählen"-Ankers auf `#buchung`): keine fehlenden Datei-/Ankerziele und 99
+   `href="#"`-Platzhalter in 33 Dateien; jede Abweichung ist zu melden.
    Der Abgleich umfasst ausdrücklich auch die in späteren Glob-Mustern nur implizit erfassten
    Dateien `Layout_1_Sek_Hauptseite.html`, `Layout_1_Sek_Intensivkurs_Unterseite.html`,
    `Layout_2_Sek__Hauptseite.html`, `Layout_5_Klasse_Hauptseite.html`,
@@ -137,6 +184,10 @@ Füge folgenden Abschnitt am Ende von CLAUDE.md ein, unverändert:
 ## Kursseiten- und Startseiten-Migration
 Architektur-Vorgaben, Datenmodell, Komponentenschnitt, Routentabelle:
 @design-reference/architektur-briefing-kursseiten.md
+Aktueller Live-Datenbankstand und verbindliche DB-Entscheidungen:
+@design-reference/datenmodell-review.md
+Designkorrekturen und redaktionelle Publikationsgates:
+@design-reference/design-review-todo.md
 Referenz-Prototyp Buchungstabelle: @design-reference/SessionTable.jsx
 Die Startseite in design-reference/Startseite.html ERSETZT die
 bestehende Startseite vollständig, sie wird nicht ergänzt.
@@ -191,8 +242,12 @@ umschreiben.
 Es darf nur eine `proxy.ts` geben: Ersetze oder überschreibe die vorhandene Auth-Proxy-Logik nicht.
 Erweitere dieselbe Datei so, dass sie zuerst zwischen öffentlichen lokalisierten Marketingpfaden
 und den bestehenden Auth-/Protected-Pfaden unterscheidet. Nur Marketingpfade werden an den
-next-intl-Handler übergeben; Auth-/Protected-Pfade laufen unverändert durch die bestehende
-Token-/Redirect-Logik. `/api`, `/_next` und Dateien mit Erweiterung werden vom i18n-Matcher
+next-intl-Handler übergeben; Auth-/Protected-Pfade behalten die bestehende Tokenprüfung. Erweitere
+den Auth-Matcher jedoch auf **alle** Seiten der geschützten `(dashboard)`-Route-Group,
+insbesondere `/aufsaetze`, `/intensivkurse`, `/materialien` und `/arbeitszeiten`. Anonyme
+Redirects erhalten den vollständigen internen Pfad inklusive erlaubter Query-Parameter als
+validierten `callbackUrl`; der Layout-Guard bleibt Defense in Depth, darf den Rücksprung aber nicht
+mehr verlieren. `/api`, `/_next` und Dateien mit Erweiterung werden vom i18n-Matcher
 ausgeschlossen. Der unlokalisierte Login bleibt `/login`.
 
 Validiere `params.locale`, rufe in jedem relevanten Marketing-Layout und jeder statisch
@@ -244,11 +299,10 @@ Zeig mir vorher den Plan inklusive der erwarteten Dateidiffs, bevor du Dateien �
 ## Schritt 5 — Datenmodell / Typen + Supabase-Schema (VOR den Komponenten)
 
 ```
-Lies Abschnitt 2 und den Repository-Bestand aus
+Lies Abschnitt 2, den Repository-Bestand und die Soll-/Ist-Matrix aus
 @design-reference/architektur-briefing-kursseiten.md. Prüfe zuerst die vorhandenen Typen
 `types/kurs.ts`, `types/kurs-form.ts`, `types/intensivwoche.ts`, `types/database.ts`,
-`lib/supabase/database.types.ts`, die Supabase-
-Migrationen für `intensivwoche_kurse`/`intensivwoche_anmeldungen` sowie alle Zugriffe aus
+die Supabase-Migrationen für `intensivwoche_kurse`/`intensivwoche_anmeldungen` sowie alle Zugriffe aus
 `app/(public)/kurse`, `app/(dashboard)/dashboard/kurse` und `app/(dashboard)/intensivkurse`.
 
 Implementiere vor jedem Komponentenbau sämtliche Typen aus Abschnitt 2.1–2.12 in einem gemeinsamen
@@ -257,15 +311,15 @@ Domain-/Marketing-Modul:
 - Kerndaten: `KlassenstufeId`, `AudienceId`, `AudienceCapabilities`, `Audience`, die verengte
   `Klassenstufe`, `Kurstyp`, `OfferBase` und die discriminated union
   `Offer` aus `CourseOffer`, `ExamSimulationOffer`, `SelfStudyOffer`
-- Termine/Buchung: `Ablauf`, stabile/cachebare `SessionDefinition`, request-time `SessionRow`, `SessionAvailability`, `AvailabilityStatus`,
+- Termine/Buchung: `Ablauf`, `CourseLocation` (`Zürich HB` oder `Winterthur`), stabile/cachebare `SessionDefinition`, request-time `SessionRow`, `SessionAvailability`, `AvailabilityStatus`,
   `BookingAction`, `BookingCopy`, `SessionSource`, `WeekOption`, `SessionColumn`
-- Inhalte: `AudienceHeroContent`, `FlowStep`, `ContentSection`, `ContentGroup`, `Feature`,
-  `Testimonial`, `FaqItem`, `ExamTimelineSegment`, `Subject`
-- Navigation/Startseite: `LinkAction`, `NavItem`, `SiteNavModel`, `SiteFooterModel`, `ServiceCardModel`,
+- Inhalte: `AudienceHeroContent`, `FlowStep`, `ContentSection`, `ContentGroup`, `Feature`, `BookingCopy`, `AccessCopy`,
+  `ImageAsset`, `Testimonial`, `FaqItem`, `ExamTimelineSegment`, `Subject`
+- Navigation/Startseite: `LinkAction`, `DisabledAction`, `UserAction`, `NavItem`, `SiteNavModel`, `SiteFooterModel`, `ServiceCardModel`,
   `ServiceSubgroupModel`, `TeamGroup`
 - Seitenmodelle: `MarketingLayoutModel`, `HomePageModel`, `AudiencePageModel`,
   `CourseDetailPageModel`, `TargetedServicePageModel`, `ExamSimulationPageModel`,
-  `SelfStudyPageModel`, `SubscriptionPageModel`, `TipsPageModel`, `AboutPageModel`, `PlaceholderPageModel`
+  `SelfStudyPageModel`, `SubscriptionPageModel`, `TipsPageModel`, `AboutPageModel`, `ContactPageModel`, `ContactChannel`, `LegalPageModel`
 - Redaktion: `TipCategory`, `TipPreview`
 - Nachhilfe: `SubscriptionPlan`
 - Bestandskurse: `ExistingCourseCardModel`; `Subject` muss `de`, `ma`, `fr`, `nmg` und `mixed`
@@ -273,7 +327,7 @@ Domain-/Marketing-Modul:
 - Materialzugriff: `MaterialAreaId` (`langzeitgymi`, `kurzgymi`, `bms`, `matura`),
   `MaterialAccessGrant`, Grant-Status/Quelle und eine explizite Audience-zu-Bereich-Zuordnung;
   Profil-Klassenstufe und sichtbare Labels sind keine Autorisierungskeys
-- Jahresverwaltung: `OfferEditionStatus`, `OfferEdition`, `CourseSessionDefinition` und das
+- Jahresverwaltung: `OfferEditionStatus`, `OfferEdition`, `CourseSessionDefinition`, `AuditEvent` und das
   Admin-Formularmodell; Preise bleiben Zahlen und Session-/Edition-IDs stabil
 
 Erstelle TypeScript-Fixtures mit `satisfies` für alle sieben Zielgruppen (fünf Klassenstufen,
@@ -282,20 +336,21 @@ Halbjahreskurs, einen Intensivkurs ohne und einen mit `WeekOption`, eine Prüfun
 Selbststudium für ZAP und BMS, beide Nachhilfe-Pläne, die Startseite, beide zielgruppenspezifischen Service-Seiten,
 die Über-uns-Seite
 (Prüfungssimulation und Distance Learning), Lerncoaching, die Tipps-Seite, je eine Selbststudium-
-und Platzhalterseite sowie das Marketing-Layout. Die Fixtures müssen
+und Kontaktseite sowie das Marketing-Layout. Die Fixtures müssen
 beweisen, dass alle Pflichtfelder der Komponentenmatrix aus Abschnitt 2.9 vorhanden sind; keine
 `as any`-/Doppel-Casts und keine rohen HTML-Strings.
 
 Erstelle zusätzlich Mapper-Fixtures für alle vier vorhandenen DB-Fachwerte sowie bekannte und
-nicht bekannte Klassenstufenwerte. Ein Bestandskurs-Mapper muss die echte numerische Kurs-ID in
+nicht bekannte Klassenstufen- und Standortwerte. Ein Bestandskurs-Mapper muss die echte numerische Kurs-ID in
 `ExistingCourseCardModel.sourceKursId` und `SessionDefinition.source` erhalten; Französisch/NMG dürfen
-nicht herausgefiltert werden, unbekannte Klassenlabels werden als `needs_review` gemeldet.
+nicht herausgefiltert werden, unbekannte Klassenlabels und alle `ort`-Werte ausser `Zürich HB` und
+`Winterthur` werden als `needs_review` gemeldet. `online` ist nur `deliveryMode`, nie Standort.
 
 Erstelle Zod-/DB-Mapper für jede persistierte Union-Variante und danach eine additive SQL-
 Migration, die das bestehende Kurs-/Anmeldemodell nachvollziehbar erweitert oder migriert. Kein
 paralleles, unverbundenes zweites Kurssystem und keine bestehende Tabelle löschen. Dokumentiere für
 jedes View-Model-Feld: DB-Spalte/JSONB-Quelle, abgeleiteter Wert oder request-time Quelle. Halte das
-Mapping von `intensivwoche_kurse.preis` zu `regularPrice`/`earlyBirdPrice`, die Kompatibilität der
+Mapping von `intensivwoche_kurse.preis` zu `regularPriceRappen`/`earlyBirdPriceRappen`, die Kompatibilität der
 bestehenden `/kurse`-Server-Actions und den Rollback-Pfad fest. Preise bleiben Zahlenfelder plus
 `currency`; Verfügbarkeit wird nicht in `Offer`, `SessionDefinition` oder einem cachebaren
 Page-Model gespeichert. `SessionRow` wird erst request-time zusammengesetzt. Aktualisiere bzw.
@@ -304,8 +359,9 @@ Regeneriere nur die kanonische Datei `types/database.ts`; entferne oder aliasier
 zweite Generierung, damit sie nicht erneut vom realen Schema abweicht.
 
 Abschnitt 2.10 ist dabei ein verbindliches Datenerhaltungs-Gate: Erzeuge vor der Änderung einen
-anonymisierten Inventarbericht (Counts, IDs, Status je Kurs), repariere zuerst den fehlenden
-`created_by`-Migrationsschritt und die Owner-RLS/View-Sicherheit, und backfille danach nur additiv.
+anonymisierten Inventarbericht (Counts, IDs, Status je Kurs). Behandle `created_by`, die bestehende
+Owner-RLS und die gehärtete View als Live-Bestand, der in der neuen Baseline reproduziert und durch
+Tests bewiesen werden muss; lege dafür keine zweite Reparaturmigration an. Backfille danach nur additiv.
 `intensivwoche_kurse` bleibt die Buchungs-/Durchführungstabelle,
 `intensivwoche_anmeldungen.kurs_id` und sämtliche bestehenden IDs bleiben unverändert. Führe kein
 Remote-`db push` aus. Zeige vor dem Schreiben der SQL-Migration den Feldmapping-, Backfill- und
@@ -323,10 +379,13 @@ Bereiche sein. Erzeuge Grants nur aus bestätigter/bezahlter Selbststudium-Einsc
 auditierbarer Admin-Freigabe, nie aus `profiles.class_level`, Namens- oder E-Mail-Abgleich.
 
 Ergänze gemäss Abschnitt 2.12 `offers`, `offer_editions` und `course_sessions` beziehungsweise
-mappe sie additiv auf die kanonischen Bestandsstrukturen. Eine veröffentlichte Vorjahresedition
+mappe sie additiv auf die kanonischen Bestandsstrukturen. `course_sessions` ist zwingend eine
+1:1-Erweiterung mit PK/FK auf `intensivwoche_kurse.id`; jede buchbare neue Session besitzt
+transaktional eine kanonische Kurszeile und jede Anmeldung behält `kurs_id` als alleinige
+Buchungsreferenz. Eine veröffentlichte Vorjahresedition
 wird nie überschrieben: „Vorjahr duplizieren“ erzeugt eine neue `draft`-Edition. Ergänze
 Optimistic Concurrency (`version`), Audit-Log, zulässige Statusübergänge und unveränderliche
-`booked_price`-/`currency`-Snapshots an Buchungen. Preis, Termin und Publikationsstatus dürfen
+`booked_price_rappen`-/`currency`-Snapshots an Buchungen. Preis, Termin und Publikationsstatus dürfen
 keine parallelen JSON-/Mockup-Datenquellen erhalten.
 
 Berücksichtige beim Schema-/Typenentwurf bereits die Abschnitte 2.13–2.15: `course_days` und
@@ -337,17 +396,15 @@ tatsächlichen Quellstrukturen an, aber vermeide Typ-/ID-Entscheidungen in Schri
 polymorphe IDs, Materialkopien, Dezimalstunden oder Gleitkomma-Geldbeträge erzwingen würden.
 Minuten und Rappen sind Ganzzahlen; finanzielle und Payroll-Snapshots sind append-only.
 
-Bevor du eine neue fachliche Migration anlegst, repariere die lokale Baseline so, dass jede
-Migrationsversion eindeutig ist, `profiles` vor dem ersten `ALTER TABLE profiles`, `subjects` vor
-Mentorship mit exakt passendem PK-/FK-Typ und die Anmeldetabelle zunächst ohne den falschen
-`public.courses`-FK angelegt wird; danach folgen `intensivwoche_kurse` und der korrekte FK.
-Verschiebe reine Demozeilen und sämtliche Test-/Auth-Benutzer aus deploybaren Migrationen nach
-`supabase/seed.sql`; `006_seed_test_data.sql` darf nicht remote ausgerollt werden. Klassifiziere
-die sechs Beispielkurse anhand Remote-Inventar und vorhandener Referenzen, statt sie pauschal als
-Geschäftsbestand oder als löschbaren Seed anzunehmen.
-Inventarisiere vor jeder Anpassung die entfernte Migrationshistorie read-only und stoppe bei
-Abweichungen; kein `migration repair`, Umbenennen remote registrierter Versionen oder `db push`
-ohne separate Freigabe.
+Bevor du eine neue fachliche Migration anlegst, bestätige das erfolgreiche Baseline-Gate aus
+Schritt 0. Ändere oder nummeriere die historischen Dateien 001–014 nicht um. Der neue kanonische
+Baseline-Strang muss `profiles`, `subjects`, Kurse, Anmeldungen, Funktionen, Views, RLS, Grants und
+Storage in korrekter Reihenfolge enthalten und auf leerer lokaler DB reproduzierbar sein. Reine
+Demozeilen und Test-/Auth-Benutzer liegen ausschliesslich in `supabase/seed.sql`; die historische
+`006_seed_test_data.sql` bleibt nur in `supabase/legacy-migrations/` und wird nie remote ausgerollt.
+Jede neue fachliche Änderung erhält ein UTC-Zeitstempelpräfix. Vor jeder Anpassung die entfernte
+Migrationshistorie read-only inventarisieren und bei Abweichungen stoppen; kein `migration repair`,
+Umbenennen remote registrierter Versionen oder `db push` ohne separate Freigabe.
 
 Entferne dabei die abweichende Belegungsberechnung aus `app/(dashboard)/intensivkurse/page.tsx`:
 stornierte Anmeldungen zählen nirgends, `wenige` bedeutet überall 1–2 Restplätze und `voll` 0.
@@ -357,9 +414,13 @@ verwenden dieselbe RLS-sichere View bzw. denselben Availability-Mapper.
 Vereinheitliche Policies auf die tatsächlich verwendeten Rollen `lehrperson`, `admin`, `user`;
 entferne widersprüchliche `teacher`-/`student`-Policies. Implementiere eine einzige atomare
 Buchungs-RPC gemäss Abschnitt 2.10: Kurszeile sperren, Aktivität/Kapazität/nicht stornierte
-Anmeldungen/Duplikat prüfen und dann einfügen. Ergänze die partielle Eindeutigkeit für aktive
-`(kurs_id, lower(email))`-Anmeldungen, minimale Grants und einen Parallelitätstest auf den letzten
-Platz. Beide bisherigen und neuen Anmeldewege verwenden diese RPC statt direkter Inserts.
+Anmeldungen/Duplikat prüfen und dann einfügen. Ersetze die zu grobe Eindeutigkeit nur auf
+Eltern-E-Mail durch den familienfähigen Schlüssel aus Abschnitt 2.10. Ergänze
+`idempotency_key`, DB-seitige Pflichtfeld-/Längenchecks, unveränderliche Snapshot-Spalten,
+minimale Grants, einen dauerhaften Rate-Limiter und einen Parallelitätstest auf den letzten Platz.
+Die RPC ist direkt als `anon` aufrufbar; Server-Action-Zod allein gilt nicht als
+Sicherheitskontrolle. Beide bisherigen und neuen Anmeldewege verwenden diese RPC statt direkter
+Inserts.
 ```
 
 ## Schritt 6 — Referenzkomponenten für Kursseiten bauen (der wichtigste Schritt)
@@ -432,7 +493,8 @@ Baue:
    (Hamburger-Drawer) für Mobile; beide werden aus derselben Audience[]-Liste (types/-Modul aus
    Schritt 5). Ersetzt die bestehende Navigationskomponente vollständig. Ergänze in beiden
    Varianten exakt die kompakten Zielgruppenlabels `4.Kl`, `5.Kl`, `6.Kl`, `1.Sek`,
-   `2./3.Sek`, `BMS`, `Matura` sowie `Nachhilfe` und `Über uns`; kein Dropdown bauen. Ergänze in
+   `2./3.Sek`, `BMS`, `Matura` sowie `Nachhilfe`, `Über uns` und `Kontakt`; kein Dropdown bauen
+   und beim Deutsch-only-Launch keinen EN-Schalter rendern. Ergänze in
    beiden Varianten einen deutlich als Button gestalteten Link „Login" auf die bereits bestehende Route
    `/login` (Next `Link` + shadcn `Button` mit `asChild`). Der Button ist kein neues Auth-Feature,
    sondern der Einstieg zu den bereits vorhandenen Übungen und Prüfungen. Auf Mobile muss er im
@@ -513,16 +575,21 @@ nicht aktiv. Die bestehende unlokalisierte Route `/kurse` bleibt unangetastet, b
 ihre spätere Integration ausdrücklich entschieden wird.
 ```
 
-## Schritt 9 — Zusatzseiten und verbleibender Kontakt-Platzhalter
+## Schritt 9 — Zusatz-, Kontakt- und Rechtstextseiten
 
 ```
-Lies Abschnitt 6 aus @design-reference/architektur-briefing-kursseiten.md. Baue nur `/kontakt`
-als einfachen Platzhalter aus PageContainer + PageIntro (Abschnitt 1a) — kein eigenes Layout.
+Lies Abschnitt 6 aus @design-reference/architektur-briefing-kursseiten.md. Baue `/kontakt`
+aus `ContactPageModel`, PageContainer, PageIntro und einer semantischen Liste verifizierter
+Kontaktkanäle — kein eigenes Layout und kein erfundener Inhalt. Ein Formular ist optional und
+benötigt vorab Spam-, Zustell- und Datenschutzkonzept.
+Lege ausserdem `/impressum` und `/datenschutz` mit `LegalPageModel` und den gemeinsamen
+Inhaltskomponenten an. Erfinde keine Rechtstexte: Bis fachlich freigegebene Inhalte vorliegen,
+bleibt der öffentliche Cutover blockiert; der Footer rendert keine toten oder `#`-Links.
 
 Alle diese Seiten liegen unter `app/[locale]/(marketing)/`; die oben genannten Pfade sind logische
 Kurzformen und werden für jedes in Schritt 3 aktivierte Locale erzeugt.
 
-Kontakt erhält `PlaceholderPageModel`. Für den BMS-Kurs wird ausschliesslich
+Kontakt erhält `ContactPageModel`. Für den BMS-Kurs wird ausschliesslich
 `Layout_BMS_Intensivkurs_Unterseite.html` unter `/kurse/bms/intensivkurs` verwendet; keine
 zusätzliche Wochenkurs-/Halbjahreskurs-Route erfinden.
 
@@ -539,9 +606,10 @@ die zentrale `SiteNav` aus Schritt 7 ersetzt. Für /nachhilfe
 zusätzlich: Verwende den in Schritt 5 implementierten `SubscriptionPlan`-Typ und die
 `SubscriptionCard`-Komponente aus Abschnitt 2.6/3 (10er/20er, Rabatt wird
 berechnet, nicht als Text gepflegt). /lerncoaching und /nachhilfe sind bewusst
-zwei getrennte Routen mit eigenen Nav-Einträgen (unterschiedliche Produkte,
-unterschiedliches Datenmodell) — nicht als eine Seite zusammenfassen. Ergänze
-in SiteNav (Nachhilfe + Über uns sowie die sieben Audience-Ziele, NICHT Lerncoaching,
+zwei getrennte Routen mit eigenen Einstiegen (unterschiedliche Produkte,
+unterschiedliches Datenmodell) — nicht als eine Seite zusammenfassen. Nur Nachhilfe erhält davon
+einen Top-Level-Nav-Eintrag; Lerncoaching bleibt über die Startseite und inhaltliche Links
+auffindbar. Ergänze in SiteNav (Nachhilfe + Über uns + Kontakt sowie die sieben Audience-Ziele, NICHT Lerncoaching,
 Tipps, Distance Learning oder Simulationsprüfung)
 und auf der Startseite (jetzt 6 ServiceCards inklusive BMS und Matura) entsprechend. Achtung bei Distance Learning:
 Die Startseiten-Kachel braucht ein korrigiertes `eligibleFor` (nur 6. Klasse &
@@ -568,6 +636,15 @@ Sie sind keine Platzhalter. Ihre CTAs dürfen erst auf einen Checkout/Zugang fü
 wenn ein reales und getestetes Ziel existiert.
 Solange keine Tipp-Artikelseite existiert, bleibt `TipPreview.action` leer und `TipCard` rendert
 keinen Link bzw. CTA. Keine `#`-, erfundene oder auf 404 führende Ersatzroute anlegen.
+
+Beachte zusätzlich die redaktionellen Publikationsgates aus Abschnitt 9.1 des Architektur-
+Briefings: `/kontakt` benötigt vor öffentlicher Freigabe echte Kontaktinformationen, aber nicht
+zwingend bereits ein Formular. Platzhalterkennzahlen auf `/ueber-uns` werden ausgeblendet oder
+neutral ohne Zahlen formuliert. Generierte Avatare dürfen nicht als echte Personenfotos
+veröffentlicht werden; bis zur Bildfreigabe bleiben sie klar nicht-fotografisch oder der Bildslot
+entfällt. Selbststudium- und Nachhilfe-Seiten dürfen technisch fertiggestellt werden, ihre Kauf-
+CTAs bleiben jedoch ohne realen und getesteten Zielprozess disabled beziehungsweise werden nicht
+als Link gerendert. Erfinde keine Ersatztexte, Bilder, Kennzahlen oder Ziel-URLs.
 ```
 
 ## Schritt 10 — Pro Zielgruppe wiederholen (nur noch Daten, kein neuer Code)
@@ -575,6 +652,9 @@ keinen Link bzw. CTA. Keine `#`-, erfundene oder auf 404 führende Ersatzroute a
 Sieben Durchläufe — für jede Audience derselbe Prompt, nur Pfad/Route angepasst.
 Prüfe bei 4. Klasse zuerst, ob aus Schritt 6 bereits vollständige Daten vorliegen,
 oder ob nur die Struktur referenziert wurde.
+Die redaktionellen Publikationsgates aus Abschnitt 9.1 des Architektur-Briefings gelten in jedem
+Durchlauf: Technischer Komponenten-/Datenbau darf fortgesetzt werden, die betroffene
+Veröffentlichung oder Buchungsaktion bleibt bis zur dokumentierten Fachfreigabe gesperrt.
 
 ```
 Extrahiere die Kursdaten aus @design-reference/Layout_4_Klasse_*.html in das
@@ -611,7 +691,9 @@ Danach identisch wiederholen mit:
   `Layout_2_Sek_Pruefungssimulation.html`, siehe Schritt 11) → `/kurse/2-3-sek`
 - `@design-reference/Layout_BMS_*.html` → `/kurse/bms`; die verbindliche Kurs-Unterseite ist
   `Layout_BMS_Intensivkurs_Unterseite.html`. Prüfungssimulation aus der vorhandenen Quelle
-  und Selbststudium aus den vorhandenen Quellen übernehmen.
+  und Selbststudium aus den vorhandenen Quellen übernehmen. Für den BMS-Halbjahreskurs existiert
+  keine eigene Detailreferenz: keine Detailroute oder Inhalte erfinden und das Angebot bis zur
+  redaktionellen Freigabe nicht aktiv buchbar veröffentlichen.
 - `@design-reference/Layout_Matura*.html` → `/kurse/matura`; Hauptseite,
   Halbjahreskurs und Intensivwoche vollständig aus den drei vorhandenen Dateien übernehmen.
 
@@ -642,9 +724,10 @@ werden aus dem stabilen Offer abgeleitet und dort nur schreibgeschützt angezeig
 entstehen über einen getrennten „Neues Kursangebot“-Flow. Ein Kontextwechsel lädt die vollständige
 Edition und warnt vor ungespeicherten Änderungen; UI-Zustände dürfen nie gleichzeitig z. B.
 „5. Klasse · Halbjahreskurs“ oben und „6. Klasse · Intensivkurs“ unten zeigen.
-Der `SessionEditor` bietet einen aus den vorhandenen Session-Standorten dynamisch erzeugten Filter
-mit Trefferzahlen. Filtern verändert oder löscht keine Sessions; neue beziehungsweise umbenannte
-Standorte aktualisieren die Optionen, und „Alle Standorte“ bleibt der sichere Ausgangszustand.
+Der `SessionEditor` bietet für jede Session ausschliesslich die Standortauswahl `Zürich HB` oder
+`Winterthur` und einen Filter mit Trefferzahlen für genau diese zwei Werte. Filtern verändert oder
+löscht keine Sessions; „Alle Standorte“ bleibt der sichere Ausgangszustand. Online-Teilnahme wird
+separat als Durchführungsform gepflegt und erscheint nie als Standortoption.
 Abschnitt „Preise“ enthält eine Option „Frühbucherpreis aktivieren“. Neue Halbjahreskurse und
 Intensivkurse/Lerncamps erhalten `true` als Voreinstellung, Prüfungssimulationen und Selbststudium
 `false`; bestehende Editionen laden ihren gespeicherten Wert. Nur bei aktiver Option werden Betrag
@@ -660,7 +743,7 @@ buchbarer Termin für terminbasierte Angebote valide sind. Danach invalidiert di
 zentralen Offer-/Audience-Cache-Tags, damit Hauptseite, Detailseite, Terminliste und Buchungsdialog
 dieselbe Edition anzeigen.
 
-Bestehende Buchungen speichern `edition_id`, `session_id`, `booked_price` und `currency` als
+Bestehende Buchungen speichern `edition_id`, `session_id`, `booked_price_rappen` und `currency` als
 Snapshot. Preisänderungen verändern keine historischen Buchungen. Sessions mit Anmeldungen werden
 nicht gelöscht; Absage/Änderung wird auditierbar markiert. Schreibe für Create, Update,
 Duplicate, Publish, Archive und Cancel ein Audit-Event mit Benutzer, Entity, Aktion und
@@ -686,7 +769,11 @@ additiv migriert werden. Keine polymorphen Fremdschlüssel ohne Integritätsprü
 Duplikate vorhandener Materialien erzeugen.
 
 Implementiere `DailyReleaseManager`, `CourseDayPicker`, `ReleaseMaterialSelector` und
-`StudentReleasePreview`. Freigeben, zeitlich planen, zurückziehen und die kursgruppenbezogene
+`StudentReleasePreview`. Lege zuvor `CourseDay`, `DailyReleaseStatus`, `DailyRelease`,
+`DailyReleaseItem` und `ReleaseContentItem` im gemeinsamen Domainmodul an; keine lokalen
+Paralleltypen. Verwende die FK-gesicherte `release_content_catalog`-Registry aus Abschnitt 2.13.
+Freigeben,
+zeitlich planen, zurückziehen und die kursgruppenbezogene
 Notfallsperre laufen ausschliesslich über Zod-validierte, transaktionale Server Actions mit
 `requireAdmin()`, Versionsvergleich, Audit-Log und Cache-Invalidierung. Speichere Zeitpunkte als
 `timestamptz`, zeige sie in `Europe/Zurich` und bestimme den effektiven Zugriff serverseitig aus
@@ -707,7 +794,7 @@ gewählte Kursgruppe. Inline-JavaScript der HTML-Referenz nicht übernehmen.
 ```
 Lies Abschnitt 2.14/3/6 aus @design-reference/architektur-briefing-kursseiten.md und verwende
 @design-reference/Layout_Admin_Zeiterfassung.html als verbindliche UX-Referenz für
-`/dashboard/arbeitszeiten`. Ergänze im bestehenden Lernpersonen-Dashboard die unlokalisierte
+`/dashboard/arbeitszeiten`. Ergänze im bestehenden Lehrpersonen-Dashboard die unlokalisierte
 Route `/arbeitszeiten` über denselben Domainservice; kein separates Zeitsystem.
 
 Inventarisiere Rollen, Lehrperson-IDs, Kurszuweisungen, Sessions, Aufsatzkorrekturen und bestehende
@@ -717,13 +804,16 @@ Check-Constraints, FKs und Indizes. Dauer wird in ganzen Minuten, Geld in ganzen
 Geplante Sessiondauer erzeugt nur einen idempotenten Vorschlag und niemals eine automatisch
 genehmigte Lohnposition.
 
-Der Administrator erfasst den mit jeder Lernperson vereinbarten Stundensatz samt `valid_from` und
+Der Administrator erfasst den mit jeder Lehrperson vereinbarten Stundensatz samt `valid_from` und
 optionalem `valid_until`. Nur `requireAdmin()` darf Vereinbarungen anlegen oder ändern; Änderungen
 erzeugen neue, nicht überlappende Gültigkeitszeiträume und überschreiben keine Historie. Das
-Lernpersonen-Dashboard enthält keine Lohnsatz-Mutation.
+Lehrpersonen-Dashboard enthält keine Lohnsatz-Mutation.
 
-Implementiere `TeacherWorkEntryForm`, `WorkTimeOverview` und `PayrollReviewPanel`. Lernpersonen
-dürfen per RLS nur eigene offene Einträge bearbeiten/einreichen. Admins dürfen alle sehen,
+Implementiere `TeacherWorkEntryForm`, `WorkTimeOverview` und `PayrollReviewPanel`. Lege zuvor
+`WorkActivityType`, `WorkEntryStatus`, `WorkEntry`, `TeacherAssignment`, `TeacherRateAgreement`,
+`PayrollPeriod` und `PayrollSnapshot` im gemeinsamen Domainmodul an. Verwende in UI-Texten
+durchgehend „Lehrperson“; die technische Rolle bleibt `lehrperson`. Lehrpersonen dürfen per RLS
+nur eigene offene Einträge bearbeiten/einreichen. Admins dürfen alle sehen,
 genehmigen, begründet zurückweisen und vollständig geprüfte Monate transaktional abschliessen.
 Der Abschluss sperrt die Periode und erzeugt unveränderliche Snapshots mit dem am Leistungsdatum
 gültigen, vom Administrator eingegebenen Stundensatz und dessen Vereinbarungs-ID. Berechne jede
@@ -731,11 +821,11 @@ Zeile auf ganze Rappen mit `round(duration_minutes * hourly_rate_rappen / 60)`. 
 Änderungen erfolgen nur als auditierte Korrekturbuchungen.
 Alle Actions nutzen Zod, kanonische Rollenprüfung, Optimistic Concurrency und Audit-Log.
 
-Teste mindestens: Fremdzugriff einer Lernperson 403, Schüler/Eltern 403, negative oder null Minuten
+Teste mindestens: Fremdzugriff einer Lehrperson 403, Schüler/Eltern 403, negative oder null Minuten
 abgelehnt, überlappender Unterricht markiert/abgelehnt, eingereichte Einträge nicht editierbar,
 Rückweisung wieder editierbar, Abschluss mit offenen Einträgen blockiert, korrekter historischer
 Stundensatz im Snapshot, überlappende Lohnvereinbarung abgelehnt, Lohnsatz-Mutation durch
-Lernperson 403 und unveränderlicher abgeschlossener Monat. Exportiere stabile Quell-IDs
+Lehrperson 403 und unveränderlicher abgeschlossener Monat. Exportiere stabile Quell-IDs
 und geprüfte Summen; implementiere keine eigene vollständige Lohnbuchhaltung.
 ```
 
@@ -753,8 +843,11 @@ Kostenquellen. Migriere additiv einen idempotenten append-only `financial_events
 Beträge werden in ganzen Rappen gespeichert; `gebucht`, `bezahlt` und `periodengerecht verdient`
 bleiben drei explizite Sichten. Keine bestehende Buchung oder Zahlung duplizieren.
 
-Implementiere `FinancialCockpit`, `OfferProfitabilityTable` und `RevenueCostChart` auf
-RLS-sicheren serverseitigen Reporting-Views beziehungsweise materialisierten Monats- und
+Implementiere `FinancialCockpit`, `OfferProfitabilityTable` und `RevenueCostChart`. Lege zuvor
+`FinancialEventType`, `FinancialEvent` inklusive `eventVersion`, `ExpenseEntry`,
+`FinancialPeriod`, `Budget` und `OfferFinancialSummary` im gemeinsamen Domainmodul an. Beträge
+sind vorzeichenbehaftete ganze Rappen; Einnahmen positiv, Aufwand und Rückerstattung negativ.
+Die Komponenten lesen aus RLS-sicheren serverseitigen Reporting-Views beziehungsweise materialisierten Monats- und
 Angebotsaggregaten. Pro OfferEdition zeigt die Tabelle aktive, nicht stornierte Teilnehmer,
 Kursgruppen, Kursauslastung, Umsatz der gewählten Sicht, genehmigte Arbeitsstunden, daraus
 berechnete direkte Kosten, Durchschnittsumsatz pro Teilnehmer, Deckungsbeitrag und Marge.
@@ -851,7 +944,7 @@ Storno/Rückerstattung → Entzug automatisiert getestet sind.
 ## Schritt 12 — Verifikation
 
 ```
-Lies zuerst Abschnitt 10 (Verbindliches Verifikations-Gate) aus
+Lies zuerst Abschnitt 10 einschliesslich 10.4 (Verbindliches Verifikations- und Produktions-Gate) aus
 @design-reference/architektur-briefing-kursseiten.md. Lege die dort geforderte Infrastruktur an,
 falls sie noch fehlt: package-Scripts für `typecheck`, `test:routes`, `test:links`, Playwright-
 Konfiguration und Tests sowie lokale Supabase-Konfiguration und pgTAP-/RLS-Tests. Nimm
@@ -914,6 +1007,9 @@ Die Suite prüft zusätzlich die Rollen `lehrperson`, `admin`, `user`, verbietet
 `teacher`-/`student`-Policy-Pfade und führt zwei parallele Buchungen auf den letzten Platz aus:
 exakt eine Buchung darf erfolgreich sein. `npm run test:data-migration` muss den unmittelbaren
 Vorgängerzustand mit Sentinel-Daten herstellen und erst danach nur die neue Migration anwenden.
+Die DB-Suite prüft zusätzlich direkte anonyme RPC-Eingaben, Maximallängen, familienfähige
+Geschwisterbuchungen, identische Doppelbuchung, `idempotency_key`, unveränderliche Snapshotfelder
+und den Rate-Limiter. Zod in der Server Action reicht dafür nicht aus.
 
 Erst wenn dieses automatisierte Gate vollständig grün ist, führe den folgenden visuellen und
 inhaltlichen Vergleich durch:
@@ -929,15 +1025,19 @@ gegen @design-reference/Startseite.html. Prüfe insbesondere:
   & Tricks für die Gymiprüfung.`
 - Touch-Targets ≥44px, Tastatur-Fokus sichtbar
 - Tabellen auf Mobile als Kartenliste ohne data-label-Trick
-- Frühbucherrabatt wird aus earlyBirdPrice berechnet statt als Text gepflegt,
+- Frühbucherrabatt wird aus `earlyBirdPriceRappen` berechnet statt als Text gepflegt,
   und erscheint auf Haupt- UND Unterseite identisch
 - Beide Ablauf-Varianten funktionieren (simple bei 4./5./6. Klasse/1. Sek,
   phased bei 2./3. Sek Halbjahreskurs)
 - WeekFilter funktioniert bei 2./3. Sek Intensivkurs
 - SiteNav: flache Zielgruppen-Direktlinks ab md:, Sheet-Hamburger-Menü darunter; beide Varianten
-  enthalten dieselben sieben `Audience`-Ziele sowie Nachhilfe und Über uns
+  enthalten dieselben sieben `Audience`-Ziele sowie Nachhilfe, Über uns und Kontakt
 - SiteNav: Login-Button ist auf Desktop und Mobile sichtbar, hat ein Touch-Ziel ≥44px und führt
   auf die bestehende Route `/login`; es existiert keine duplizierte Login-Seite
+- Alle Kurs- und Prüfungssimulations-Termine verwenden als physischen Standort ausschliesslich
+  `Zürich HB` oder `Winterthur`; `online` erscheint nur als Durchführungsform. Admin-Auswahl,
+  Mapper-Fixtures und öffentliche Terminlisten lehnen andere Standortwerte ab beziehungsweise
+  melden Bestandswerte als `needs_review`.
 - SiteNav wird genau einmal durch `app/[locale]/(marketing)/layout.tsx` gerendert; weder
   `app/layout.tsx` noch eine `page.tsx` importiert oder rendert sie
 - SiteNav erscheint auf allen öffentlichen Marketing-, Kurs- und Zusatzangebotsseiten, aber nicht
@@ -965,18 +1065,18 @@ gegen @design-reference/Startseite.html. Prüfe insbesondere:
 - Veröffentlichung ist atomar: Ungültige Preise/Fristen, fehlende Pflichtfelder oder keine
   buchbare Session verhindern den gesamten Statuswechsel. Nach Erfolg zeigen Hauptseite,
   Detailseite, Terminliste und Buchungsdialog dieselbe Edition.
-- Buchungen behalten `booked_price`, `currency`, `edition_id` und `session_id` nach späteren
+- Buchungen behalten `booked_price_rappen`, `currency`, `edition_id` und `session_id` nach späteren
   Admin-Änderungen unverändert. Ein Concurrency-Test lehnt das Speichern einer veralteten
   `version` ab; Audit-Events decken Erstellen, Ändern, Duplizieren, Publizieren, Archivieren und
   Absagen ab.
-- Arbeitszeiten: Lernpersonen sehen und ändern nur eigene offene Einträge; Dauer ist eine ganze
+- Arbeitszeiten: Lehrpersonen sehen und ändern nur eigene offene Einträge; Dauer ist eine ganze
   positive Minutenzahl. Eingereichte Einträge sind gesperrt, Rückweisung macht sie erneut
   bearbeitbar, und ein Monatsabschluss mit offenen Einträgen wird vollständig abgelehnt.
 - Payroll-Snapshot: Der Abschluss verwendet den am Leistungsdatum gültigen Stundensatz in ganzen
   Rappen aus der vom Administrator gepflegten, nicht überlappenden Vereinbarung, ist danach
   unveränderlich und fliesst genau einmal als Lohnkostenquelle in den
   Finanz-Ledger. Korrekturen erzeugen neue auditierte Ereignisse statt Überschreibungen.
-- Lernpersonen können Lohnsätze weder über UI noch direkte Requests ändern; das Finanz-Cockpit
+- Lehrpersonen können Lohnsätze weder über UI noch direkte Requests ändern; das Finanz-Cockpit
   übernimmt Payroll-Snapshot-Beträge und bietet keine zweite manuelle Lohneingabe.
 - Finanz-Cockpit: `gebucht`, `bezahlt` und `periodengerecht verdient` sind getrennt testbar;
   stornierte Anmeldungen/Wartelisten zählen nicht als Teilnehmer, Rückerstattungen werden
@@ -1034,6 +1134,13 @@ gegen @design-reference/Startseite.html. Prüfe insbesondere:
   alle benötigten shadcn-Primitives liegen unter `app/components/ui`
 - Alle zwölf Befehle des Gates laufen erfolgreich; protokolliere je Befehl Exit-Code sowie die
   Anzahl ausgeführter Datenbank-, Routen- und Linktests
+
+Führe danach das Produktions-Gate aus Abschnitt 10.4 durch und protokolliere dessen Artefakte:
+Staging-/Restore-Nachweis, Feature-Flag und nicht-destruktiver Rollback, getrennte Env-/Secret-
+Prüfung, freigegebene Impressums-/Datenschutzrouten, Sitemap/robots/Canonical/OG/JSON-LD-Tests,
+Consent-Entscheidung, Datenaufbewahrungs- und Löschkonzept, Mail-Outbox/Retry, PII-arme
+Observability samt Runbook sowie WCAG-2.2-AA- und Performance-Abnahme. Ohne diese Nachweise darf
+der technische Build grün sein, aber der öffentliche Cutover gilt nicht als freigegeben.
 
 Durchsuche zusätzlich den Code nach wiederholten Card-/Button-/Table-/Badge-
 Markup-Mustern über mehrere Dateien hinweg (z. B. per grep nach ähnlichen
