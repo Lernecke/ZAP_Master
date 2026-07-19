@@ -41,7 +41,8 @@ export type AnmeldungResult =
   | { success: false; error: string; fieldErrors?: Record<string, string[]> }
 
 export async function submitIntensivwocheAnmeldung(
-  data: IntensivwocheAnmeldungInput
+  data: IntensivwocheAnmeldungInput,
+  idempotencyKey: string
 ): Promise<AnmeldungResult> {
   const parsed = intensivwocheAnmeldungSchema.safeParse(data)
 
@@ -71,9 +72,10 @@ export async function submitIntensivwocheAnmeldung(
   }
 
   // Schreibt ausschliesslich über die atomare Datenbankfunktion
-  // (supabase/migrations/014_atomic_booking_function.sql): sperrt den Kurs,
-  // prüft Aktivität/Kapazität/Doppelanmeldung und snapshotted den Preis.
-  // Direkte Inserts sind seit dieser Migration per REVOKE nicht mehr erlaubt
+  // (supabase/migrations/20260719190025_booking_hardening_phase_a.sql): sperrt den Kurs,
+  // prüft Aktivität/Kapazität/familienfähige Doppelanmeldung atomar, unterstützt idempotente
+  // Wiederholungen über idempotencyKey und snapshotted den Preis. Direkte Inserts sind seit der
+  // ursprünglichen Migration 014 per REVOKE nicht mehr erlaubt
   // (verifiziert live am 18.07.2026 über den Supabase-Connector).
   const { error } = await supabase.rpc('book_intensivwoche_kurs', {
     p_kurs_id: kursId,
@@ -84,6 +86,7 @@ export async function submitIntensivwocheAnmeldung(
     p_parent_email: parsed.data.parent_email.trim().toLowerCase(),
     p_parent_phone: parsed.data.parent_phone.trim(),
     p_notes: parsed.data.notes?.trim() || undefined,
+    p_idempotency_key: idempotencyKey,
   })
 
   if (error) {

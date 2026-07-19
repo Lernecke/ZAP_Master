@@ -46,6 +46,10 @@ interface AnmeldungModalProps {
 export function AnmeldungModal({ kurs, onClose }: AnmeldungModalProps) {
   const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [serverMessage, setServerMessage] = useState('')
+  // Stabil über Re-Renders/Retries desselben Modal-Öffnens hinweg, neu bei erneutem Öffnen —
+  // erlaubt der DB, einen wiederholten Submit (Doppelklick, Netzwerk-Retry) idempotent zu
+  // behandeln statt eine doppelte Buchung anzulegen.
+  const [idempotencyKey] = useState(() => crypto.randomUUID())
 
   const {
     register,
@@ -81,7 +85,7 @@ export function AnmeldungModal({ kurs, onClose }: AnmeldungModalProps) {
     setSubmitState('loading')
     setServerMessage('')
 
-    const result = await submitIntensivwocheAnmeldung(data)
+    const result = await submitIntensivwocheAnmeldung(data, idempotencyKey)
 
     if (result.success) {
       setSubmitState('success')
