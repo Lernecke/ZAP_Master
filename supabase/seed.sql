@@ -1,0 +1,12 @@
+-- ============================================================================
+-- Lokale Seed-Datei (nur synthetische Fixtures)
+-- ============================================================================
+-- Diese Datei wird laut step0Baseline.revision2.md, Abschnitt 9, niemals automatisch
+-- remote ausgerollt. Sie darf ausschliesslich klar erkennbare synthetische lokale
+-- Testdaten enthalten -- keine echten Geschaefts-, Auth- oder Personendaten.
+--
+-- Die historischen Testnutzer/-daten aus legacy-migrations/006_seed_test_data.sql werden
+-- NICHT automatisch hierher uebernommen; sie bleiben nur als historische Referenz erhalten.
+--
+-- Noch keine Fixtures definiert -- wird in einem eigenen, spaeter freizugebenden Schritt
+-- befuellt.

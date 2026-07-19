@@ -1,0 +1,15 @@
+-- ============================================================
+-- History-Marker (kein SQL) fuer bereits angewandte Remote-Migration
+-- ============================================================
+-- version: 20260223102441
+-- name:    cleanup_redundant_is_lehrperson
+-- zustand: applied (Quelle: supabase_migrations.schema_migrations)
+-- bestaetigt read-only am 2026-07-19T13:48:02Z
+-- Beleg: docs/migration-evidence/2026-07-18-supabase-baseline-inventory.md, Abschnitt 5 und 14
+--
+-- Diese Datei enthaelt absichtlich kein SQL. Sie dient ausschliesslich dazu,
+-- dass die lokale Migrationskette denselben 14-stelligen Zeitstempel und
+-- Namen traegt wie die bereits live angewandte Remote-Migration, damit
+-- 'supabase migration list' die Historie ohne Abweichung abgleicht.
+-- Der tatsaechliche Schemastand aller Remote-Migrationen bis einschliesslich
+-- dieser Version ist in der nachfolgenden Baseline-Datei zusammengefasst.

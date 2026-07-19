@@ -55,6 +55,9 @@ next-env.d.ts
 supabase/.branches
 supabase/.temp
 
+# Lokal entpackte, gepinnte Supabase-CLI (Binärdatei, nicht versioniert)
+/tools/supabase-cli/
+
 # OS
 Thumbs.db
 
@@ -68,8 +71,13 @@ Thumbs.db
 ZAP/
 legacy-bardhi/
 
-# Dokumentation (lokal, nicht für GitHub)
-docs/
+# Migrationsnachweise: nur der bereinigte Bericht darf versioniert werden.
+# Rohinventare und sämtliche übrigen lokalen Dokumente bleiben ausgeschlossen.
+docs/*
+!docs/migration-evidence/
+docs/migration-evidence/*
+!docs/migration-evidence/2026-07-18-supabase-baseline-inventory.md
+docs/migration-evidence/private/
 
 # Temporäre Prüfdateien der versionierten Designreferenzen
 design-reference/_writetest.tmp
