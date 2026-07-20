@@ -44,26 +44,16 @@ export default async function IntensivkursePage() {
 
 async function KurseContent({ userId, supabaseToken }: { userId: string, supabaseToken: string }) {
   const supabase = createAuthenticatedSupabaseClient(supabaseToken)
-  
-  // Kurse laden (aktive)
+
+  // Belegung/Status kommen aus derselben RLS-sicheren View wie die öffentliche /kurse-Seite und
+  // die Dashboard-Kursverwaltung (intensivwoche_kurse_mit_anmeldungen): stornierte Anmeldungen
+  // zählen dort nicht mit, "wenige-plaetze" bedeutet 1-2 Restplätze, "ausgebucht" bedeutet 0 --
+  // keine eigene, abweichende Berechnung mehr in dieser Seite.
   const { data: kurseData } = await supabase
-    .from('intensivwoche_kurse')
+    .from('intensivwoche_kurse_mit_anmeldungen')
     .select('*')
     .eq('ist_aktiv', true)
     .order('start_datum', { ascending: true })
-
-  // Anmeldungen separat laden für Count
-  const { data: anmeldungenData } = await supabase
-    .from('intensivwoche_anmeldungen')
-    .select('kurs_id')
-
-  // Count pro Kurs berechnen
-  const anmeldungenCountByKurs = (anmeldungenData || []).reduce((acc, a) => {
-    if (a.kurs_id !== null) {
-      acc[a.kurs_id] = (acc[a.kurs_id] || 0) + 1
-    }
-    return acc
-  }, {} as Record<number, number>)
 
   // Profil-Daten für Vorausfüllung laden
   const { data: profileData } = await supabase
@@ -72,41 +62,12 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
     .eq('id', userId)
     .single()
 
-  // Transformiere Kurse für UI
-  const kurse: KursDBMitAnmeldungen[] = (kurseData || []).map((kurs) => {
-    const anmeldungenCount = anmeldungenCountByKurs[kurs.id] || 0
-    const freePlaces = kurs.max_teilnehmer - anmeldungenCount
-    
-    let status: 'offen' | 'wenige-plaetze' | 'ausgebucht' = 'offen'
-    if (freePlaces <= 0) {
-      status = 'ausgebucht'
-    } else if (freePlaces <= 3) {
-      status = 'wenige-plaetze'
-    }
-
-    return {
-      id: kurs.id,
-      name: kurs.name,
-      fach: kurs.fach as KursDBMitAnmeldungen['fach'],
-      beschreibung: kurs.beschreibung,
-      detail_beschreibung: kurs.detail_beschreibung,
-      start_datum: kurs.start_datum,
-      end_datum: kurs.end_datum,
-      uhrzeit: kurs.uhrzeit,
-      ort: kurs.ort,
-      preis: Number(kurs.preis),
-      max_teilnehmer: kurs.max_teilnehmer,
-      klassenstufen: kurs.klassenstufen || [],
-      lehrer: kurs.lehrer,
-      highlights: kurs.highlights || [],
-      ist_aktiv: kurs.ist_aktiv,
-      created_at: kurs.created_at,
-      updated_at: kurs.updated_at,
-      created_by: kurs.created_by,
-      aktuelle_teilnehmer: anmeldungenCount,
-      status,
-    }
-  })
+  const kurse: KursDBMitAnmeldungen[] = (kurseData || []).map((kurs) => ({
+    ...kurs,
+    preis: Number(kurs.preis),
+    klassenstufen: kurs.klassenstufen || [],
+    highlights: kurs.highlights || [],
+  })) as KursDBMitAnmeldungen[]
 
   const userProfile: UserProfileData = {
     first_name: profileData?.first_name || null,
