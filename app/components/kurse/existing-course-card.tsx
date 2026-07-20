@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import type { ExistingCourseCardModel } from '@/types/marketing'
 import {
   Card,
@@ -21,12 +21,14 @@ const subjectLabels: Record<ExistingCourseCardModel['subject'], string> = {
 
 interface ExistingCourseCardProps {
   course: ExistingCourseCardModel
+  /** Schritt 8: wenn gesetzt, öffnet die Karte die bestehende Buchungsmodalität in-place statt
+   *  zu /kurse zu verlinken (dessen "?kurs="-Parameter dort nicht ausgewertet wird). */
+  onBook?: (course: ExistingCourseCardModel) => void
 }
 
 // Bucht weiterhin über die unveränderte sourceKursId -- die stabile intensivwoche_kurse.id, nie
-// neu abgeleitet (Abschnitt 2.10). Die konkrete Zielroute für den Deep-Link ist eine
-// Seiten-Wiring-Entscheidung von Schritt 8, hier nur der stabile Query-Parameter.
-function ExistingCourseCard({ course }: ExistingCourseCardProps) {
+// neu abgeleitet (Abschnitt 2.10).
+function ExistingCourseCard({ course, onBook }: ExistingCourseCardProps) {
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
@@ -52,9 +54,15 @@ function ExistingCourseCard({ course }: ExistingCourseCardProps) {
         <p className="font-serif text-lg font-semibold text-foreground">
           {formatChfRappen(course.regularPriceRappen)}
         </p>
-        <Button asChild variant="outline">
-          <Link href={`/kurse?kurs=${course.sourceKursId}`}>Termine ansehen</Link>
-        </Button>
+        {onBook ? (
+          <Button variant="outline" onClick={() => onBook(course)}>
+            Termine ansehen
+          </Button>
+        ) : (
+          <Button asChild variant="outline">
+            <Link href={`/kurse?kurs=${course.sourceKursId}`}>Termine ansehen</Link>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   )

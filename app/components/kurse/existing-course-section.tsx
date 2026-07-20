@@ -5,10 +5,11 @@ import { ExistingCourseCard } from '@/app/components/kurse/existing-course-card'
 
 interface ExistingCourseSectionProps {
   courses: ExistingCourseCardModel[]
+  onBook?: (course: ExistingCourseCardModel) => void
 }
 
 // Leerer Bestand rendert keine Sektion (Abschnitt 3).
-function ExistingCourseSection({ courses }: ExistingCourseSectionProps) {
+function ExistingCourseSection({ courses, onBook }: ExistingCourseSectionProps) {
   if (courses.length === 0) return null
 
   return (
@@ -16,7 +17,7 @@ function ExistingCourseSection({ courses }: ExistingCourseSectionProps) {
       <SectionHeading title="Bestehende Kurse" level={3} />
       <ResponsiveGrid columns={{ base: 1, md: 2, lg: 3 }}>
         {courses.map((course) => (
-          <ExistingCourseCard key={course.id} course={course} />
+          <ExistingCourseCard key={course.id} course={course} onBook={onBook} />
         ))}
       </ResponsiveGrid>
     </div>
