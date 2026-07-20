@@ -6,6 +6,9 @@
 // übrigen sechs Zielgruppen -- hier wird kein Inhalt für sie erfunden.
 
 import {
+  fuenfKlasseAudiencePageModel,
+  fuenfKlasseHalbjahreskurs,
+  fuenfKlasseHalbjahreskursSessions,
   sechsKlasseAudiencePageModel,
   sechsKlasseHalbjahreskurs,
   sechsKlasseIntensivkurs,
@@ -38,6 +41,14 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [vierKlasseHalbjahreskurs, vierKlasseLerncampSportferien],
     addOnOffers: [],
   },
+  // '5': nur Halbjahreskurs -- das Lerncamp-Angebot hat einen ungelösten Preiskonflikt zwischen
+  // Haupt- und Unterseite (CHF 950 vs. CHF 890, kein "regulär"-Anker) und bleibt bis zur
+  // fachlichen Preisfreigabe ausserhalb des Katalogs, siehe Kommentar bei
+  // fuenfKlasseHalbjahreskurs in types/marketing.fixtures.ts.
+  '5': {
+    offers: [fuenfKlasseHalbjahreskurs],
+    addOnOffers: [],
+  },
   '6': {
     offers: [sechsKlasseHalbjahreskurs, sechsKlasseIntensivkurs],
     addOnOffers: [sechsKlassePruefungssimulation],
@@ -55,12 +66,14 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
 /** Nur gesetzt, wo Schritt 6 bereits eine dedizierte, HTML-extrahierte Hero-Kopie geliefert hat. */
 const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> = {
   '4': vierKlasseAudiencePageModel.hero,
+  '5': fuenfKlasseAudiencePageModel.hero,
   '6': sechsKlasseAudiencePageModel.hero,
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [vierKlasseHalbjahreskurs.id]: vierKlasseHalbjahreskursSessions,
   [vierKlasseLerncampSportferien.id]: vierKlasseLerncampSessions,
+  [fuenfKlasseHalbjahreskurs.id]: fuenfKlasseHalbjahreskursSessions,
   [sechsKlasseIntensivkurs.id]: sechsKlasseIntensivkursSessions,
 }
 

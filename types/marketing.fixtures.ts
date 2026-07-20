@@ -54,6 +54,7 @@ import {
 export { audiences, serviceGroups, homePageModel, siteNav, siteFooter, marketingLayoutModel }
 
 const vierKlasse: Audience = audiences[0]
+const fuenfKlasse: Audience = audiences[1]
 const sechsKlasse: Audience = audiences[2]
 const bms: Audience = audiences[5]
 
@@ -1409,6 +1410,279 @@ export const vierKlasseAudiencePageModel = {
       'Grundlagen in Deutsch und Mathematik frühzeitig festigen — im wöchentlichen Rhythmus oder kompakt in den Ferien.',
   },
   offers: [vierKlasseHalbjahreskurs, vierKlasseLerncampSportferien],
+  addOnOffers: [],
+  existingCourses: [],
+} as const satisfies AudiencePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Schritt 10, Runde 2/6 -- 5. Klasse: Layout_5_Klasse_Hauptseite.html +
+// Layout_5_Klasse_Halbjahreskurs_Unterseite.html.
+//
+// Layout_5_Klasse_Intensivkurs_Unterseite.html (Lerncamp) ist bewusst NICHT übernommen: Hauptseite
+// und Unterseite zeigen für dasselbe Angebot flach widersprüchliche Preise (CHF 950 vs. CHF 890,
+// kein "regulär"-Anker wie beim Halbjahreskurs) -- bereits in Abschnitt 2.3 des
+// Architektur-Briefings dokumentiert. Abschnitt 9.1 verbietet ausdrücklich das stille Auswählen
+// eines der beiden Mockup-Werte; das Angebot bleibt ausserhalb des Katalogs, bis eine fachliche
+// Preisfreigabe vorliegt (User-Entscheid in dieser Session, siehe AskUserQuestion).
+//
+// Beim Halbjahreskurs ist der Konflikt auflösbar: Haupt- und Unterseite stimmen im "regulär
+// CHF 3'490"-Wert überein, nur der angezeigte Frühbucherpreis weicht ab (CHF 3'190 vs. CHF 1'980,
+// zusätzlich nur "bis Juli" ohne Tagesdatum). regularPriceRappen wird deshalb gesetzt,
+// earlyBirdPriceRappen/-Deadline bleiben bewusst unset -- kein Preis wird produktiv beworben, der
+// nicht auf beiden Seiten übereinstimmt. Die Kurslaufzeit "Mai – Juli 2027" aus der spezifischeren
+// Unterseite wird verwendet, nicht die vagere Hauptseiten-Angabe "Nov. 2026 – Juli 2027".
+// ---------------------------------------------------------------------------------------------
+
+export const fuenfKlasseHalbjahreskursSessions = [
+  {
+    id: 7001,
+    offerId: 'offer-5klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 7001 },
+    kurs: 'Kurs A',
+    dateLabel: 'Samstag, 08:30–10:15',
+    timeLabel: '08:30–10:15',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 7002,
+    offerId: 'offer-5klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 7002 },
+    kurs: 'Kurs D',
+    dateLabel: 'Samstag, 08:30–10:15',
+    timeLabel: '08:30–10:15',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 7003,
+    offerId: 'offer-5klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 7003 },
+    kurs: 'Kurs I',
+    dateLabel: 'Mittwoch, 13:45–15:30',
+    timeLabel: '13:45–15:30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 7004,
+    offerId: 'offer-5klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 7004 },
+    kurs: 'Kurs K',
+    dateLabel: 'Mittwoch, 13:45–15:30',
+    timeLabel: '13:45–15:30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 7005,
+    offerId: 'offer-5klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 7005 },
+    kurs: 'Kurs N',
+    dateLabel: 'Mittwoch, 18:00–19:45',
+    timeLabel: '18:00–19:45',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const fuenfKlasseHalbjahreskurs = {
+  id: 'offer-5klasse-halbjahreskurs',
+  audienceId: '5',
+  slug: 'halbjahreskurs',
+  href: '/kurse/5-klasse/halbjahreskurs',
+  displayName: 'Halbjahreskurs',
+  tagline: 'Breite Vorbereitung über das ganze Semester',
+  lede: 'Bereits in der 5. Klasse starten und einen Vorsprung für die 6. Klasse erarbeiten: Grundlagen in Deutsch und Mathematik festigen, dazu gezieltes Lerncoaching für Selbstorganisation und Lernstrategien — alles in einem wöchentlichen Termin.',
+  description:
+    'Deutsch, Mathematik und spielerisches Lernen in einem Termin — je 45 Minuten pro Bereich, mit Fachwechsel für maximale Aufmerksamkeit. Ob Wortschatz-Spiele oder Kopfrechen-Wettbewerbe: Lernen mit Spass statt nur Pauken.',
+  recommended: true,
+  laufzeit: 'Mai – Juli 2027',
+  dateSummary: ['Mai – Juli 2027'],
+  features: [
+    'Grammatik, Rechtschreibung & Aufsatztraining vertiefen',
+    'Bruchrechnen, Sachaufgaben & Geometrie vertiefen',
+    'Lerncoaching & Lernspiele pro Termin',
+    'Samstag- oder Mittwochnachmittag',
+  ],
+  // Nur der auf beiden Quellseiten übereinstimmende "regulär"-Preis wird geführt -- der
+  // Frühbucherpreis ist zwischen Haupt- und Unterseite widersprüchlich (siehe Kommentar oben) und
+  // bleibt deshalb bewusst unset.
+  regularPriceRappen: 349000,
+  currency: 'CHF',
+  overviewBullets: [
+    '8 Kurstage zwischen Frühlings- und Sommerferien (Mai – Juli 2027)',
+    'Kleingruppen',
+    'Standortbestimmung & Abschlusstest inbegriffen',
+  ],
+  whyUs: [
+    {
+      id: 'lerncoaching-jeder-termin',
+      title: 'Lerncoaching bei jedem Termin',
+      description:
+        '15 Minuten pro Termin für Selbstorganisation, Lernmethoden und Konzentration — die Basis, um von den fachlichen Inhalten wirklich zu profitieren.',
+    },
+    {
+      id: 'lernen-mit-spass',
+      title: 'Lernen mit Spass statt Druck',
+      description: 'Lernspiele und Wettbewerbe sorgen dafür, dass Üben sich nicht wie ein Test anfühlt.',
+    },
+    {
+      id: 'praktische-strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über Konzentrationsübungen bis zur Herangehensweise an typische Aufgaben — Grundlagen, die auch später an der Gymiprüfung helfen.',
+    },
+    {
+      id: 'kleingruppen',
+      title: 'Kleingruppen von höchstens 8 Kindern',
+      description: 'Genug Raum für individuelle Fragen, ohne dass ein Kind im Kurs untergeht.',
+    },
+  ],
+  kurstyp: 'halbjahreskurs',
+  flowSteps: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung',
+      body: 'Vor dem ersten Kurstag stellen wir fest, wo Ihr Kind aktuell steht — insbesondere hilfreich nach Lehrerwechseln oder bei Unsicherheit über den Wissensstand.',
+    },
+    {
+      id: 'woechentliches-training',
+      title: 'Wöchentliches Training',
+      body: 'Von Mai bis Juli wird an 8 Terminen in Deutsch, Mathematik und Lerncoaching gearbeitet — mit regelmässigen Zwischentests zur Lernstandskontrolle.',
+    },
+    {
+      id: 'abschlusstest-feedback',
+      title: 'Abschlusstest & Feedback',
+      body: 'Nach dem letzten Kurstag zeigt ein Abschlusstest den aktuellen Lernstand — inklusive Empfehlung, was bis zur 6. Klasse noch gezielt geübt werden sollte.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Natürliche Zahlen',
+            'Grundrechenarten — Multiplikation, Division, Addition, Subtraktion',
+            'Rechen-Check — Strategien, um bei der Prüfung die volle Punktzahl zu erreichen',
+            'Grössen',
+            'Geometrische Grundbegriffe',
+            'Brüche',
+            'Würfel & Quader',
+            'Sachaufgaben — mit Fokus auf Grössen',
+            'Textaufgaben — zu allen behandelten Themen',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'deutsch',
+      title: 'Deutsch',
+      lede: 'Die Themenschwerpunkte werden individuell auf den Lernstand des Kindes abgestimmt.',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Aufsatz — Prüfungsanforderungen und verlangte Textsorten kennenlernen',
+            'Erzählung — Ideen sammeln, planen, schreiben und überarbeiten',
+            'Satzglieder — Satzproben, Satzanfänge und Satzverbindungen üben',
+            'Textverständnis — Lesestrategien aufbauen und gezielt trainieren',
+            'Rechtschreibung — zentrale Regeln und passende Übungen',
+            'Verben — Konjugation, Zeitformen und Wortstammprinzip',
+            'Nomen & Adjektive — inkl. Wortschatzübungen',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'lerncoaching',
+      title: 'Lerncoaching',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Selbstorganisation — Planung und Struktur für den Lernalltag',
+            'Lernumgebung — den passenden Lernort finden',
+            'Lernmethoden — Techniken und Tricks fürs Lernen',
+            'Motivation — Ziele setzen und dranbleiben, auch wenn es mal harzt',
+            'Konzentration — Übungen für mehr Fokus',
+            'Bei LRS — gezielte Tipps für Lesen und Rechtschreibung',
+            'Sommer-Smart — erholen, repetieren und gestärkt in die 6. Klasse starten',
+          ],
+        },
+      ],
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    note: 'Jeder Termin folgt demselben Ablauf — Details dazu unter "Ablauf".',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const fuenfKlasseHalbjahreskursDetailPageModel = {
+  audience: fuenfKlasse,
+  offer: fuenfKlasseHalbjahreskurs,
+  sessions: fuenfKlasseHalbjahreskursSessions,
+} as const satisfies CourseDetailPageModel
+
+export const fuenfKlasseAudiencePageModel = {
+  audience: fuenfKlasse,
+  hero: {
+    title: 'Grundlagen stärken — 5. Klasse',
+    description:
+      'Grundlagen in Deutsch und Mathematik frühzeitig festigen — im wöchentlichen Rhythmus oder kompakt in den Ferien.',
+  },
+  offers: [fuenfKlasseHalbjahreskurs],
   addOnOffers: [],
   existingCourses: [],
 } as const satisfies AudiencePageModel
