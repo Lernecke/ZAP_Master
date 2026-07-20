@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Contains no lintable files (only .md/.sql/.pdf); one subfolder is permission-restricted
+    // (docs/migration-evidence/private/), which otherwise crashes the directory scan with EPERM.
+    "docs/**",
   ]),
 ]);
 

@@ -24,5 +24,7 @@ export default async function MarketingLayout({
   setRequestLocale(locale)
 
   // SiteNav is added here in Schritt 6 once it exists as a component.
-  return <>{children}</>
+  return (
+    <div className="brand-marketing min-h-screen bg-background">{children}</div>
+  )
 }
