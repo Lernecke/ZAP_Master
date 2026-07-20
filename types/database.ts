@@ -319,6 +319,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          idempotency_key: string | null
           kurs_id: number | null
           notes: string | null
           paid_at: string | null
@@ -335,6 +336,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          idempotency_key?: string | null
           kurs_id?: number | null
           notes?: string | null
           paid_at?: string | null
@@ -351,6 +353,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          idempotency_key?: string | null
           kurs_id?: number | null
           notes?: string | null
           paid_at?: string | null
@@ -374,6 +377,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      intensivwoche_buchungsversuche: {
+        Row: {
+          attempted_at: string
+          id: number
+          parent_email: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: never
+          parent_email: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: never
+          parent_email?: string
+        }
+        Relationships: []
       }
       intensivwoche_kurse: {
         Row: {
@@ -440,6 +461,7 @@ export type Database = {
       }
       learning_materials: {
         Row: {
+          area_id: number | null
           class_levels: string[] | null
           created_at: string
           created_by: string | null
@@ -457,6 +479,7 @@ export type Database = {
           type: string | null
         }
         Insert: {
+          area_id?: number | null
           class_levels?: string[] | null
           created_at?: string
           created_by?: string | null
@@ -474,6 +497,7 @@ export type Database = {
           type?: string | null
         }
         Update: {
+          area_id?: number | null
           class_levels?: string[] | null
           created_at?: string
           created_by?: string | null
@@ -492,6 +516,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "learning_materials_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "material_areas"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "learning_materials_subject_id_fkey"
             columns: ["subject_id"]
             isOneToOne: false
@@ -499,6 +530,74 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      material_access_grants: {
+        Row: {
+          area_id: number
+          created_at: string
+          id: string
+          revoked_at: string | null
+          source_id: string | null
+          source_kind: string
+          status: string
+          user_id: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          area_id: number
+          created_at?: string
+          id?: string
+          revoked_at?: string | null
+          source_id?: string | null
+          source_kind: string
+          status?: string
+          user_id: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          area_id?: number
+          created_at?: string
+          id?: string
+          revoked_at?: string | null
+          source_id?: string | null
+          source_kind?: string
+          status?: string
+          user_id?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_access_grants_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "material_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_areas: {
+        Row: {
+          created_at: string
+          id: number
+          key: string
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          key: string
+          label: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          key?: string
+          label?: string
+        }
+        Relationships: []
       }
       math_solution_steps: {
         Row: {
@@ -926,6 +1025,53 @@ export type Database = {
         }
         Relationships: []
       }
+      self_study_enrollments: {
+        Row: {
+          access_until: string | null
+          area_id: number
+          audience_id: string
+          beneficiary_user_id: string | null
+          created_at: string
+          id: string
+          invite_token_hash: string | null
+          payment_provider_ref: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_until?: string | null
+          area_id: number
+          audience_id: string
+          beneficiary_user_id?: string | null
+          created_at?: string
+          id?: string
+          invite_token_hash?: string | null
+          payment_provider_ref?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_until?: string | null
+          area_id?: number
+          audience_id?: string
+          beneficiary_user_id?: string | null
+          created_at?: string
+          id?: string
+          invite_token_hash?: string | null
+          payment_provider_ref?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "self_study_enrollments_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "material_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_essays: {
         Row: {
           created_at: string | null
@@ -1245,6 +1391,7 @@ export type Database = {
           p_child_firstname: string
           p_child_gender: string
           p_child_lastname: string
+          p_idempotency_key?: string
           p_kurs_id: number
           p_notes?: string
           p_parent_email: string

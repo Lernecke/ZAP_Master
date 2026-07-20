@@ -11,6 +11,15 @@
 -- (intensivwoche_buchungsversuche, RLS aktiviert), +1 Sequenz (Identity-Spalte), +1 Constraint
 -- (Primary Key), +2 Indizes (Primary-Key-Index + idx_buchungsversuche_email_time). Funktionen/
 -- SECURITY DEFINER/Trigger/Policies/Views unveraendert (CREATE OR REPLACE, gleiche Signatur).
+--
+-- Angepasst durch 20260720140000_material_access_schema.sql: +3 Tabellen (material_areas,
+-- self_study_enrollments, material_access_grants; alle RLS aktiviert), +3 RLS-Policies (je eine
+-- SELECT-Policy pro neuer Tabelle; die alte learning_materials_public_read-Policy wurde 1:1 durch
+-- eine neue ersetzt, netto unveraendert dort), +1 Sequenz (material_areas Identity-Spalte),
+-- +12 Constraints (material_areas: PK+UNIQUE; learning_materials: +1 FK; self_study_enrollments:
+-- PK+2 FK+1 CHECK; material_access_grants: PK+2 FK+2 CHECK), +7 Indizes (je PK-Index der drei
+-- neuen Tabellen + idx_learning_materials_area_id + idx_self_study_enrollments_beneficiary +
+-- idx_material_access_grants_user_area).
 
 begin;
 
@@ -18,14 +27,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    27,
-    '27 Tabellen im public-Schema'
+    30,
+    '30 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    27,
-    'alle 27 public-Tabellen haben RLS aktiviert'
+    30,
+    'alle 30 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -55,14 +64,14 @@ select is(
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    131,
-    '131 RLS-Policies im public-Schema'
+    134,
+    '134 RLS-Policies im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_sequences where schemaname = 'public'),
-    13,
-    '13 Sequenzen im public-Schema'
+    14,
+    '14 Sequenzen im public-Schema'
 );
 
 select is(
@@ -71,14 +80,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    91,
-    '91 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    103,
+    '103 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    75,
-    '75 Indizes im public-Schema'
+    82,
+    '82 Indizes im public-Schema'
 );
 
 select is(
