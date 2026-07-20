@@ -454,3 +454,35 @@ export type LegalPageModel = {
   updatedAt: string
   sections: ContentSection[]
 }
+
+// ---------------------------------------------------------------------------------------------
+// 2.12 Jährliche Angebotsverwaltung (Admin-Maske) -- stabiles Offer vs. jährliche Durchführung
+// ---------------------------------------------------------------------------------------------
+
+export type OfferEditionStatus = 'draft' | 'published' | 'archived'
+
+export type OfferEdition = {
+  id: string
+  offerId: string // stabiles Offer, z. B. 6. Klasse / Intensivkurs
+  schoolYear: string // "2026/27"
+  publicTitle: string
+  tagline: string
+  description: string
+  regularPriceRappen: number
+  earlyBirdEnabled: boolean
+  earlyBirdPriceRappen: number | null
+  earlyBirdDeadline: string | null // ISO-Datum
+  currency: 'CHF'
+  registrationOpensAt?: string
+  registrationClosesAt?: string
+  status: OfferEditionStatus
+  version: number // Optimistic Concurrency
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+}
+
+export type CourseSessionDefinition = SessionDefinition & {
+  editionId: string
+  registrationStatus: 'bookable' | 'waitlist' | 'cancelled'
+}

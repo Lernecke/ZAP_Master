@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          diff: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          occurred_at: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          diff?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          occurred_at?: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          diff?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          occurred_at?: string
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           created_at: string
@@ -171,6 +201,58 @@ export type Database = {
           },
         ]
       }
+      course_sessions: {
+        Row: {
+          created_at: string
+          delivery_modes: string[]
+          edition_id: string
+          id: number
+          registration_status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          delivery_modes?: string[]
+          edition_id: string
+          id: number
+          registration_status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          delivery_modes?: string[]
+          edition_id?: string
+          id?: number
+          registration_status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_sessions_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "offer_editions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_sessions_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "intensivwoche_kurse"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_sessions_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "intensivwoche_kurse_mit_anmeldungen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           created_at: string
@@ -318,6 +400,7 @@ export type Database = {
           child_lastname: string
           created_at: string
           currency: string
+          edition_id: string | null
           id: string
           idempotency_key: string | null
           kurs_id: number | null
@@ -325,6 +408,7 @@ export type Database = {
           paid_at: string | null
           parent_email: string
           parent_phone: string
+          session_id: number | null
           status: string
         }
         Insert: {
@@ -335,6 +419,7 @@ export type Database = {
           child_lastname: string
           created_at?: string
           currency?: string
+          edition_id?: string | null
           id?: string
           idempotency_key?: string | null
           kurs_id?: number | null
@@ -342,6 +427,7 @@ export type Database = {
           paid_at?: string | null
           parent_email: string
           parent_phone: string
+          session_id?: number | null
           status?: string
         }
         Update: {
@@ -352,6 +438,7 @@ export type Database = {
           child_lastname?: string
           created_at?: string
           currency?: string
+          edition_id?: string | null
           id?: string
           idempotency_key?: string | null
           kurs_id?: number | null
@@ -359,9 +446,17 @@ export type Database = {
           paid_at?: string | null
           parent_email?: string
           parent_phone?: string
+          session_id?: number | null
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "intensivwoche_anmeldungen_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "offer_editions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "intensivwoche_anmeldungen_kurs_id_fkey"
             columns: ["kurs_id"]
@@ -374,6 +469,13 @@ export type Database = {
             columns: ["kurs_id"]
             isOneToOne: false
             referencedRelation: "intensivwoche_kurse_mit_anmeldungen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intensivwoche_anmeldungen_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -955,6 +1057,101 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      offer_editions: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string
+          early_bird_deadline: string | null
+          early_bird_enabled: boolean
+          early_bird_price_rappen: number | null
+          id: string
+          offer_id: number
+          public_title: string
+          published_at: string | null
+          registration_closes_at: string | null
+          registration_opens_at: string | null
+          regular_price_rappen: number
+          school_year: string
+          status: string
+          tagline: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description: string
+          early_bird_deadline?: string | null
+          early_bird_enabled?: boolean
+          early_bird_price_rappen?: number | null
+          id?: string
+          offer_id: number
+          public_title: string
+          published_at?: string | null
+          registration_closes_at?: string | null
+          registration_opens_at?: string | null
+          regular_price_rappen: number
+          school_year: string
+          status?: string
+          tagline: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string
+          early_bird_deadline?: string | null
+          early_bird_enabled?: boolean
+          early_bird_price_rappen?: number | null
+          id?: string
+          offer_id?: number
+          public_title?: string
+          published_at?: string | null
+          registration_closes_at?: string | null
+          registration_opens_at?: string | null
+          regular_price_rappen?: number
+          school_year?: string
+          status?: string
+          tagline?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_editions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          audience_id: string
+          created_at: string
+          id: number
+          kurstyp: string
+          slug: string
+        }
+        Insert: {
+          audience_id: string
+          created_at?: string
+          id?: never
+          kurstyp: string
+          slug: string
+        }
+        Update: {
+          audience_id?: string
+          created_at?: string
+          id?: never
+          kurstyp?: string
+          slug?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1542,9 +1739,10 @@ export const Constants = {
   },
 } as const
 
-// ============================================
-// Convenience Types für die App
-// ============================================
+
+// ============================================================
+// Convenience Types fuer die App
+// ============================================================
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"]

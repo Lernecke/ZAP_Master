@@ -20,6 +20,17 @@
 -- PK+2 FK+1 CHECK; material_access_grants: PK+2 FK+2 CHECK), +7 Indizes (je PK-Index der drei
 -- neuen Tabellen + idx_learning_materials_area_id + idx_self_study_enrollments_beneficiary +
 -- idx_material_access_grants_user_area).
+--
+-- Angepasst durch 20260720170000_offer_editions_schema.sql: +4 Tabellen (offers, offer_editions,
+-- course_sessions, audit_log; alle RLS aktiviert), +4 RLS-Policies (je eine SELECT-Policy),
+-- +1 Sequenz (offers Identity-Spalte), +16 Constraints (offers: PK+CHECK+UNIQUE=3; offer_editions:
+-- PK+FK+2 CHECK+UNIQUE+CHECK=6; course_sessions: PK+FK+CHECK=3; audit_log: PK+FK=2;
+-- intensivwoche_anmeldungen: +2 FK fuer edition_id/session_id), +11 Indizes (offers: PK+UNIQUE=2;
+-- offer_editions: PK+UNIQUE+idx_offer_editions_offer_id=3; course_sessions: PK+
+-- idx_course_sessions_edition_id=2; audit_log: PK+idx_audit_log_entity=2;
+-- intensivwoche_anmeldungen: idx_anmeldungen_edition_id+idx_anmeldungen_session_id=2). Funktionen/
+-- SECURITY DEFINER/Trigger unveraendert (enforce_anmeldung_price_snapshot_immutable() per
+-- CREATE OR REPLACE erweitert, gleiche Signatur, bestehender Trigger unangetastet).
 
 begin;
 
@@ -27,14 +38,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    30,
-    '30 Tabellen im public-Schema'
+    34,
+    '34 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    30,
-    'alle 30 public-Tabellen haben RLS aktiviert'
+    34,
+    'alle 34 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -64,14 +75,14 @@ select is(
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    134,
-    '134 RLS-Policies im public-Schema'
+    138,
+    '138 RLS-Policies im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_sequences where schemaname = 'public'),
-    14,
-    '14 Sequenzen im public-Schema'
+    15,
+    '15 Sequenzen im public-Schema'
 );
 
 select is(
@@ -80,14 +91,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    103,
-    '103 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    120,
+    '120 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    82,
-    '82 Indizes im public-Schema'
+    93,
+    '93 Indizes im public-Schema'
 );
 
 select is(
