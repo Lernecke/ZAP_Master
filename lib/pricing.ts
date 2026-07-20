@@ -27,6 +27,26 @@ export function formatChfRappen(rappen: number, locale = 'de-CH'): string {
   }).format(rappen / 100)
 }
 
+interface SubscriptionPlanPriceInput {
+  lessons: number
+  pricePerLessonRappen: number
+  discountPercent?: number
+  currency: 'CHF'
+}
+
+export function formatSubscriptionPrice(plan: SubscriptionPlanPriceInput, locale = 'de-CH'): FormattedOfferPrice {
+  const totalRappen = Math.round(
+    plan.pricePerLessonRappen * plan.lessons * (1 - (plan.discountPercent ?? 0) / 100)
+  )
+
+  return {
+    value: formatChfRappen(totalRappen, locale),
+    note: plan.discountPercent
+      ? `${formatChfRappen(plan.pricePerLessonRappen, locale)} pro Lektion · ${plan.discountPercent}% Rabatt`
+      : `${formatChfRappen(plan.pricePerLessonRappen, locale)} pro Lektion`,
+  }
+}
+
 export function formatOfferPrice(offer: OfferPriceInput, locale = 'de-CH'): FormattedOfferPrice {
   if (offer.earlyBirdPriceRappen != null && offer.earlyBirdDeadline) {
     const deadlineLabel = new Intl.DateTimeFormat(locale, {

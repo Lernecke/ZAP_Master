@@ -6,7 +6,6 @@
 // übrigen sechs Zielgruppen -- hier wird kein Inhalt für sie erfunden.
 
 import {
-  bmsSelbststudium,
   sechsKlasseAudiencePageModel,
   sechsKlasseHalbjahreskurs,
   sechsKlasseIntensivkurs,
@@ -34,9 +33,13 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [sechsKlasseHalbjahreskurs, sechsKlasseIntensivkurs],
     addOnOffers: [sechsKlassePruefungssimulation],
   },
+  // bms.addOnOffers bewusst leer: bmsSelbststudium (types/marketing.fixtures.ts) hat noch keinen
+  // Renderer in [angebot]/page.tsx (das rendert nur CourseOffer/halbjahreskurs+intensivkurs). Die
+  // drei Selbststudium-Seiten (BMS + 6. Klasse + 2./3. Sek) gehören laut Ausführungsplan als EINE
+  // Einheit in einen eigenen späteren Schritt -- nicht BMS allein, sonst Halb-Feature/toter Link.
   bms: {
     offers: [],
-    addOnOffers: [bmsSelbststudium],
+    addOnOffers: [],
   },
 }
 

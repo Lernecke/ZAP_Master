@@ -4,11 +4,15 @@
 // design-reference/ übernommen, nicht erfunden. Keine Verfügbarkeit/Belegung enthalten (die wird
 // laut Abschnitt 2.9 immer request-time ergänzt).
 //
-// Bewusst NICHT abgedeckt in dieser Runde (kein Quell-HTML gelesen bzw. keine reale Quelle
-// vorhanden -- siehe step0Baseline.revision2.md/Konversation für den Stand): TargetedServicePageModel
-// (Lerncoaching/Distance Learning), TipsPageModel, LegalPageModel und ein inhaltlich befüllter
-// ContactPageModel-Fixture (im Repo existieren keine echten, verifizierten Kontaktkanäle -- ein
-// Fixture dafür würde Kontaktdaten erfinden müssen, was ausdrücklich nicht erlaubt ist).
+// TargetedServicePageModel (Lerncoaching/Distance Learning) und TipsPageModel kamen in Schritt 9
+// dazu, wörtlich aus Layout_Lerncoaching_Seite.html/Layout_DistanceLearning_Seite.html/
+// Layout_Tipps_Uebersichtsseite.html übernommen.
+//
+// Bewusst weiterhin NICHT abgedeckt: LegalPageModel und ein inhaltlich befüllter
+// ContactPageModel-Fixture (im Repo existieren keine echten, verifizierten Kontaktkanäle oder
+// Rechtstexte -- ein Fixture dafür würde Daten erfinden müssen, was ausdrücklich nicht erlaubt
+// ist; /kontakt, /impressum und /datenschutz definieren ihren ehrlichen Platzhalter-Inhalt
+// deshalb lokal in der jeweiligen page.tsx, nicht hier).
 //
 // SessionDefinition.id: intensivwoche_kurse.id ist laut Abschnitt 2.4 global und darf nie neu
 // nummeriert werden. Für diese Kurse existieren noch keine echten DB-Zeilen (das folgt erst mit
@@ -29,6 +33,8 @@ import type {
   SessionDefinition,
   SubscriptionPageModel,
   SubscriptionPlan,
+  TargetedServicePageModel,
+  TipsPageModel,
 } from './marketing'
 
 // 2.1/2.7/2.8 Audience[], serviceGroups, homePageModel, siteNav, siteFooter,
@@ -461,7 +467,9 @@ export const nachhilfeZehnerAbo = {
     'Individuelle Terminvereinbarung',
     'Deutsch, Mathematik und Französisch',
   ],
-  cta: { kind: 'link', label: 'Abo buchen', href: '/nachhilfe#buchung' },
+  // Abschnitt 9.1: kein realer Checkout vorhanden -- "Abo buchen" bleibt disabled statt auf einen
+  // toten #buchung-Anker zu verlinken (Schritt 9, Korrektur beim Verdrahten von /nachhilfe).
+  cta: { kind: 'disabled', label: 'Abo buchen', disabledReason: 'Checkout folgt in einer späteren Ausbaustufe' },
 } as const satisfies SubscriptionPlan
 
 export const nachhilfeZwanzigerAbo = {
@@ -479,7 +487,9 @@ export const nachhilfeZwanzigerAbo = {
     'Deutsch, Mathematik und Französisch',
   ],
   recommended: true,
-  cta: { kind: 'link', label: 'Abo buchen', href: '/nachhilfe#buchung' },
+  // Abschnitt 9.1: kein realer Checkout vorhanden -- "Abo buchen" bleibt disabled statt auf einen
+  // toten #buchung-Anker zu verlinken (Schritt 9, Korrektur beim Verdrahten von /nachhilfe).
+  cta: { kind: 'disabled', label: 'Abo buchen', disabledReason: 'Checkout folgt in einer späteren Ausbaustufe' },
 } as const satisfies SubscriptionPlan
 
 export const nachhilfePageModel = {
@@ -564,4 +574,314 @@ export const aboutPageModel = {
         'Führungskräfte entweder aus der Wirtschaft oder aus der Wissenschaft, die sich den Anforderungen moderner Gesellschaften bewusst sind. Sie sind an der Erstellung passender Lernmaterialien mitbeteiligt.',
     },
   ],
+  // /kontakt existiert seit Schritt 9 -- ein reales, erreichbares Ziel (Abschnitt 2.8: "nur setzen,
+  // wenn ein reales Beratungs-/Kontaktziel existiert").
+  cta: { label: 'Kontakt aufnehmen', href: '/kontakt' },
 } as const satisfies AboutPageModel
+
+// ---------------------------------------------------------------------------------------------
+// 2.8 TargetedServicePageModel -- Layout_Lerncoaching_Seite.html
+// ---------------------------------------------------------------------------------------------
+
+export const lerncoachingPageModel = {
+  id: 'lerncoaching',
+  hero: {
+    eyebrow: 'Zusatzangebot · Für alle Klassenstufen',
+    title: 'Lerncoaching',
+    description:
+      'Gute Vorbereitung ist mehr als Fachwissen. Wir stärken, wie Ihr Kind lernt — Struktur, Konzentration und Motivation — und begleiten es damit über die Gymiprüfung hinaus.',
+  },
+  eligibleAudiences: audiences.filter((audience) => audience.kind === 'gymipruefung'),
+  flowSteps: [
+    {
+      id: 'fachlich-praezise',
+      title: 'Fachlich präzise',
+      body: 'Deutsch und Mathematik so vermittelt, dass Kinder das Prinzip dahinter verstehen — nicht nur ein Ergebnis auswendig lernen.',
+    },
+    {
+      id: 'wissenschaftlich-abgestuetzt',
+      title: 'Wissenschaftlich abgestützt',
+      body: 'Unsere Lernstrategien beruhen auf anerkannten Erkenntnissen der Lernpsychologie und wirken über die Prüfung hinaus.',
+    },
+    {
+      id: 'auf-das-kind-zugeschnitten',
+      title: 'Auf das Kind zugeschnitten',
+      body: 'Jedes Kind bringt andere Voraussetzungen mit — die Begleitung richtet sich danach, statt ein Standardprogramm durchzuziehen.',
+    },
+  ],
+  features: [
+    {
+      id: 'selbstorganisation',
+      title: 'Selbstorganisation',
+      description: 'Ein klarer Lernplan und feste Routinen, statt Lernen nach Zufall.',
+    },
+    {
+      id: 'lernstrategien-motivation',
+      title: 'Lernstrategien & Motivation',
+      description:
+        'Konkrete Methoden fürs Behalten und Anwenden — sowie ein gesunder Umgang mit Prüfungsdruck.',
+    },
+    {
+      id: 'individuelle-foerderbedarfe',
+      title: 'Individuelle Förderbedarfe',
+      description: 'Gezielte Unterstützung bei ADHS, LRS oder Dyskalkulie, bei Bedarf mit Lernstandsanalyse.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'einordnung',
+      title: 'Lerncoaching einordnen',
+      groups: [
+        {
+          id: 'bereits-inbegriffen',
+          subhead: 'Bereits inbegriffen',
+          items: [
+            'Lerncoaching ist fester Bestandteil unserer Vor- und Halbjahreskurse — ohne Aufpreis, in regelmässigen Zusatzlektionen.',
+          ],
+        },
+        {
+          id: 'nachhilfe-gesucht',
+          subhead: 'Gezielte Nachhilfe gesucht?',
+          items: [
+            'Nachhilfe ≠ Lerncoaching: Für konkreten Fachstoff in Deutsch, Mathematik oder Französisch gibt es unser eigenständiges Nachhilfe-Abo (10er/20er).',
+          ],
+        },
+        {
+          id: 'beratung',
+          subhead: 'Nicht sicher, was zu Ihrem Kind passt?',
+          items: [
+            'Wir beraten Sie unverbindlich, ob Kurs, Lerncoaching oder Nachhilfe-Abo die passende Wahl ist.',
+          ],
+        },
+      ],
+    },
+  ],
+  faq: [
+    {
+      id: 'unterschied-nachhilfe',
+      question: 'Was unterscheidet Lerncoaching von Nachhilfe?',
+      answer:
+        'Lerncoaching stärkt, wie Ihr Kind lernt — Struktur, Strategie, Motivation. Nachhilfe vertieft konkreten Fachstoff in Deutsch, Mathematik oder Französisch. Beides ergänzt sich gut.',
+    },
+    {
+      id: 'zusatzkosten',
+      question: 'Kostet Lerncoaching zusätzlich zum Kurs?',
+      answer: 'Nein — Lerncoaching ist fester Bestandteil unserer Vor- und Halbjahreskurse, ohne Aufpreis.',
+    },
+  ],
+  relatedActions: [
+    { label: 'Zu unseren Kursen', href: '/' },
+    { label: 'Zum Nachhilfe-Abo', href: '/nachhilfe' },
+    { label: 'Beratungsgespräch vereinbaren', href: '/kontakt' },
+  ],
+} as const satisfies TargetedServicePageModel
+
+// ---------------------------------------------------------------------------------------------
+// 2.8 TargetedServicePageModel -- Layout_DistanceLearning_Seite.html
+// ---------------------------------------------------------------------------------------------
+
+export const distanceLearningPageModel = {
+  id: 'distance-learning',
+  hero: {
+    eyebrow: 'Zusatzoption · Nur Intensivkurs Sportferien',
+    title: 'Distance Learning',
+    description:
+      'Der Intensivkurs in den Sportferien lässt sich auch von zu Hause oder vom Ferienort aus per Video-Unterricht besuchen — mit denselben Inhalten wie vor Ort.',
+  },
+  eligibleAudiences: audiences.filter((audience) => audience.id === '6' || audience.id === '2-3-sek'),
+  flowSteps: [
+    {
+      id: 'live-per-video',
+      title: 'Live per Video',
+      body: 'Teilnahme in Echtzeit am selben Unterricht wie die Kinder vor Ort — keine Aufzeichnung, kein Nacharbeiten im Nachhinein.',
+    },
+    {
+      id: 'gleiche-inhalte',
+      title: 'Gleiche Inhalte',
+      body: 'Derselbe Ablauf, dieselben Übungen und Materialien wie im Präsenzunterricht am Kursstandort.',
+    },
+    {
+      id: 'keine-zusatzkosten',
+      title: 'Keine Zusatzkosten',
+      body: 'Distance Learning ist eine Teilnahmeform des Intensivkurses, kein separat zu buchendes Angebot.',
+    },
+  ],
+  features: [],
+  contentSections: [
+    {
+      id: 'fuer-wen',
+      title: 'Für wen es ist',
+      groups: [
+        {
+          id: 'verfuegbarkeit',
+          items: ['Verfügbar für den Intensivkurs Sportferien von zwei Prüfungsjahren.'],
+        },
+        {
+          id: 'ausschluss',
+          items: [
+            'Bei allen anderen Kursen (Wochenkurse, Halbjahreskurse, Lerncamp der 4./5. Klasse und 1. Sek) ist Distance Learning aktuell nicht verfügbar — dort findet der Unterricht ausschliesslich vor Ort statt.',
+          ],
+        },
+      ],
+    },
+  ],
+  faq: [
+    {
+      id: 'extra-kosten',
+      question: 'Kostet die Teilnahme per Distance Learning extra?',
+      answer: 'Nein — es ist dieselbe Kursbuchung wie vor Ort, nur die Teilnahmeform ändert sich.',
+    },
+    {
+      id: 'wechsel',
+      question: 'Kann ich zwischen den Kurstagen wechseln — mal vor Ort, mal online?',
+      answer:
+        'Die Teilnahmeform wird bei der Anmeldung festgelegt; ein spontaner Wechsel während des Kurses ist nicht vorgesehen.',
+    },
+    {
+      id: 'warum-nicht-ueberall',
+      question: 'Warum gibt es Distance Learning nicht bei allen Kursen?',
+      answer:
+        'Der Intensivkurs in den Sportferien fällt oft mit Familienferien zusammen — deshalb bieten wir hier gezielt die Möglichkeit, von unterwegs teilzunehmen. Bei den länger laufenden Wochen- und Halbjahreskursen ist die Präsenz vor Ort Teil des Konzepts.',
+    },
+  ],
+} as const satisfies TargetedServicePageModel
+
+// ---------------------------------------------------------------------------------------------
+// 2.8 TipsPageModel -- Layout_Tipps_Uebersichtsseite.html
+// ---------------------------------------------------------------------------------------------
+
+export const tipsPageModel = {
+  hero: {
+    eyebrow: 'Wissen & Orientierung',
+    title: 'Tipps rund um die Gymivorbereitung',
+    description:
+      'Kurze, konkrete Einblicke aus unserer Praxis — zur Prüfungsplanung, zum Lernen zu Hause, zu Deutsch und Mathematik sowie zu besonderen Förderbedarfen. Für Eltern, die sich einen Überblick verschaffen möchten, bevor sie ins Detail gehen.',
+  },
+  categories: [
+    {
+      id: 'pruefung-planung',
+      title: 'Prüfung & Planung',
+      tips: [
+        {
+          id: 'langzeit-kurzzeit',
+          title: 'Langzeit- oder Kurzzeitgymnasium — welcher Weg passt?',
+          excerpt:
+            'Beide Wege führen ans Gymnasium, unterscheiden sich aber deutlich in Tempo, Einstiegsalter und Anforderungsprofil. Eine Übersicht der wichtigsten Unterschiede, damit die Entscheidung leichter fällt.',
+        },
+        {
+          id: 'wann-beginnen',
+          title: 'Wann sollte die Vorbereitung beginnen?',
+          excerpt:
+            'Ein früher Einstieg schon in der 5. Klasse gibt vielen Kindern Sicherheit und Zeit, Lücken in Ruhe zu schliessen — muss aber nicht für jedes Kind der richtige Zeitpunkt sein.',
+        },
+        {
+          id: 'pruefungsformat-aenderungen',
+          title: 'Was sich am Prüfungsformat zuletzt geändert hat',
+          excerpt:
+            'Prüfungsreglemente werden periodisch angepasst. Die wichtigsten Änderungen im Überblick, damit Sie mit aktuellem Wissen planen.',
+        },
+      ],
+    },
+    {
+      id: 'lernen-motivation',
+      title: 'Lernen & Motivation',
+      tips: [
+        {
+          id: 'lernen-zuhause-kraftakt',
+          title: 'Wenn Lernen zu Hause zum Kraftakt wird',
+          excerpt:
+            'Streit ums Üben ist oft ein Beziehungsthema, kein Fleissproblem. Warum Struktur und ein klar getrennter Rahmen zwischen Eltern- und Lernrolle hier oft mehr bewirken als zusätzlicher Druck.',
+        },
+        {
+          id: 'struktur-die-hilft',
+          title: 'Struktur, die wirklich hilft',
+          excerpt:
+            'Ein realistischer Wochenplan mit festen Lernblöcken schafft Verlässlichkeit — für Kinder wie für Eltern. Konkrete Ansätze für den Alltag zu Hause.',
+        },
+        {
+          id: 'mental-stark',
+          title: 'Mental stark in die Prüfung',
+          excerpt:
+            'Nervosität vor der Prüfung ist normal — entscheidend ist, wie gut ein Kind lernt, damit umzugehen. Einfache Techniken, die sich in den Alltag einbauen lassen.',
+        },
+      ],
+    },
+    {
+      id: 'deutsch-aufsatz',
+      title: 'Deutsch & Aufsatz',
+      tips: [
+        {
+          id: 'guter-aufsatz',
+          title: 'Was einen guten Aufsatz ausmacht',
+          excerpt:
+            'Nicht Perfektion zählt, sondern ein klarer roter Faden, eigene Sprache und ein glaubwürdiger Inhalt. Worauf es bei der Bewertung wirklich ankommt.',
+        },
+        {
+          id: 'kommasetzung',
+          title: 'Kommasetzung ohne Grammatikstress',
+          excerpt:
+            'Mit einem einfachen Bild statt trockener Regeln verstehen viele Kinder Satzgrenzen deutlich schneller. Ein praktischer Ansatz fürs Üben zu Hause.',
+        },
+        {
+          id: 'rechtschreibung-verstehen',
+          title: 'Rechtschreibung verstehen statt auswendig lernen',
+          excerpt: 'Wer die Logik hinter Regeln erkennt, muss weniger pauken. Wie Kinder ein echtes Gefühl für Rechtschreibung entwickeln.',
+        },
+      ],
+    },
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      tips: [
+        {
+          id: 'loesungsweg-zaehlt',
+          title: 'Der Lösungsweg zählt so viel wie das Resultat',
+          excerpt:
+            'Ein richtiges Ergebnis allein reicht an der Prüfung oft nicht — die Nachvollziehbarkeit des Rechenwegs bringt zusätzliche Punkte. Was das für die Vorbereitung bedeutet.',
+        },
+        {
+          id: 'textaufgaben-meistern',
+          title: 'Textaufgaben Schritt für Schritt meistern',
+          excerpt:
+            'Die grösste Hürde ist oft nicht das Rechnen, sondern das Verstehen der Aufgabenstellung. Eine Herangehensweise, die Kindern hier Sicherheit gibt.',
+        },
+      ],
+    },
+    {
+      id: 'foerderbedarfe',
+      title: 'Besondere Förderbedarfe',
+      tips: [
+        {
+          id: 'konzentration-schwerfaellt',
+          title: 'Wenn Konzentration besonders schwerfällt',
+          excerpt:
+            'Manche Kinder brauchen mehr Struktur und kürzere Lerneinheiten, um ihr Potenzial zu zeigen. Was in der Vorbereitung dann besonders hilft.',
+        },
+        {
+          id: 'nachteilsausgleich',
+          title: 'Nachteilsausgleich — was Eltern wissen sollten',
+          excerpt:
+            'Bei bestimmten Diagnosen können Anpassungen bei der Prüfung beantragt werden. Ein Überblick, was dafür nötig ist und wie der Ablauf funktioniert.',
+        },
+      ],
+    },
+  ],
+  faq: [
+    {
+      id: 'kurs-noetig',
+      question: 'Muss ich zuerst einen Kurs buchen, um diese Tipps zu nutzen?',
+      answer: 'Nein — die Tipps stehen allen Eltern offen, unabhängig davon, ob Ihr Kind bereits einen Kurs bei uns besucht.',
+    },
+    {
+      id: 'klassenstufen',
+      question: 'Für welche Klassenstufen sind die Tipps relevant?',
+      answer:
+        'Die meisten Beiträge sind für alle Stufen zwischen 4. Klasse und 2./3. Sek hilfreich; einzelne Themen (z. B. Prüfungsformat-Änderungen) sind spezifisch für das jeweilige Prüfungsjahr gekennzeichnet.',
+    },
+    {
+      id: 'neue-beitraege',
+      question: 'Wie oft kommen neue Beiträge dazu?',
+      answer: 'Wir ergänzen die Sammlung laufend um neue Themen aus unserer Beratungs- und Kurspraxis.',
+    },
+  ],
+} as const satisfies TipsPageModel

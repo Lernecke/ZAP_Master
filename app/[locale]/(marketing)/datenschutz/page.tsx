@@ -1,0 +1,42 @@
+import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
+import type { LegalPageModel } from '@/types/marketing'
+import { Section } from '@/app/components/layout/section'
+import { LegalPageContent } from '@/app/components/marketing/legal-page-content'
+
+// Kein freigegebener Rechtstext vorhanden (Abschnitt 9.1). Route technisch gebaut, öffentlicher
+// Cutover bleibt bis zur fachlichen Freigabe blockiert -- lokal statt in einer "reale Inhalte"-
+// Datenquelle, siehe Kommentar in kontakt/page.tsx.
+const datenschutzModel: LegalPageModel = {
+  title: 'Datenschutz',
+  updatedAt: '2026-07-20',
+  sections: [
+    {
+      id: 'pending',
+      title: 'Inhalte folgen',
+      groups: [
+        {
+          id: 'hinweis',
+          items: ['Diese Seite wird ergänzt, sobald die rechtlich geprüften Inhalte vorliegen.'],
+        },
+      ],
+    },
+  ],
+}
+
+export const metadata: Metadata = { title: datenschutzModel.title }
+
+export default async function DatenschutzPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
+  return (
+    <Section spacing="lg">
+      <LegalPageContent model={datenschutzModel} />
+    </Section>
+  )
+}
