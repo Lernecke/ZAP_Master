@@ -6,6 +6,10 @@
 // übrigen sechs Zielgruppen -- hier wird kein Inhalt für sie erfunden.
 
 import {
+  bmsAudiencePageModel,
+  bmsIntensivkurs,
+  bmsIntensivkursSessions,
+  bmsPruefungssimulation,
   einsSekAudiencePageModel,
   einsSekLerncampSportferien,
   einsSekLerncampSessions,
@@ -74,13 +78,16 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [zweiDreiSekHalbjahreskurs, zweiDreiSekIntensivkurs],
     addOnOffers: [],
   },
-  // bms.addOnOffers bewusst leer: bmsSelbststudium (types/marketing.fixtures.ts) hat noch keinen
-  // Renderer in [angebot]/page.tsx (das rendert nur CourseOffer/halbjahreskurs+intensivkurs). Die
-  // drei Selbststudium-Seiten (BMS + 6. Klasse + 2./3. Sek) gehören laut Ausführungsplan als EINE
-  // Einheit in einen eigenen späteren Schritt -- nicht BMS allein, sonst Halb-Feature/toter Link.
+  // bms.offers: nur der Intensivkurs -- die Halbjahreskurs-Karte der Hauptseite verlinkt fälschlich
+  // auf die Intensivkurs-Unterseite (kein echter eigener Detailinhalt, siehe Kommentar bei
+  // bmsIntensivkurs in types/marketing.fixtures.ts). bmsSelbststudium (dort ebenfalls bereits als
+  // Fixture vorhanden) bleibt weiterhin unverdrahtet: kein Renderer in [angebot]/page.tsx für
+  // SelfStudyOffer. Die drei Selbststudium-Seiten (BMS + 6. Klasse + 2./3. Sek) gehören laut
+  // Ausführungsplan als EINE Einheit in einen eigenen späteren Schritt -- nicht BMS allein, sonst
+  // Halb-Feature/toter Link.
   bms: {
-    offers: [],
-    addOnOffers: [],
+    offers: [bmsIntensivkurs],
+    addOnOffers: [bmsPruefungssimulation],
   },
 }
 
@@ -91,6 +98,7 @@ const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> 
   '6': sechsKlasseAudiencePageModel.hero,
   '1-sek': einsSekAudiencePageModel.hero,
   '2-3-sek': zweiDreiSekAudiencePageModel.hero,
+  bms: bmsAudiencePageModel.hero,
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
@@ -101,6 +109,7 @@ const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [einsSekLerncampSportferien.id]: einsSekLerncampSessions,
   [zweiDreiSekHalbjahreskurs.id]: zweiDreiSekHalbjahreskursSessions,
   [zweiDreiSekIntensivkurs.id]: zweiDreiSekIntensivkursSessions,
+  [bmsIntensivkurs.id]: bmsIntensivkursSessions,
   [sechsKlasseIntensivkurs.id]: sechsKlasseIntensivkursSessions,
 }
 

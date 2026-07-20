@@ -2576,3 +2576,285 @@ export const zweiDreiSekAudiencePageModel = {
   addOnOffers: [],
   existingCourses: [],
 } as const satisfies AudiencePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Schritt 10, Runde 5/6 -- BMS: Layout_BMS_Hauptseite.html + Layout_BMS_Intensivkurs_Unterseite.html
+// (die verbindliche BMS-Kurs-Unterseite) + Layout_BMS_Pruefungssimulation_Seite.html.
+//
+// BMS-Halbjahreskurs bleibt bewusst ausserhalb des Katalogs: Abschnitt 9.1 verlangt "keine
+// erfundene Detailroute", und die Hauptseite verlinkt ihre eigene Halbjahreskurs-Karte fälschlich
+// auf die Intensivkurs-Unterseite (beschreibt ein komplett anderes Angebot) -- kein echter
+// Detailinhalt existiert für diese Karte. bmsSelbststudium (bereits als Fixture aus Schritt 5
+// vorhanden) bleibt ebenfalls unverdrahtet -- eigene spätere Runde für alle drei
+// Selbststudium-Seiten gemeinsam, siehe Korrektur in Schritt 9.
+//
+// Kleine, eindeutig gerechtfertigte Korrektur: Die Hauptseiten-Kartenbeschreibung des
+// Intensivkurses endet in der Quelle auf "...für die Gymiprüfung" (Kopier-Rest aus einer
+// Gymnasium-Vorlage -- BMS bereitet nicht auf die "Gymiprüfung" vor). Ersetzt durch
+// "BMS-Aufnahmeprüfung", exakt der Begriff, den dieselbe reale Unterseite für dasselbe Angebot an
+// jeder anderen Stelle verwendet -- keine neue Information, nur ein einzelnes falsches Wort
+// korrigiert.
+// ---------------------------------------------------------------------------------------------
+
+export const bmsIntensivkursSessions = [
+  {
+    id: 3001,
+    offerId: 'offer-bms-intensivkurs-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 3001 },
+    kurs: 'Kurs A',
+    dateLabel: '15.–19. Feb.',
+    timeLabel: '08.30–12.30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 15. Feb.', value: '08.30–12.30' },
+        { id: 'di', label: 'Di, 16. Feb.', value: '08.30–12.30' },
+        { id: 'mi', label: 'Mi, 17. Feb. (Prüfungssimulation)', value: '08.30–12.30', highlight: true },
+        { id: 'do', label: 'Do, 18. Feb.', value: '08.30–12.30' },
+        { id: 'fr', label: 'Fr, 19. Feb.', value: '08.30–12.30' },
+      ],
+    },
+  },
+  {
+    id: 3002,
+    offerId: 'offer-bms-intensivkurs-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 3002 },
+    kurs: 'Kurs B',
+    dateLabel: '22.–26. Feb.',
+    timeLabel: '08.30–12.30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 22. Feb.', value: '08.30–12.30' },
+        { id: 'di', label: 'Di, 23. Feb.', value: '08.30–12.30' },
+        { id: 'mi', label: 'Mi, 24. Feb. (Prüfungssimulation)', value: '08.30–12.30', highlight: true },
+        { id: 'do', label: 'Do, 25. Feb.', value: '08.30–12.30' },
+        { id: 'fr', label: 'Fr, 26. Feb.', value: '08.30–12.30' },
+      ],
+    },
+  },
+  {
+    id: 3003,
+    offerId: 'offer-bms-intensivkurs-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 3003 },
+    kurs: 'Kurs C',
+    dateLabel: '01.–05. März',
+    timeLabel: '08.30–12.30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 01. März', value: '08.30–12.30' },
+        { id: 'di', label: 'Di, 02. März', value: '08.30–12.30' },
+        { id: 'mi', label: 'Mi, 03. März (Prüfungssimulation)', value: '08.30–12.30', highlight: true },
+        { id: 'do', label: 'Do, 04. März', value: '08.30–12.30' },
+        { id: 'fr', label: 'Fr, 05. März', value: '08.30–12.30' },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const bmsIntensivkurs = {
+  id: 'offer-bms-intensivkurs-sportferien',
+  audienceId: 'bms',
+  slug: 'intensivkurs',
+  href: '/kurse/bms/intensivkurs',
+  displayName: 'Intensivkurs-Sportferien',
+  tagline: 'Kompaktes Training in den Schulferien',
+  lede: 'Möchten Sie sich explizit auf die BMS-Aufnahmeprüfung vorbereiten? Im Kurs werden typische Aufgaben in Deutsch (inkl. Aufsatz) und Mathematik erklärt und Prüfungen simuliert — geeignet für BM1 und BM2 gleichermassen.',
+  description:
+    'Ideal für alle, die sich kurz vor der Prüfung nochmals intensiv mit dem Prüfungsformat und typischen Aufgaben auseinandersetzen möchten – inklusive praktischer Tipps & Tricks für die BMS-Aufnahmeprüfung.',
+  laufzeit: 'Feb. 2027',
+  dateSummary: ['Feb. 2027'],
+  features: [
+    'Prüfungsnahe Aufgaben & Prüfungsbedingungen trainieren',
+    '5 aufeinanderfolgende Kurstage in einer Schulferienwoche',
+    'Kurszeit: 08.30 – 12.30 Uhr',
+    'Inklusive Prüfungssimulation',
+  ],
+  regularPriceRappen: 99000,
+  currency: 'CHF',
+  overviewBullets: [
+    '5 Kurstage in einer Schulferienwoche',
+    'Kurszeit: 08.30 – 12.30 Uhr',
+    'Kleingruppen: max. 8 Teilnehmende',
+    'Zürich HB · Winterthur',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'pruefungssimulation',
+      title: 'Eine echte Prüfungssimulation',
+      description:
+        'Reale Prüfungsbedingungen, korrigiert und Schritt für Schritt besprochen — einmal reicht, wenn sie gut gemacht ist.',
+    },
+    {
+      id: 'strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über den Umgang mit Prüfungsangst und Blackouts bis zu Konzentrationsübungen und der Herangehensweise an typische Prüfungsaufgaben.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  testimonials: [
+    {
+      id: 'testi-1',
+      quote: 'Die Prüfungssimulation hat mir die Nervosität genommen — ich wusste danach, was mich erwartet.',
+      author: 'Teilnehmerin, Intensivwoche BM2',
+    },
+    {
+      id: 'testi-2',
+      quote: 'In fünf Tagen habe ich mehr gelernt als ich erwartet hätte, ohne dass es sich wie Ferien-Stress anfühlte.',
+      author: 'Teilnehmer, Intensivwoche BM1',
+    },
+    {
+      id: 'testi-3',
+      quote: 'Auch nach dem Kurs konnte ich noch Fragen stellen, wenn mir etwas unklar war.',
+      author: 'Teilnehmerin, Intensivwoche BM1',
+    },
+  ],
+  kurstyp: 'intensivkurs',
+  flowSteps: [
+    {
+      id: 'wissen-aneignen',
+      title: 'Wissen aneignen',
+      body: 'Prüfungsrelevante Grundlagen in Deutsch und Mathematik im Schnelldurchgang repetieren, typische Aufgabentypen kennenlernen.',
+    },
+    {
+      id: 'wissen-umsetzen',
+      title: 'Wissen umsetzen',
+      body: 'Aufgaben im Unterricht und im Selbststudium trainieren, echte Prüfungssimulation durchführen.',
+    },
+    {
+      id: 'wissen-pruefen',
+      title: 'Wissen prüfen',
+      body: 'Individuelles Feedback zur Simulation, gemeinsame Besprechung — Sie wissen danach genau, wo noch Übungsbedarf besteht.',
+    },
+  ],
+  contentSections: [],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const bmsIntensivkursDetailPageModel = {
+  audience: bms,
+  offer: bmsIntensivkurs,
+  sessions: bmsIntensivkursSessions,
+} as const satisfies CourseDetailPageModel
+
+// Prüfungssimulation: kein Timeline-Element und keine echte Terminliste in der Quelle (der
+// "Termin wählen"-Button ist ein Selbstanker ohne Session-Daten) -- examTimeline bleibt ehrlich
+// leer statt erfunden, keine Sessions-Fixture wird angelegt (Buchungstabelle zeigt dadurch korrekt
+// den emptyState-Text).
+export const bmsPruefungssimulation = {
+  id: 'offer-bms-pruefungssimulation',
+  audienceId: 'bms',
+  slug: 'pruefungssimulation',
+  href: '/kurse/bms/pruefungssimulation',
+  displayName: 'Prüfungssimulation',
+  tagline: 'Offen für alle',
+  lede: 'Eine echte BMS-Aufnahmeprüfung unter realen Bedingungen — inklusive schriftlicher Bewertung und individuellem Feedback. Auch ohne vorherige Kursteilnahme buchbar.',
+  description:
+    'Eine echte BMS-Aufnahmeprüfung unter realen Bedingungen — inklusive schriftlicher Bewertung. Auch ohne vorherige Kursteilnahme buchbar.',
+  laufzeit: 'Ein Prüfungstermin, halbtags',
+  dateSummary: ['Prüfungstermin'],
+  features: [
+    'Prüfungssimulation nach aktuellem Prüfungsformat',
+    'Durchführung unter Prüfungsbedingungen',
+    'Schriftliche Bewertung des Aufsatzes',
+  ],
+  regularPriceRappen: 14500,
+  currency: 'CHF',
+  priceUnit: 'Pro Teilnahme · inkl. schriftlicher Auswertung',
+  overviewBullets: [
+    'Gleicher Zeitrahmen, gleiches Format wie an der echten BMS-Aufnahmeprüfung',
+    'Detaillierte schriftliche Korrektur inkl. Aufsatz',
+    'Buchbar unabhängig von BM1 oder BM2',
+  ],
+  whyUs: [
+    {
+      id: 'pruefungsnahe-bedingungen',
+      title: 'Prüfungsnahe Bedingungen',
+      description: 'Gleicher Zeitrahmen, gleiches Format und gleiche Aufgabentypen wie an der echten BMS-Aufnahmeprüfung.',
+    },
+    {
+      id: 'schriftliche-bewertung',
+      title: 'Schriftliche Bewertung',
+      description: 'Detaillierte Korrektur inkl. Aufsatz auf Deutsch, mit Einschätzung des aktuellen Leistungsstands.',
+    },
+    {
+      id: 'offen-fuer-alle',
+      title: 'Offen für alle',
+      description: 'Keine vorherige Kursteilnahme nötig — buchbar unabhängig von BM1 oder BM2.',
+    },
+  ],
+  kurstyp: 'pruefungssimulation',
+  flowSteps: [
+    { id: 'anmeldung', title: 'Anmeldung', body: 'Buchung eines einzelnen Prüfungstermins — unabhängig davon, ob Sie sonst einen Kurs bei uns besuchen.' },
+    { id: 'durchfuehrung', title: 'Durchführung', body: 'Die vollständige BMS-Aufnahmeprüfung nach aktuellem Prüfungsformat, unter denselben zeitlichen und organisatorischen Bedingungen wie am echten Prüfungstag.' },
+    { id: 'auswertung-feedback', title: 'Auswertung & Feedback', body: 'Schriftliche Korrektur aller Teile, eine Einschätzung des aktuellen Leistungsstands und konkrete Hinweise, woran Sie bis zur echten Prüfung noch arbeiten können.' },
+  ],
+  examTimeline: [],
+  faq: [
+    {
+      id: 'vorheriger-kurs',
+      question: 'Muss ich vorher einen Kurs bei Ihnen besucht haben?',
+      answer: 'Nein. Die Prüfungssimulation ist ein eigenständiges Angebot und unabhängig von einer Kursteilnahme buchbar.',
+    },
+    {
+      id: 'bm1-bm2-unterschied',
+      question: 'Ist die Simulation für BM1 und BM2 unterschiedlich?',
+      answer: 'Nein, der Prüfungsinhalt ist für BM1 und BM2 identisch (Deutsch & Mathematik) — es gibt daher nur eine gemeinsame Simulation für beide Wege.',
+    },
+    {
+      id: 'auswertung-tempo',
+      question: 'Wie schnell erhalte ich die Auswertung?',
+      answer: 'Die schriftliche Bewertung inkl. Einschätzung des Leistungsstands erhalten Sie zeitnah nach der Simulation.',
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies ExamSimulationOffer
+
+export const bmsPruefungssimulationDetailPageModel = {
+  audience: bms,
+  offer: bmsPruefungssimulation,
+  sessions: [],
+} as const satisfies ExamSimulationPageModel
+
+export const bmsAudiencePageModel = {
+  audience: bms,
+  hero: {
+    title: 'Vorbereitungskurse für die BMS-Aufnahmeprüfung 2027',
+    description:
+      'Zwei Wege zur Vorbereitung auf die BMS-Aufnahmeprüfung — wöchentliche Begleitung über mehrere Monate oder intensives Training in einer Ferienwoche.',
+  },
+  // Nur der Intensivkurs -- die Halbjahreskurs-Karte der Hauptseite verlinkt fälschlich auf die
+  // Intensivkurs-Unterseite (siehe Kommentar oben), es existiert kein echter eigener Detailinhalt.
+  offers: [bmsIntensivkurs],
+  addOnOffers: [bmsPruefungssimulation],
+  existingCourses: [],
+} as const satisfies AudiencePageModel
