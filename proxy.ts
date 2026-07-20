@@ -81,12 +81,6 @@ export async function proxy(request: NextRequest) {
     return handleAuthRoute(request)
   }
 
-  // Temporärer Sonderfall bis Schritt 7: `/` bedient weiterhin direkt die bestehende
-  // Startseite, statt auf das noch inhaltsleere /de umgeleitet zu werden.
-  if (pathname === "/") {
-    return NextResponse.next()
-  }
-
   // Bestehende unlokalisierte öffentliche Routen bleiben unverändert an ihrem Ort.
   if (isUnderPrefix(pathname, existingUnlocalizedPublicPrefixes)) {
     return NextResponse.next()
