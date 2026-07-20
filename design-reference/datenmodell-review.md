@@ -1,10 +1,14 @@
 # Datenbank-Review: aktueller Stand und verbindliche Migrationsentscheidungen
 
-Stand: 18.07.2026. Dieses Dokument ersetzt das Review vom 16.07.2026 vollständig. Grundlage sind
+Stand: 19.07.2026. Dieses Dokument ersetzt das Review vom 16.07.2026 vollständig. Grundlage sind
 alle 37 HTML-Referenzen, die vier Markdown-Dokumente in `design-reference/`, der aktuelle Code,
 `types/database.ts`, sämtliche lokalen SQL-Dateien sowie ein schreibgeschützter Live-Abgleich des
-Supabase-Projekts. Live-Zahlen sind datierte Kontrollwerte und werden vor jeder Migration erneut
-inventarisiert; sie sind keine Seeds.
+Supabase-Projekts. Die sechs Counts, der Aktivstatus sowie die 27-Tabellen-/Vier-Spalten-Matrix
+wurden am 19.07.2026 erneut read-only über HTTP HEAD beziehungsweise die REST-Schemabeschreibung
+bestätigt. Die vollständige DB-Migrationshistorie und das DB-Level-Schema stammen weiterhin aus
+dem Kataloglauf vom 18.07.2026 und müssen vor der Baseline-Adoption erneut direkt geprüft werden.
+Live-Zahlen sind datierte Kontrollwerte und werden vor jeder Migration erneut inventarisiert; sie
+sind keine Seeds.
 
 ## 1. Verbindlicher Live-Snapshot
 
@@ -88,11 +92,20 @@ Verbindliche Lösung ist die Baseline-Strategie aus dem Architektur-Briefing:
 2. Geprüften Schema-Dump inklusive Constraints, Indizes, Triggern, Funktionen, Views, Grants, RLS
    und Storage-Policies als neuen lokalen Baseline-Strang anlegen. Die oben genannten 5 vorhandenen
    und 22 fehlenden Zieltabellen werden dabei als maschinenprüfbare Soll-/Ist-Matrix festgehalten.
-3. `001`–`014` unverändert nach `supabase/legacy-migrations/` verschieben.
-4. Nur synthetische Fixtures nach `supabase/seed.sql`.
-5. Neue additive Migrationen ausschliesslich mit UTC-Zeitstempelpräfix.
-6. Kein `migration repair`, kein Umbenennen angewandter Remote-Versionen und kein `db push` ohne
-   separate Freigabe.
+3. Für jeden erneut bestätigten Remote-Migrationseintrag einen reinen Kommentar-Marker mit
+   exakt demselben 14-stelligen Zeitstempel und Namen vor der Baseline ablegen. Die Marker enthalten
+   kein SQL und werden nicht aus `statements` erzeugt.
+4. `001`–`014` unverändert nach `supabase/legacy-migrations/` verschieben.
+5. Nur synthetische Fixtures nach `supabase/seed.sql`.
+6. Neue additive Migrationen ausschliesslich mit UTC-Zeitstempelpräfix.
+7. Nach grünem lokalen Gate und bewiesener Schema-Gleichheit die neue Baseline-Version in einem
+   separat freizugebenden Baseline-Adoption-Gate mit
+   `supabase migration repair <baseline-version> --status applied` als bereits vorhanden
+   registrieren. Vorher muss `migration list` alle Remote-Zeitstempel gegen die Marker abgleichen;
+   vorher/nachher wird die Ausgabe protokolliert. `db push --dry-run` darf danach nur additive
+   Post-Baseline-Migrationen anzeigen. Keine Reparatur der historischen Versionen
+   `001`–`014`, kein Umbenennen angewandter Remote-Versionen und kein tatsächlicher `db push` ohne
+   weitere separate Freigabe.
 
 ### 3.2 Rollenmodell
 

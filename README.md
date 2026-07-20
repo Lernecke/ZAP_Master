@@ -199,31 +199,30 @@ Den ausgegebenen Text kopieren und als `AUTH_SECRET` einsetzen.
 
 ### Schritt 5: Datenbank einrichten
 
-Die Datenbank braucht Tabellen, Sicherheitsregeln und Beispieldaten. Diese werden über sogenannte "Migrations" eingerichtet.
+Die Datenbank braucht Tabellen und Sicherheitsregeln. Der aktuell eingecheckte historische
+Migrationsordner ist jedoch **nicht** zum Aufbau einer neuen Datenbank oder zum Ausrollen auf ein
+bestehendes Supabase-Projekt freigegeben.
 
-#### 5a. SQL-Migrations ausführen
+#### 5a. Aktueller Migrationsstatus
 
-1. Gehe in deinem Supabase-Projekt auf **"SQL Editor"** (linke Seitenleiste)
-2. Führe die folgenden Dateien **in dieser Reihenfolge** aus:
+Die zwölf Dateien unter `supabase/migrations/` dokumentieren historische Teilstände. Sie bilden
+weder die tatsächliche Live-Migrationshistorie noch eine auf einer leeren Datenbank ausführbare
+Kette ab. Unter anderem existieren zwei Versionen `002`, mehrere Basistabellen fehlen und
+`006_seed_test_data.sql` enthält lokale Auth-/Testdaten.
 
-| Datei | Was sie macht |
-|---|---|
-| `supabase/migrations/001_create_trainer_tables.sql` | Erstellt Tabellen für Trainer und Kurse |
-| `supabase/migrations/002_create_student_essays.sql` | Erstellt Tabellen für Aufsätze |
-| `supabase/migrations/002_create_intensivwoche_anmeldungen.sql` | Anmeldungen für Intensivwochen |
-| `supabase/migrations/003_create_intensivwoche_kurse.sql` | Tabellen für Intensivkurse |
-| `supabase/migrations/004_fix_rls_policies.sql` | Sicherheitsregeln (Row Level Security) |
-| `supabase/migrations/005_create_mentorship_tables.sql` | Mentoring/Götti-System |
-| `supabase/migrations/006_seed_test_data.sql` | Testdaten (optional, empfohlen für lokale Entwicklung) |
-| `supabase/migrations/007_create_ai_correction_tables.sql` | KI-Korrektur-Tabellen |
-| `supabase/migrations/008_profiles_rls.sql` | Profil-Sicherheitsregeln |
+Deshalb gilt bis zum abgeschlossenen Baseline-Gate:
 
-**Für jede Datei:**
-1. Öffne die `.sql`-Datei im Projektordner mit einem Texteditor
-2. Kopiere den gesamten Inhalt
-3. Füge ihn in den SQL-Editor von Supabase ein
-4. Klicke auf **"Run"** (oder Cmd+Enter / Ctrl+Enter)
-5. Warte auf eine grüne Erfolgsmeldung
+- historische Dateien nicht manuell im SQL Editor ausführen;
+- kein `supabase db push`, kein Remote-Reset und kein `migration repair` ohne die dafür
+  dokumentierte separate Freigabe;
+- keine Geschäfts-, Auth- oder Testdaten aus historischen Dateien übernehmen;
+- den verbindlichen Ablauf in `step0Baseline.revision2.md` und
+  `design-reference/datenmodell-review.md` verwenden.
+
+Der geplante neue lokale Strang beginnt mit einer geprüften, datenfreien Baseline des aktuellen
+Live-Schemas. Danach folgen ausschließlich additive Migrationen mit UTC-Zeitstempelpräfix. Erst
+wenn lokaler Reset, Lint, pgTAP und Schema-Diff erfolgreich sind, darf ein gesondert freigegebener
+Staging- oder Live-Rollout geplant werden.
 
 #### 5b. Authentifizierung konfigurieren
 
@@ -366,9 +365,14 @@ npm install
 
 ### SQL-Fehler beim Ausführen der Migrations
 
-**Ursache**: Eine Migration wurde übersprungen oder in falscher Reihenfolge ausgeführt.
+**Ursache**: Der historische Ordner `supabase/migrations/` ist derzeit keine reproduzierbare,
+freigegebene Migrationskette. Ein Fehler darf nicht durch Ausprobieren einer anderen Reihenfolge
+oder durch Zurücksetzen eines Supabase-Projekts umgangen werden.
 
-**Lösung**: Führe die Migrations strikt in der nummerierten Reihenfolge aus (001, 002, ...). Wenn bereits Tabellen existieren und Fehler auftreten, kann es nötig sein, das Supabase-Projekt zurückzusetzen (Project Settings → "Reset database").
+**Lösung**: Ausführung abbrechen und den Baseline-Status anhand von
+`step0Baseline.revision2.md` prüfen. Remote-Datenbanken niemals zur Fehlerbehebung zurücksetzen.
+Lokale Resets sind erst nach Aufbau des neuen Baseline-Strangs und ausschließlich mit explizitem
+`--local` zulässig.
 
 ---
 

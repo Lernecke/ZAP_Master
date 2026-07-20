@@ -3,8 +3,8 @@
 > **Live-Datenbank-Abgleich 18.07.2026 (via Supabase-MCP-Connector, Projekt ZAP_25):** Der reale
 > Zustand der Live-Datenbank wurde erstmals direkt geprüft, nicht nur über die lokal eingecheckten
 > Migrationsdateien. Ergebnis: Die Live-DB wurde nie durch Abspielen der lokalen Dateien
-> `001`–`008` aufgebaut — ihre echte Migrationshistorie besteht aus 17 anders benannten, lokal
-> nicht vorhandenen Einträgen. Abschnitt 2.10 beschreibt deshalb teils Zustände, die so nur in den
+> `001`–`008` aufgebaut — ihre echte Migrationshistorie umfasst 20 Einträge, von denen 16 keinen
+> lokal übereinstimmenden Dateistamm besitzen. Abschnitt 2.10 beschreibt deshalb teils Zustände, die so nur in den
 > lokalen Migrationsdateien bestehen, nicht mehr auf der Live-DB: `subjects`/
 > `mentor_skills.subject_id` sind live bereits korrekt und identisch typisiert (`bigint`),
 > `intensivwoche_kurse.created_by` existiert live bereits. Andere dort beschriebene Lücken waren
@@ -176,10 +176,15 @@ Vor dem ersten fachlichen Migrationsschritt gilt deshalb zwingend:
 2. Einen **neuen lokalen Baseline-Strang** aus einem geprüften Schema-Dump des aktuellen
    Live-Schemas erzeugen. Historische Dateien bleiben unverändert unter
    `supabase/legacy-migrations/` als Referenz erhalten und werden von `supabase db reset --local`
-   nicht mehr ausgeführt. Die kanonische Baseline enthält Schema, Funktionen, Views, RLS, Grants
-   und Storage-Policies, aber keine Geschäfts-, Auth- oder Testdaten.
+   nicht mehr ausgeführt. Für jeden erneut bestätigten Remote-Migrationseintrag wird davor eine
+   reine Kommentar-Datei mit exakt demselben 14-stelligen Zeitstempel und Remote-Namen in
+   `supabase/migrations/` angelegt. Diese History-Marker enthalten kein SQL und dienen nur dem
+   Zeitstempelabgleich; das sensible Feld `statements` wird dafür nie gelesen. Die danach folgende
+   kanonische Baseline enthält Schema, Funktionen, Views, RLS, Grants und Storage-Policies, aber
+   keine Geschäfts-, Auth- oder Testdaten.
 3. `supabase/seed.sql` enthält ausschliesslich synthetische lokale Fixtures. Die produktive
-   Migrationstabelle wird nicht per `migration repair` an lokale Fantasieversionen angepasst.
+   Migrationstabelle wird nicht an die historischen lokalen Versionen `001`–`014` oder andere
+   erfundene Versionen angepasst.
 4. Ab der Baseline erhält jede neue Migration ein UTC-Zeitstempelpräfix
    `YYYYMMDDHHMMSS_beschreibung.sql`. Eine bereits live registrierte Datei wird niemals umbenannt
    oder inhaltlich verändert; Korrekturen erfolgen ausschliesslich additiv.
@@ -189,6 +194,18 @@ Vor dem ersten fachlichen Migrationsschritt gilt deshalb zwingend:
    geschrieben werden. Der erste Live-Rollout verwendet nur die nach der Baseline neu erzeugten,
    vorab einzeln geprüften additiven Migrationen. `db push` bleibt bis zu einer separaten,
    dokumentierten Freigabe verboten.
+6. Nachdem `migration list` bestätigt, dass alle vorhandenen Remote-Zeitstempel durch die
+   reinen Kommentar-Marker lokal abgedeckt sind, wird die neue Baseline-Version im
+   bestehenden Remote-Projekt nach nachgewiesener Schema-Gleichheit in einem eigenen
+   **Baseline-Adoption-Gate** exakt einmal als bereits angewendet markiert. Der gewählte
+   Mechanismus ist
+   `supabase migration repair <baseline-version> --status applied`; er führt das Baseline-SQL
+   nicht aus. Dieser eng begrenzte History-Eintrag benötigt Backup-/Restore-Nachweis, gepinnte CLI,
+   Vier-Augen-Review, erneuten Live-Drift-Abgleich und eine separate Remote-Mutationsfreigabe.
+   Vorher und nachher wird `supabase migration list` protokolliert. Ein anschließendes
+   `supabase db push --dry-run` muss ausschließlich die nach der Baseline erzeugten additiven
+   Migrationen anzeigen; andernfalls wird abgebrochen. Jede andere Verwendung von
+   `migration repair`, insbesondere für `001`–`014`, bleibt verboten.
 
 Damit gibt es keine widersprüchliche Anweisung mehr, die defekten Dateien `001`–`014` zugleich
 umzubenennen, lokal abzuspielen und remote unverändert zu lassen.
@@ -1207,7 +1224,9 @@ werden:
   umnummeriert, sondern gemäss Baseline-Strategie aus dem ausführbaren Strang entfernt. Der neue
   geprüfte Baseline-Dump enthält ausschliesslich den korrekten FK auf `intensivwoche_kurse`. Vor einem Abgleich mit einem
   entfernten Projekt ist dessen Migrationshistorie read-only zu inventarisieren; kein spontanes
-  `migration repair`, Umbenennen bereits remote registrierter Versionen oder `db push`.
+  `migration repair`, Umbenennen bereits remote registrierter Versionen oder `db push`. Einzige
+  spätere Ausnahme ist das separat freizugebende Baseline-Adoption-Gate aus der verbindlichen
+  Baseline-Strategie; es markiert nur die nachweislich schemaidentische Baseline als angewendet.
   **(Live-Abgleich 18.07.2026:** `public.courses` existiert auf der Live-DB tatsächlich — als
   eigenständiges Tabellenpaar mit `course_occurrences`, ohne aktuelle Code-Referenz, aber mit
   4 bzw. 8 Zeilen. Es ist nicht Ziel dieses FK und darf nicht ohne Fachentscheid gelöscht werden.

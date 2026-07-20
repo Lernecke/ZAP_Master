@@ -93,10 +93,16 @@ Lies den Live-Abgleich und die „Verbindliche Supabase-Baseline-Strategie“ am
    Abweichungen nur dokumentieren; keine Zieltabellen in Schritt 0 remote anlegen.
 4. Lege einen Plan für einen neuen lokalen Baseline-Strang aus einem geprüften Schema-Dump des
    Live-Schemas vor. Die historischen Dateien 001–014 werden unverändert nach
-   `supabase/legacy-migrations/` verschoben und nicht mehr von `db reset --local` ausgeführt.
-   Baseline und neue Migrationen enthalten keine Geschäfts-, Auth- oder Testdaten.
-5. Ab der Baseline nur UTC-Zeitstempelpräfixe `YYYYMMDDHHMMSS_*.sql`. Kein `migration repair`,
-   kein Umbenennen remote registrierter Versionen, kein `db push` und keine Live-Mutation.
+   `supabase/legacy-migrations/` verschoben und nicht mehr von `db reset --local` ausgeführt. Lege
+   für alle erneut bestätigten Remote-Einträge kommentar-only History-Marker mit identischem
+   14-stelligem Zeitstempel und Namen vor die Baseline; sie enthalten kein SQL. Baseline und neue
+   Migrationen enthalten keine Geschäfts-, Auth- oder Testdaten.
+5. Ab der Baseline nur UTC-Zeitstempelpräfixe `YYYYMMDDHHMMSS_*.sql`. Keine Remote-Mutation in
+   Schritt 0. Plane jedoch ausdrücklich das separate Baseline-Adoption-Gate: Nach bewiesener
+   Schema-Gleichheit wird ausschließlich die neue Baseline-Version mit
+   `supabase migration repair <baseline-version> --status applied` registriert, ohne ihr SQL auf
+   Live auszuführen. Dieser einzelne History-Eintrag benötigt eine eigene Freigabe; jede Reparatur
+   der Versionen `001`–`014`, jedes Umbenennen und jeder `db push` bleiben verboten.
 6. Plane die offenen Härtungen der öffentlichen Buchung: familienfähiger Duplikatschlüssel,
    `idempotency_key`, DB-seitige Eingabe-/Längenchecks, unveränderliche Snapshot-Spalten,
    dauerhafter Rate-Limiter und automatisierter Parallelitätstest.
@@ -398,13 +404,19 @@ Minuten und Rappen sind Ganzzahlen; finanzielle und Payroll-Snapshots sind appen
 
 Bevor du eine neue fachliche Migration anlegst, bestätige das erfolgreiche Baseline-Gate aus
 Schritt 0. Ändere oder nummeriere die historischen Dateien 001–014 nicht um. Der neue kanonische
-Baseline-Strang muss `profiles`, `subjects`, Kurse, Anmeldungen, Funktionen, Views, RLS, Grants und
-Storage in korrekter Reihenfolge enthalten und auf leerer lokaler DB reproduzierbar sein. Reine
+Baseline-Strang beginnt mit reinen Kommentar-Markern für sämtliche erneut bestätigten
+Remote-Zeitstempel; danach muss die Baseline `profiles`, `subjects`, Kurse, Anmeldungen,
+Funktionen, Views, RLS, Grants und Storage in korrekter Reihenfolge enthalten und auf leerer
+lokaler DB reproduzierbar sein. Reine
 Demozeilen und Test-/Auth-Benutzer liegen ausschliesslich in `supabase/seed.sql`; die historische
 `006_seed_test_data.sql` bleibt nur in `supabase/legacy-migrations/` und wird nie remote ausgerollt.
 Jede neue fachliche Änderung erhält ein UTC-Zeitstempelpräfix. Vor jeder Anpassung die entfernte
-Migrationshistorie read-only inventarisieren und bei Abweichungen stoppen; kein `migration repair`,
-Umbenennen remote registrierter Versionen oder `db push` ohne separate Freigabe.
+Migrationshistorie read-only inventarisieren und bei Abweichungen stoppen. Das einzige zulässige
+`migration repair` ist der separat freigegebene, protokollierte `--status applied`-Eintrag für die
+schemaidentische neue Baseline. Reparaturen der historischen Versionen, Umbenennen remote
+registrierter Versionen und `db push` bleiben ohne separate Freigabe verboten. Vor einem späteren
+Push müssen `migration list` und `db push --dry-run` beweisen, dass nur additive
+Post-Baseline-Migrationen ausstehen.
 
 Entferne dabei die abweichende Belegungsberechnung aus `app/(dashboard)/intensivkurse/page.tsx`:
 stornierte Anmeldungen zählen nirgends, `wenige` bedeutet überall 1–2 Restplätze und `voll` 0.
