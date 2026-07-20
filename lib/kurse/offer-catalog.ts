@@ -10,6 +10,11 @@ import {
   bmsIntensivkurs,
   bmsIntensivkursSessions,
   bmsPruefungssimulation,
+  maturaAudiencePageModel,
+  maturaHalbjahreskurs,
+  maturaHalbjahreskursSessions,
+  maturaIntensivwoche,
+  maturaIntensivwocheSessions,
   einsSekAudiencePageModel,
   einsSekLerncampSportferien,
   einsSekLerncampSessions,
@@ -89,6 +94,10 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [bmsIntensivkurs],
     addOnOffers: [bmsPruefungssimulation],
   },
+  matura: {
+    offers: [maturaHalbjahreskurs, maturaIntensivwoche],
+    addOnOffers: [],
+  },
 }
 
 /** Nur gesetzt, wo Schritt 6 bereits eine dedizierte, HTML-extrahierte Hero-Kopie geliefert hat. */
@@ -99,6 +108,7 @@ const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> 
   '1-sek': einsSekAudiencePageModel.hero,
   '2-3-sek': zweiDreiSekAudiencePageModel.hero,
   bms: bmsAudiencePageModel.hero,
+  matura: maturaAudiencePageModel.hero,
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
@@ -110,6 +120,8 @@ const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [zweiDreiSekHalbjahreskurs.id]: zweiDreiSekHalbjahreskursSessions,
   [zweiDreiSekIntensivkurs.id]: zweiDreiSekIntensivkursSessions,
   [bmsIntensivkurs.id]: bmsIntensivkursSessions,
+  [maturaHalbjahreskurs.id]: maturaHalbjahreskursSessions,
+  [maturaIntensivwoche.id]: maturaIntensivwocheSessions,
   [sechsKlasseIntensivkurs.id]: sechsKlasseIntensivkursSessions,
 }
 

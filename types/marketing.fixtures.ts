@@ -59,6 +59,7 @@ const sechsKlasse: Audience = audiences[2]
 const einsSek: Audience = audiences[3]
 const zweiDreiSek: Audience = audiences[4]
 const bms: Audience = audiences[5]
+const matura: Audience = audiences[6]
 
 // ---------------------------------------------------------------------------------------------
 // 2.2/2.4 CourseOffer + SessionDefinition -- Layout_6_Klasse_Hauptseite.html +
@@ -2856,5 +2857,381 @@ export const bmsAudiencePageModel = {
   // Intensivkurs-Unterseite (siehe Kommentar oben), es existiert kein echter eigener Detailinhalt.
   offers: [bmsIntensivkurs],
   addOnOffers: [bmsPruefungssimulation],
+  existingCourses: [],
+} as const satisfies AudiencePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Schritt 10, Runde 6/6 -- Matura: Layout_Maturapruefung_Seite.html +
+// Layout_Matura_Halbjahreskurs_Unterseite.html + Layout_Matura_Intensivwoche_Unterseite.html.
+// Letzte der sieben Zielgruppen (6. Klasse bereits aus Schritt 5/6 erledigt) -- damit hat Schritt
+// 10 alle sieben Übersichtsseiten mit mindestens einem realen Angebot versehen.
+//
+// Sauberste Runde bisher: keine Preis-Diskrepanz zwischen Haupt- und Unterseite bei beiden
+// Angeboten (Halbjahreskurs 2'690/2'790 stimmt exakt überein, Intensivwoche 980 ohne
+// Frühbucherpreis auf beiden Seiten identisch), keine Copy-Paste-Reste aus anderen
+// Zielgruppen-Vorlagen. displayName "Intensivwoche" weicht bewusst vom internen kurstyp-Key
+// "intensivkurs" ab (Abschnitt 2.2: interner Key ≠ Anzeigename, exakt wie bei "Vorkurs" bei 1. Sek).
+// ---------------------------------------------------------------------------------------------
+
+export const maturaHalbjahreskursSessions = [
+  {
+    id: 2001,
+    offerId: 'offer-matura-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 2001 },
+    kurs: 'Kurs A',
+    dateLabel: 'Samstag, 09:00–10:30',
+    timeLabel: '09:00–10:30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'analysis', label: 'Analysis', value: '40 Min.' },
+        { id: 'vektorgeometrie', label: 'Vektorgeometrie', value: '30 Min.' },
+        { id: 'wahrscheinlichkeitsrechnung', label: 'Wahrscheinlichkeitsrechnung', value: '20 Min.' },
+      ],
+    },
+  },
+  {
+    id: 2002,
+    offerId: 'offer-matura-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 2002 },
+    kurs: 'Kurs B',
+    dateLabel: 'Mittwoch, 17:00–18:30',
+    timeLabel: '17:00–18:30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'analysis', label: 'Analysis', value: '40 Min.' },
+        { id: 'vektorgeometrie', label: 'Vektorgeometrie', value: '30 Min.' },
+        { id: 'wahrscheinlichkeitsrechnung', label: 'Wahrscheinlichkeitsrechnung', value: '20 Min.' },
+      ],
+    },
+  },
+  {
+    id: 2003,
+    offerId: 'offer-matura-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 2003 },
+    kurs: 'Kurs C',
+    dateLabel: 'Samstag, 11:00–12:30',
+    timeLabel: '11:00–12:30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'analysis', label: 'Analysis', value: '40 Min.' },
+        { id: 'vektorgeometrie', label: 'Vektorgeometrie', value: '30 Min.' },
+        { id: 'wahrscheinlichkeitsrechnung', label: 'Wahrscheinlichkeitsrechnung', value: '20 Min.' },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const maturaHalbjahreskurs = {
+  id: 'offer-matura-halbjahreskurs',
+  audienceId: 'matura',
+  slug: 'halbjahreskurs',
+  href: '/kurse/matura/halbjahreskurs',
+  displayName: 'Halbjahreskurs',
+  tagline: 'Breite Vorbereitung über das ganze Semester',
+  lede: 'Kontinuierliche Vorbereitung auf die Mathematik-Matura: fachliches Training in den prüfungsrelevanten Themengebieten, begleitet über das ganze letzte Gymnasialjahr mit einem festen Wochentermin.',
+  description:
+    'Umfassende Vorbereitung auf die Mathematik-Matura — gezielte, individuelle Förderung in den prüfungsrelevanten Themengebieten, begleitet über das ganze letzte Gymnasialjahr.',
+  recommended: true,
+  subject: 'ma',
+  laufzeit: 'Nov. 2026 – April 2027',
+  dateSummary: ['Nov. 2026 – April 2027'],
+  features: [
+    'Schwerpunkte: Analysis, Vektorgeometrie & Wahrscheinlichkeitsrechnung',
+    'Samstag oder Mittwochnachmittag',
+    'Standortbestimmung & Prüfungssimulation inbegriffen',
+    'Betreuung auch ausserhalb der Kurszeiten',
+  ],
+  regularPriceRappen: 279000,
+  earlyBirdPriceRappen: 269000,
+  earlyBirdDeadline: '2026-07-31',
+  currency: 'CHF',
+  overviewBullets: [
+    'Nov. 2026 – April 2027',
+    'Kleingruppen',
+    'Eigenes Lernunterlagen-Dossier',
+    'Standortbestimmung & Prüfungssimulation inbegriffen',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'pruefungssimulation',
+      title: 'Eine echte Prüfungssimulation',
+      description:
+        'Reale Prüfungsbedingungen, korrigiert und Schritt für Schritt besprochen — einmal reicht, wenn sie gut gemacht ist.',
+    },
+    {
+      id: 'fokus-themen',
+      title: 'Fokus auf die prüfungsrelevanten Themen',
+      description:
+        'Wir konzentrieren uns gezielt auf Analysis, Vektorgeometrie und Wahrscheinlichkeitsrechnung — die Schwerpunkte der Mathematik-Matura.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  testimonials: [
+    {
+      id: 'testi-1',
+      quote: 'Vektorgeometrie war mein Angstgegner — nach dem Kurs habe ich die Aufgaben endlich verstanden.',
+      author: 'Maturandin, Halbjahreskurs',
+    },
+    {
+      id: 'testi-2',
+      quote: 'Die Prüfungssimulation hat mir gezeigt, wo ich noch üben muss — genau rechtzeitig vor der Matura.',
+      author: 'Maturand, Halbjahreskurs',
+    },
+    {
+      id: 'testi-3',
+      quote: 'Der wöchentliche Rhythmus hat mir geholfen, neben der Matura auch die anderen Fächer nicht zu vernachlässigen.',
+      author: 'Maturandin, Halbjahreskurs',
+    },
+  ],
+  kurstyp: 'halbjahreskurs',
+  flowSteps: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung',
+      body: 'Vor dem ersten Kurstag stellen wir fest, wo Sie aktuell stehen, um die Kurszeit von Beginn an gezielt zu nutzen.',
+    },
+    {
+      id: 'wochentraining',
+      title: 'Wochentraining',
+      body: 'Von November bis April wird wöchentlich an Analysis, Vektorgeometrie und Wahrscheinlichkeitsrechnung gearbeitet.',
+    },
+    {
+      id: 'pruefungssimulation-feedback',
+      title: 'Prüfungssimulation & Feedback',
+      body: 'Eine echte Prüfungssimulation zeigt den aktuellen Stand — inklusive individueller Besprechung und Empfehlungen für die letzten Wochen vor der Matura.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      lede: 'Aufbau, Übung und schrittweise Anleitung zum Lösen der Aufgabentypen, die an der Mathematik-Matura tatsächlich geprüft werden.',
+      groups: [
+        {
+          id: 'analysis',
+          subhead: 'Analysis',
+          items: ['Ableitungen und Kurvendiskussion', 'Integralrechnung und Flächenberechnungen', 'Extremwertprobleme'],
+        },
+        {
+          id: 'vektorgeometrie',
+          subhead: 'Vektorgeometrie',
+          items: ['Geraden und Ebenen im Raum', 'Schnittpunkte, Abstände und Winkel', 'Skalar- und Vektorprodukt'],
+        },
+        {
+          id: 'wahrscheinlichkeitsrechnung',
+          subhead: 'Wahrscheinlichkeitsrechnung',
+          items: ['Kombinatorik und Baumdiagramme', 'Bedingte Wahrscheinlichkeiten', 'Binomial- und Normalverteilung'],
+        },
+      ],
+    },
+    {
+      id: 'mentale-vorbereitung',
+      title: 'Mentale Vorbereitung',
+      lede: 'Neben dem Fachwissen fördern wir gezielt Ihre Lernkompetenzen — integriert im Kursprogramm. Die genauen Kursinhalte können sich noch anpassen — die Schwerpunkte richten sich nach dem Stand der jeweiligen Kursgruppe.',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Selbstorganisation im letzten Gymnasialjahr',
+            'Effiziente Lernmethoden für die Prüfungsvorbereitung',
+            'Umgang mit Prüfungsdruck',
+            'Zeitmanagement während der Prüfung',
+          ],
+        },
+      ],
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    note: 'Jeder Termin folgt demselben Ablauf — Details dazu unter "Ablauf".',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const maturaHalbjahreskursDetailPageModel = {
+  audience: matura,
+  offer: maturaHalbjahreskurs,
+  sessions: maturaHalbjahreskursSessions,
+} as const satisfies CourseDetailPageModel
+
+export const maturaIntensivwocheSessions = [
+  {
+    id: 2101,
+    offerId: 'offer-matura-intensivwoche',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 2101 },
+    kurs: 'Kurs A',
+    dateLabel: '26.–30. April',
+    timeLabel: '09.00–13.15',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 26.4.', value: 'Analysis' },
+        { id: 'di', label: 'Di, 27.4.', value: 'Analysis' },
+        { id: 'mi', label: 'Mi, 28.4. (Prüfungssimulation)', value: '', highlight: true },
+        { id: 'do', label: 'Do, 29.4.', value: 'Vektorgeometrie' },
+        { id: 'fr', label: 'Fr, 30.4.', value: 'Wahrscheinlichkeitsrechnung' },
+      ],
+    },
+  },
+  {
+    id: 2102,
+    offerId: 'offer-matura-intensivwoche',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 2102 },
+    kurs: 'Kurs B',
+    dateLabel: '03.–07. Mai',
+    timeLabel: '09.00–13.15',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 3.5.', value: 'Analysis' },
+        { id: 'di', label: 'Di, 4.5.', value: 'Analysis' },
+        { id: 'mi', label: 'Mi, 5.5. (Prüfungssimulation)', value: '', highlight: true },
+        { id: 'do', label: 'Do, 6.5.', value: 'Vektorgeometrie' },
+        { id: 'fr', label: 'Fr, 7.5.', value: 'Wahrscheinlichkeitsrechnung' },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const maturaIntensivwoche = {
+  id: 'offer-matura-intensivwoche',
+  audienceId: 'matura',
+  slug: 'intensivwoche',
+  href: '/kurse/matura/intensivwoche',
+  displayName: 'Intensivwoche',
+  tagline: 'Intensives Training in den Frühlingsferien',
+  lede: 'Möchten Sie sich in der letzten Ferienwoche vor der Prüfung nochmals gezielt auf die Mathematik-Matura vorbereiten? Im Kurs werden die prüfungsrelevanten Themen Analysis, Vektorgeometrie und Wahrscheinlichkeitsrechnung trainiert und eine Prüfung simuliert.',
+  description:
+    'Ideal für Maturandinnen und Maturanden, die sich in der letzten Ferienwoche vor der Prüfung nochmals gezielt auf die Mathematik-Matura vorbereiten möchten.',
+  subject: 'ma',
+  laufzeit: 'Ende April 2027',
+  dateSummary: ['Ende April 2027'],
+  features: [
+    'Schwerpunkte: Analysis, Vektorgeometrie & Wahrscheinlichkeitsrechnung',
+    '5 Kurstage in den Frühlingsferien',
+    'Kurszeit: 09.00 – 13.15 Uhr',
+    'Inklusive Prüfungssimulation',
+  ],
+  regularPriceRappen: 98000,
+  currency: 'CHF',
+  overviewBullets: [
+    '5 Kurstage in den Frühlingsferien',
+    'Kurszeit: 09.00 – 13.15 Uhr',
+    'Kleingruppen: max. 8 Teilnehmende',
+    'Zürich HB · Winterthur',
+  ],
+  whyUs: [
+    {
+      id: 'fokus-letzte-wochen',
+      title: 'Fokus auf die letzten Wochen vor der Matura',
+      description:
+        'Kurz vor der Prüfung zählt gezieltes Wiederholen mehr als neuer Stoff — genau darauf ist die Woche ausgerichtet.',
+    },
+    {
+      id: 'pruefungssimulation',
+      title: 'Eine echte Prüfungssimulation',
+      description:
+        'Reale Prüfungsbedingungen, korrigiert und Schritt für Schritt besprochen — mitten in der Kurswoche, damit noch Zeit zum Nacharbeiten bleibt.',
+    },
+    {
+      id: 'drei-schwerpunktthemen',
+      title: 'Die drei Schwerpunktthemen im Fokus',
+      description:
+        'Analysis, Vektorgeometrie und Wahrscheinlichkeitsrechnung — konzentriert auf das, was an der Mathematik-Matura tatsächlich geprüft wird.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  testimonials: [
+    {
+      id: 'testi-1',
+      quote: 'In der Ferienwoche konnte ich mich voll auf Mathe konzentrieren, ohne dass mir Schule dazwischenkam.',
+      author: 'Maturand, Intensivwoche',
+    },
+    {
+      id: 'testi-2',
+      quote: 'Die Prüfungssimulation hat mir die Nervosität genommen — ich wusste danach genau, was mich erwartet.',
+      author: 'Maturandin, Intensivwoche',
+    },
+    {
+      id: 'testi-3',
+      quote: 'Fünf Tage vor der Matura waren genau richtig, um nochmals alles zu festigen.',
+      author: 'Maturand, Intensivwoche',
+    },
+  ],
+  kurstyp: 'intensivkurs',
+  flowSteps: [
+    {
+      id: 'wissen-aneignen',
+      title: 'Wissen aneignen',
+      body: 'Prüfungsrelevante Grundlagen in Analysis, Vektorgeometrie und Wahrscheinlichkeitsrechnung im Schnelldurchgang repetieren.',
+    },
+    {
+      id: 'wissen-umsetzen',
+      title: 'Wissen umsetzen',
+      body: 'Aufgaben im Unterricht trainieren, echte Prüfungssimulation durchführen.',
+    },
+    {
+      id: 'wissen-pruefen',
+      title: 'Wissen prüfen',
+      body: 'Individuelles Feedback zur Simulation, gemeinsame Besprechung — Sie wissen danach genau, wo noch Übungsbedarf besteht.',
+    },
+  ],
+  contentSections: [],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const maturaIntensivwocheDetailPageModel = {
+  audience: matura,
+  offer: maturaIntensivwoche,
+  sessions: maturaIntensivwocheSessions,
+} as const satisfies CourseDetailPageModel
+
+export const maturaAudiencePageModel = {
+  audience: matura,
+  hero: {
+    title: 'Vorbereitungskurse für die Mathematik-Matura 2027',
+    description:
+      'Zwei Wege zur Vorbereitung auf die Maturaprüfung in Mathematik — wöchentliche Begleitung über mehrere Monate oder intensives Training in den Frühlingsferien.',
+  },
+  offers: [maturaHalbjahreskurs, maturaIntensivwoche],
+  addOnOffers: [],
   existingCourses: [],
 } as const satisfies AudiencePageModel
