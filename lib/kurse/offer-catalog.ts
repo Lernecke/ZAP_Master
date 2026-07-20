@@ -6,6 +6,11 @@
 // übrigen sechs Zielgruppen -- hier wird kein Inhalt für sie erfunden.
 
 import {
+  einsSekAudiencePageModel,
+  einsSekLerncampSportferien,
+  einsSekLerncampSessions,
+  einsSekVorkurs,
+  einsSekVorkursSessions,
   fuenfKlasseAudiencePageModel,
   fuenfKlasseHalbjahreskurs,
   fuenfKlasseHalbjahreskursSessions,
@@ -41,6 +46,10 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [vierKlasseHalbjahreskurs, vierKlasseLerncampSportferien],
     addOnOffers: [],
   },
+  '1-sek': {
+    offers: [einsSekVorkurs, einsSekLerncampSportferien],
+    addOnOffers: [],
+  },
   // '5': nur Halbjahreskurs -- das Lerncamp-Angebot hat einen ungelösten Preiskonflikt zwischen
   // Haupt- und Unterseite (CHF 950 vs. CHF 890, kein "regulär"-Anker) und bleibt bis zur
   // fachlichen Preisfreigabe ausserhalb des Katalogs, siehe Kommentar bei
@@ -68,12 +77,15 @@ const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> 
   '4': vierKlasseAudiencePageModel.hero,
   '5': fuenfKlasseAudiencePageModel.hero,
   '6': sechsKlasseAudiencePageModel.hero,
+  '1-sek': einsSekAudiencePageModel.hero,
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [vierKlasseHalbjahreskurs.id]: vierKlasseHalbjahreskursSessions,
   [vierKlasseLerncampSportferien.id]: vierKlasseLerncampSessions,
   [fuenfKlasseHalbjahreskurs.id]: fuenfKlasseHalbjahreskursSessions,
+  [einsSekVorkurs.id]: einsSekVorkursSessions,
+  [einsSekLerncampSportferien.id]: einsSekLerncampSessions,
   [sechsKlasseIntensivkurs.id]: sechsKlasseIntensivkursSessions,
 }
 

@@ -56,6 +56,7 @@ export { audiences, serviceGroups, homePageModel, siteNav, siteFooter, marketing
 const vierKlasse: Audience = audiences[0]
 const fuenfKlasse: Audience = audiences[1]
 const sechsKlasse: Audience = audiences[2]
+const einsSek: Audience = audiences[3]
 const bms: Audience = audiences[5]
 
 // ---------------------------------------------------------------------------------------------
@@ -1683,6 +1684,396 @@ export const fuenfKlasseAudiencePageModel = {
       'Grundlagen in Deutsch und Mathematik frühzeitig festigen — im wöchentlichen Rhythmus oder kompakt in den Ferien.',
   },
   offers: [fuenfKlasseHalbjahreskurs],
+  addOnOffers: [],
+  existingCourses: [],
+} as const satisfies AudiencePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Schritt 10, Runde 3/6 -- 1. Sek: Layout_1_Sek_Hauptseite.html +
+// Layout_1_Sek_Halbjahesrkurs_Unterseite.html (Tippfehler im Original-Dateinamen selbst) +
+// Layout_1_Sek_Intensivkurs_Unterseite.html.
+//
+// Der in Abschnitt 2.3 dokumentierte Preis-Bug ist hier -- anders als beim 5.-Klasse-Lerncamp --
+// eindeutig auflösbar: CHF 990 erscheint konsistent auf Haupt- UND Unterseite (kein Widerspruch
+// beim Kernpreis). Die begleitende Notiz "regulär CHF 3'490" ist nachweislich ein
+// Copy-Paste-Rest aus der 6.-Klasse-Vorlage (dort: CHF 3'390 Frühbucher / "regulär CHF 3'490" --
+// eine plausible CHF-100-Differenz; bei 1. Sek wurde nur der Hauptpreis auf CHF 990 geändert, die
+// Notiz aber unverändert übernommen und bezieht sich auf nichts Reales mehr). regularPriceRappen
+// wird deshalb auf den einzigen echten, konsistenten Wert (990) gesetzt; die fehlerhafte Notiz
+// wird nicht übernommen, kein earlyBirdPriceRappen/-Deadline gesetzt.
+// ---------------------------------------------------------------------------------------------
+
+export const einsSekVorkursSessions = [
+  {
+    id: 6001,
+    offerId: 'offer-1sek-vorkurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6001 },
+    kurs: 'Kurs A',
+    dateLabel: 'Samstag, 09:00–10:30',
+    timeLabel: '09:00–10:30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '30 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 6002,
+    offerId: 'offer-1sek-vorkurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6002 },
+    kurs: 'Kurs B',
+    dateLabel: 'Samstag, 11:00–12:30',
+    timeLabel: '11:00–12:30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '30 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 6003,
+    offerId: 'offer-1sek-vorkurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6003 },
+    kurs: 'Kurs C',
+    dateLabel: 'Mittwoch, 14:00–15:30',
+    timeLabel: '14:00–15:30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '30 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 6004,
+    offerId: 'offer-1sek-vorkurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6004 },
+    kurs: 'Kurs D',
+    dateLabel: 'Mittwoch, 16:00–17:30',
+    timeLabel: '16:00–17:30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '30 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const einsSekVorkurs = {
+  id: 'offer-1sek-vorkurs',
+  audienceId: '1-sek',
+  slug: 'vorkurs',
+  href: '/kurse/1-sek/vorkurs',
+  displayName: 'Vorkurs',
+  tagline: 'Breite Vorbereitung über das ganze Semester',
+  lede: 'Beste Voraussetzungen für die Gymivorbereitung auf die Kurzzeit-Prüfung 2028 schaffen: Grundlagen in Deutsch und Mathematik festigen, dazu eine umfassende Standortbestimmung zum Einstieg und Lerncoaching für die Selbstorganisation.',
+  description:
+    'Ideal für Kinder, die sich frühzeitig und ohne Druck auf die Kurzzeit-Prüfung 2028 vorbereiten möchten — mit viel Vorlauf und einer Standortbestimmung zum Einstieg.',
+  recommended: true,
+  laufzeit: 'Mai – Juli 2027',
+  dateSummary: ['Mai – Juli 2027'],
+  features: [
+    'Deutsch & Mathematik',
+    'Samstag oder Mittwochnachmittag',
+    'Lerncoaching inbegriffen',
+    'Umfassende Standortbestimmung inbegriffen',
+  ],
+  regularPriceRappen: 99000,
+  currency: 'CHF',
+  overviewBullets: ['Mai – Juli 2027', 'Kleingruppen', 'Standortbestimmung & Lerncoaching inbegriffen'],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'lerncoaching-inbegriffen',
+      title: 'Lerncoaching inbegriffen',
+      description:
+        'Selbstorganisation, Lernmethoden und Konzentration — die Basis, um von den fachlichen Inhalten wirklich zu profitieren.',
+    },
+    {
+      id: 'kleingruppen',
+      title: 'Kleingruppen von höchstens 8 Kindern',
+      description: 'Genug Raum für individuelle Fragen, ohne dass ein Kind im Kurs untergeht.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  kurstyp: 'halbjahreskurs',
+  flowSteps: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung',
+      body: 'Vor dem ersten Kurstag stellen wir fest, wo Ihr Kind aktuell steht — besonders hilfreich, wenn die Prüfung schon einmal knapp nicht bestanden wurde.',
+    },
+    {
+      id: 'woechentliches-training',
+      title: 'Wöchentliches Training',
+      body: 'Von Mai bis Juli wird an Deutsch, Mathematik und Lerncoaching gearbeitet — mit Blick auf die Anforderungen der Kurzzeit-Prüfung 2028.',
+    },
+    {
+      id: 'abschlussgespraech-empfehlung',
+      title: 'Abschlussgespräch & Empfehlung',
+      body: 'Nach dem letzten Kurstag besprechen wir den aktuellen Lernstand und empfehlen, wie es bis zur Prüfung optimal weitergeht — z. B. mit dem Halbjahreskurs in der 2./3. Sek.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      lede: 'Die genauen Schwerpunkte richten sich nach dem individuellen Stand der Schülerinnen und Schüler.',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Rechnen mit Brüchen',
+            'Terme',
+            'Geometrische Grundbegriffe',
+            'Proportionale Zuordnungen',
+            'Statistik',
+            'Umfang und Fläche',
+            'Rauminhalt und Oberfläche',
+            'Textaufgaben',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'deutsch',
+      title: 'Deutsch',
+      lede: 'Die genauen Schwerpunkte richten sich nach dem individuellen Stand der Schülerinnen und Schüler.',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Aufsatz — Einführung in Prüfungsbedingungen und geforderte Textsorten',
+            'Erzählung — Ideen finden, planen, formulieren und überarbeiten',
+            'Satzlehre — Satzglieder inkl. der vier Fälle, Satzproben, Satzanfänge und Satzverbindungen',
+            'Textverständnis — Lesestrategien aufbauen und gezielt üben',
+            'Rechtschreibung — zentrale Regeln und passende Übungen',
+            'Verben — Konjugation, Zeitformen, Wortstammprinzip, Aktiv/Passiv und Verbformen',
+            'Wortlehre — inkl. Wortschatzübungen',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'lerncoaching',
+      title: 'Lerncoaching',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Selbstorganisation — Planung und Struktur für den Lernalltag',
+            'Lernumgebung — den passenden Lernort finden',
+            'Lernmethoden — Techniken und Tricks fürs Lernen',
+            'Motivation',
+            'Konzentration',
+            'Bei LRS — gezielte Tipps für Lesen und Rechtschreibung',
+            'Sommer-Smart — erholen, repetieren und gestärkt weitermachen',
+          ],
+        },
+      ],
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    note: 'Jeder Termin folgt demselben Ablauf — Details dazu unter "Ablauf".',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const einsSekVorkursDetailPageModel = {
+  audience: einsSek,
+  offer: einsSekVorkurs,
+  sessions: einsSekVorkursSessions,
+} as const satisfies CourseDetailPageModel
+
+export const einsSekLerncampSessions = [
+  {
+    id: 6101,
+    offerId: 'offer-1sek-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6101 },
+    kurs: 'Kurs A',
+    dateLabel: '08.–12. Feb.',
+    timeLabel: '09.00–12.00',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 08. Feb.', value: '09.00–12.00' },
+        { id: 'di', label: 'Di, 09. Feb.', value: '09.00–12.00' },
+        { id: 'mi', label: 'Mi, 10. Feb.', value: '09.00–12.00' },
+        { id: 'do', label: 'Do, 11. Feb.', value: '09.00–12.00' },
+        { id: 'fr', label: 'Fr, 12. Feb. (Rückblick)', value: '09.00–12.00', highlight: true },
+      ],
+    },
+  },
+  {
+    id: 6102,
+    offerId: 'offer-1sek-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6102 },
+    kurs: 'Kurs B',
+    dateLabel: '15.–19. Feb.',
+    timeLabel: '13.30–16.30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 15. Feb.', value: '13.30–16.30' },
+        { id: 'di', label: 'Di, 16. Feb.', value: '13.30–16.30' },
+        { id: 'mi', label: 'Mi, 17. Feb.', value: '13.30–16.30' },
+        { id: 'do', label: 'Do, 18. Feb.', value: '13.30–16.30' },
+        { id: 'fr', label: 'Fr, 19. Feb. (Rückblick)', value: '13.30–16.30', highlight: true },
+      ],
+    },
+  },
+  {
+    id: 6103,
+    offerId: 'offer-1sek-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 6103 },
+    kurs: 'Kurs C',
+    dateLabel: '22.–26. Feb.',
+    timeLabel: '13.30–16.30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 22. Feb.', value: '13.30–16.30' },
+        { id: 'di', label: 'Di, 23. Feb.', value: '13.30–16.30' },
+        { id: 'mi', label: 'Mi, 24. Feb.', value: '13.30–16.30' },
+        { id: 'do', label: 'Do, 25. Feb.', value: '13.30–16.30' },
+        { id: 'fr', label: 'Fr, 26. Feb. (Rückblick)', value: '13.30–16.30', highlight: true },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const einsSekLerncampSportferien = {
+  id: 'offer-1sek-lerncamp-sportferien',
+  audienceId: '1-sek',
+  slug: 'lerncamp-sportferien',
+  href: '/kurse/1-sek/lerncamp-sportferien',
+  displayName: 'Lerncamp – Sportferien',
+  tagline: 'Spielerisch, ohne Prüfungsdruck',
+  lede: 'Grundlagen in Deutsch und Mathematik auffrischen — spielerisch, ohne Prüfungsdruck, mit spürbarem Fortschritt in einer Woche. Ideal für einen Frühstart oder als Ergänzung zum Vorkurs.',
+  description:
+    'Ideal für Kinder, die ihre Grundlagen in Deutsch und Mathematik stärken und Lücken schliessen möchten — spielerisch, ohne Prüfungsdruck, mit spürbarem Fortschritt in einer Woche.',
+  laufzeit: 'Feb. – März 2027',
+  dateSummary: ['Feb. – März 2027'],
+  features: [
+    '5 aufeinanderfolgende Halbtage in den Ferien',
+    'Kurszeit: 09.00 – 12.00 Uhr oder 13.30 – 16.30 Uhr',
+    'Standortbestimmung zu Kursbeginn',
+    'Lernspiele & Wettbewerbe zur Auflockerung',
+  ],
+  regularPriceRappen: 89000,
+  currency: 'CHF',
+  overviewBullets: [
+    '5 Halbtage in den Ferien',
+    'Kurszeit: 09.00 – 12.00 Uhr oder 13.30 – 16.30 Uhr',
+    'Kleingruppen: 3 bis max. 8 Kinder',
+    'Zürich HB · Winterthur',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'lernen-mit-spass',
+      title: 'Lernen mit Spass statt Druck',
+      description: 'Lernspiele und Wettbewerbe sorgen dafür, dass Üben sich nicht wie ein Test anfühlt.',
+    },
+    {
+      id: 'praktische-strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über Konzentrationsübungen bis zur Herangehensweise an typische Aufgaben — Grundlagen, die auch später an der Gymiprüfung helfen.',
+    },
+    {
+      id: 'kleingruppen',
+      title: 'Kleingruppen von höchstens 8 Kindern',
+      description: 'Genug Raum für individuelle Fragen, ohne dass ein Kind im Kurs untergeht.',
+    },
+  ],
+  kurstyp: 'intensivkurs',
+  flowSteps: [
+    {
+      id: 'ankommen-einschaetzen',
+      title: 'Ankommen & Einschätzen',
+      body: 'Ein kurzer, spielerischer Check am ersten Tag zeigt der Lehrperson, wo Ihr Kind in Deutsch und Mathematik steht.',
+    },
+    {
+      id: 'ueben-vertiefen',
+      title: 'Üben & Vertiefen',
+      body: 'An jedem Halbtag wechseln sich Deutsch, Mathematik und eine spielerische Vertiefung ab — Lernspiele und Wettbewerbe halten die Motivation hoch.',
+    },
+    {
+      id: 'zeigen-was-man-kann',
+      title: 'Zeigen, was man kann',
+      body: 'Kein Test-Druck, aber ein kurzer, positiver Rückblick am letzten Tag zeigt, was Ihr Kind dazugelernt hat und woran es dranbleiben kann.',
+    },
+  ],
+  contentSections: [],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const einsSekLerncampDetailPageModel = {
+  audience: einsSek,
+  offer: einsSekLerncampSportferien,
+  sessions: einsSekLerncampSessions,
+} as const satisfies CourseDetailPageModel
+
+export const einsSekAudiencePageModel = {
+  audience: einsSek,
+  hero: {
+    title: 'Vorbereitungskurse für Gymiprüfung 2028',
+    description:
+      'Zwei Wege zur Vorbereitung auf die Aufnahmeprüfung ins Kurzzeitgymnasium — der ganzheitliche Halbjahreskurs oder ein kompaktes Ferien-Lerncamp.',
+  },
+  offers: [einsSekVorkurs, einsSekLerncampSportferien],
   addOnOffers: [],
   existingCourses: [],
 } as const satisfies AudiencePageModel
