@@ -11,6 +11,11 @@ import {
   sechsKlasseIntensivkurs,
   sechsKlasseIntensivkursSessions,
   sechsKlassePruefungssimulation,
+  vierKlasseAudiencePageModel,
+  vierKlasseHalbjahreskurs,
+  vierKlasseHalbjahreskursSessions,
+  vierKlasseLerncampSportferien,
+  vierKlasseLerncampSessions,
 } from '@/types/marketing.fixtures'
 import type {
   AudienceHeroContent,
@@ -29,6 +34,10 @@ type OfferCatalogEntry = {
 const EMPTY_ENTRY: OfferCatalogEntry = { offers: [], addOnOffers: [] }
 
 const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
+  '4': {
+    offers: [vierKlasseHalbjahreskurs, vierKlasseLerncampSportferien],
+    addOnOffers: [],
+  },
   '6': {
     offers: [sechsKlasseHalbjahreskurs, sechsKlasseIntensivkurs],
     addOnOffers: [sechsKlassePruefungssimulation],
@@ -45,10 +54,13 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
 
 /** Nur gesetzt, wo Schritt 6 bereits eine dedizierte, HTML-extrahierte Hero-Kopie geliefert hat. */
 const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> = {
+  '4': vierKlasseAudiencePageModel.hero,
   '6': sechsKlasseAudiencePageModel.hero,
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
+  [vierKlasseHalbjahreskurs.id]: vierKlasseHalbjahreskursSessions,
+  [vierKlasseLerncampSportferien.id]: vierKlasseLerncampSessions,
   [sechsKlasseIntensivkurs.id]: sechsKlasseIntensivkursSessions,
 }
 

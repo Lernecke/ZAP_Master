@@ -17,7 +17,8 @@
 // SessionDefinition.id: intensivwoche_kurse.id ist laut Abschnitt 2.4 global und darf nie neu
 // nummeriert werden. Für diese Kurse existieren noch keine echten DB-Zeilen (das folgt erst mit
 // dem additiven Editions-/Sessions-Schema aus Abschnitt 2.12, einer eigenen späteren Runde) --
-// die IDs hier sind daher bewusst hohe Platzhalterwerte (9xxx), nicht mit echten Bestandskursen
+// die IDs hier sind daher bewusst hohe, audienceweise getrennte Platzhalterwerte (8xxx für
+// 4. Klasse, 9xxx für 6. Klasse), nicht mit echten Bestandskursen
 // zu verwechseln.
 
 import type {
@@ -52,6 +53,7 @@ import {
 
 export { audiences, serviceGroups, homePageModel, siteNav, siteFooter, marketingLayoutModel }
 
+const vierKlasse: Audience = audiences[0]
 const sechsKlasse: Audience = audiences[2]
 const bms: Audience = audiences[5]
 
@@ -970,3 +972,443 @@ export const pruefungssimulationPageModel = {
     },
   ],
 } as const satisfies TargetedServicePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Schritt 10, Runde 1/6 -- 4. Klasse: Layout_4_Klasse_Hauptseite.html +
+// Layout_4_Klasse_Halbjahreskurs_Unterseite.html + Layout_4_Klasse_Intensivkurs_Unterseite.html.
+// Frühbucher-Deadline "bis Juli" ist in der Quelle nur unpräzise angegeben (kein Tagesdatum) --
+// dieselbe Regel wie beim 6.-Klasse-Halbjahreskurs angewendet: der Juli VOR Kursbeginn
+// (Kurslaufzeit "März – Juli 2027" -> Deadline 2026-07-31).
+// ---------------------------------------------------------------------------------------------
+
+export const vierKlasseHalbjahreskursSessions = [
+  {
+    id: 8001,
+    offerId: 'offer-4klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8001 },
+    kurs: 'Kurs A',
+    dateLabel: 'Samstag, 13:15–15:00',
+    timeLabel: '13:15–15:00',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 8002,
+    offerId: 'offer-4klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8002 },
+    kurs: 'Kurs B',
+    dateLabel: 'Samstag, 08:45–10:30',
+    timeLabel: '08:45–10:30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 8003,
+    offerId: 'offer-4klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8003 },
+    kurs: 'Kurs C',
+    dateLabel: 'Mittwoch, 15:45–17:30',
+    timeLabel: '15:45–17:30',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+  {
+    id: 8004,
+    offerId: 'offer-4klasse-halbjahreskurs',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8004 },
+    kurs: 'Kurs D',
+    dateLabel: 'Mittwoch, 13:45–15:30',
+    timeLabel: '13:45–15:30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'deutsch', label: 'Deutsch', value: '45 Min.' },
+        { id: 'mathematik', label: 'Mathematik', value: '45 Min.' },
+        { id: 'lerncoaching', label: 'Lerncoaching', value: '15 Min.' },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const vierKlasseHalbjahreskurs = {
+  id: 'offer-4klasse-halbjahreskurs',
+  audienceId: '4',
+  slug: 'halbjahreskurs',
+  href: '/kurse/4-klasse/halbjahreskurs',
+  displayName: 'Halbjahreskurs',
+  tagline: 'Breite Vorbereitung über das ganze Semester',
+  lede: 'Lücken in Deutsch und Mathematik frühzeitig erkennen und schliessen, dazu erste Lernstrategien fürs Lerncoaching mitgeben — alles in einem wöchentlichen Termin, damit ein stabiles Fundament für die weiteren Schuljahre entsteht.',
+  description:
+    'Deutsch, Mathematik und spielerisches Lernen in einem Termin — je 45 Minuten pro Bereich, mit Fachwechsel für maximale Aufmerksamkeit. Ob Wortschatz-Spiele oder Kopfrechen-Wettbewerbe: Lernen mit Spass statt nur Pauken.',
+  recommended: true,
+  laufzeit: 'März – Juli 2027',
+  dateSummary: ['März – Juli 2027'],
+  features: [
+    'Lücken in Grammatik, Rechtschreibung & Aufsatz schliessen',
+    'Grundrechenarten, Sachaufgaben & Textverständnis vertiefen',
+    'Lerncoaching & Lernspiele pro Termin',
+    'Samstag- oder Mittwochnachmittag',
+  ],
+  regularPriceRappen: 349000,
+  earlyBirdPriceRappen: 269000,
+  earlyBirdDeadline: '2026-07-31',
+  currency: 'CHF',
+  overviewBullets: [
+    '14 Kurstage zwischen März und Juli 2027',
+    'Kleingruppen',
+    'Standortbestimmung & Abschlusstest inbegriffen',
+  ],
+  whyUs: [
+    {
+      id: 'lerncoaching-jeder-termin',
+      title: 'Lerncoaching bei jedem Termin',
+      description:
+        '15 Minuten pro Termin für Selbstorganisation, Lernmethoden und Konzentration — die Basis, um von den fachlichen Inhalten wirklich zu profitieren.',
+    },
+    {
+      id: 'lernen-mit-spass',
+      title: 'Lernen mit Spass statt Druck',
+      description: 'Lernspiele und Wettbewerbe sorgen dafür, dass Üben sich nicht wie ein Test anfühlt.',
+    },
+    {
+      id: 'praktische-strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über Konzentrationsübungen bis zur Herangehensweise an typische Aufgaben — Grundlagen, die auch später an der Gymiprüfung helfen.',
+    },
+    {
+      id: 'kleingruppen',
+      title: 'Kleingruppen von höchstens 8 Kindern',
+      description: 'Genug Raum für individuelle Fragen, ohne dass ein Kind im Kurs untergeht.',
+    },
+  ],
+  kurstyp: 'halbjahreskurs',
+  flowSteps: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung',
+      body: 'Vor dem ersten Kurstag stellen wir fest, wo Ihr Kind aktuell steht — besonders hilfreich bei anderer Erstsprache oder kürzlichem Zuzug in die Schweiz.',
+    },
+    {
+      id: 'woechentliches-training',
+      title: 'Wöchentliches Training',
+      body: 'Von März bis Juli wird an 14 Terminen in Deutsch, Mathematik und Lerncoaching gearbeitet — mit den offiziellen DUDEN-Lehrmitteln für Deutsch.',
+    },
+    {
+      id: 'abschlusstest-feedback',
+      title: 'Abschlusstest & Feedback',
+      body: 'Nach dem letzten Kurstag zeigt ein Abschlusstest den aktuellen Lernstand — inklusive Empfehlung, was über die Sommerferien noch geübt werden sollte.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Zahlen & Ziffern — Zahlenraum erweitern, Stellenwerte verstehen',
+            'Addition & Subtraktion — mündliche und schriftliche Rechenstrategien',
+            'Multiplikation & Division — Einmaleins festigen, Rechenwege verstehen',
+            'Grössen & Daten — Zeit, Geld, Gewicht, Länge; Daten lesen und darstellen',
+            'Geometrie — Formen, Körper, Symmetrie',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'deutsch',
+      title: 'Deutsch',
+      groups: [
+        {
+          id: 'grammatik',
+          subhead: 'Grammatik',
+          items: [
+            'Wortarten — Nomen, Pronomen, Adjektive, Verben',
+            'Wortbildung',
+            'Bausteine eines Satzes',
+            'Sätze verbinden',
+          ],
+        },
+        {
+          id: 'rechtschreibung',
+          subhead: 'Rechtschreibung',
+          items: [
+            'Gross- und Kleinschreibung',
+            'Schwierige Laute',
+            'Langer und kurzer Vokal',
+            'Getrennt- und Zusammenschreibung',
+            'Zeichensetzung',
+          ],
+        },
+        {
+          id: 'aufsatz',
+          subhead: 'Aufsatz (Schreiben)',
+          items: [
+            'Erlebniserzählung',
+            'Bildergeschichte',
+            'Reizwortgeschichte',
+            'Tiere & Gegenstände beschreiben',
+            'Berichte verfassen',
+            'Eigene Meinung bilden (inkl. Schreibkonferenz)',
+          ],
+        },
+        {
+          id: 'lesen',
+          subhead: 'Lesen — Trainieren & Strategien nutzen',
+          items: [
+            'Vorwissen nutzen',
+            'Gezielt lesen',
+            'Handlungsschritte herausfinden',
+            'Stichwörter notieren',
+            'Texte vergleichen',
+            'Zu einem Thema recherchieren',
+            'Eigene Meinung bilden',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'lerncoaching',
+      title: 'Lerncoaching',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Selbstorganisation — Planung und Struktur für den Lernalltag',
+            'Lernumgebung — den passenden Lernort finden',
+            'Lernmethoden — Techniken und Tricks fürs Lernen',
+            'Motivation — Ziele setzen und dranbleiben, auch wenn es mal harzt',
+            'Konzentration — Übungen für mehr Fokus',
+            'Bei LRS — gezielte Tipps für Lesen und Rechtschreibung',
+            'Sommer-Smart — erholen, repetieren und gestärkt weitermachen',
+          ],
+        },
+      ],
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    note: 'Jeder Termin folgt demselben Ablauf — Details dazu unter "Ablauf".',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const vierKlasseHalbjahreskursDetailPageModel = {
+  audience: vierKlasse,
+  offer: vierKlasseHalbjahreskurs,
+  sessions: vierKlasseHalbjahreskursSessions,
+} as const satisfies CourseDetailPageModel
+
+export const vierKlasseLerncampSessions = [
+  {
+    id: 8101,
+    offerId: 'offer-4klasse-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8101 },
+    kurs: 'Kurs A',
+    dateLabel: '08.–12. Feb.',
+    timeLabel: '09.00–12.00',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 08. Feb.', value: '09.00–12.00' },
+        { id: 'di', label: 'Di, 09. Feb.', value: '09.00–12.00' },
+        { id: 'mi', label: 'Mi, 10. Feb.', value: '09.00–12.00' },
+        { id: 'do', label: 'Do, 11. Feb.', value: '09.00–12.00' },
+        { id: 'fr', label: 'Fr, 12. Feb. (Rückblick)', value: '09.00–12.00', highlight: true },
+      ],
+    },
+  },
+  {
+    id: 8102,
+    offerId: 'offer-4klasse-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8102 },
+    kurs: 'Kurs B',
+    dateLabel: '15.–19. Feb.',
+    timeLabel: '13.30–16.30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 15. Feb.', value: '13.30–16.30' },
+        { id: 'di', label: 'Di, 16. Feb.', value: '13.30–16.30' },
+        { id: 'mi', label: 'Mi, 17. Feb.', value: '13.30–16.30' },
+        { id: 'do', label: 'Do, 18. Feb.', value: '13.30–16.30' },
+        { id: 'fr', label: 'Fr, 19. Feb. (Rückblick)', value: '13.30–16.30', highlight: true },
+      ],
+    },
+  },
+  {
+    id: 8103,
+    offerId: 'offer-4klasse-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8103 },
+    kurs: 'Kurs C',
+    dateLabel: '22.–26. Feb.',
+    timeLabel: '09.00–12.00',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 22. Feb.', value: '09.00–12.00' },
+        { id: 'di', label: 'Di, 23. Feb.', value: '09.00–12.00' },
+        { id: 'mi', label: 'Mi, 24. Feb.', value: '09.00–12.00' },
+        { id: 'do', label: 'Do, 25. Feb.', value: '09.00–12.00' },
+        { id: 'fr', label: 'Fr, 26. Feb. (Rückblick)', value: '09.00–12.00', highlight: true },
+      ],
+    },
+  },
+  {
+    id: 8104,
+    offerId: 'offer-4klasse-lerncamp-sportferien',
+    capacity: 8,
+    source: { kind: 'intensivwoche_kurse', kursId: 8104 },
+    kurs: 'Kurs D',
+    dateLabel: '22.–26. Feb.',
+    timeLabel: '13.30–16.30',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: {
+      kind: 'simple',
+      items: [
+        { id: 'mo', label: 'Mo, 22. Feb.', value: '13.30–16.30' },
+        { id: 'di', label: 'Di, 23. Feb.', value: '13.30–16.30' },
+        { id: 'mi', label: 'Mi, 24. Feb.', value: '13.30–16.30' },
+        { id: 'do', label: 'Do, 25. Feb.', value: '13.30–16.30' },
+        { id: 'fr', label: 'Fr, 26. Feb. (Rückblick)', value: '13.30–16.30', highlight: true },
+      ],
+    },
+  },
+] satisfies SessionDefinition[]
+
+export const vierKlasseLerncampSportferien = {
+  id: 'offer-4klasse-lerncamp-sportferien',
+  audienceId: '4',
+  slug: 'lerncamp-sportferien',
+  href: '/kurse/4-klasse/lerncamp-sportferien',
+  displayName: 'Lerncamp – Sportferien',
+  tagline: 'Spielerisch, ohne Prüfungsdruck',
+  lede: 'Grundlagen in Deutsch und Mathematik auffrischen — spielerisch, ohne Prüfungsdruck, mit spürbarem Fortschritt in einer Woche.',
+  description:
+    'Ideal für Kinder, die ihre Grundlagen in Deutsch und Mathematik stärken und Lücken schliessen möchten — spielerisch, ohne Prüfungsdruck, mit spürbarem Fortschritt in einer Woche.',
+  laufzeit: 'Sportferien 2027',
+  dateSummary: ['Sportferien 2027'],
+  features: [
+    '5 aufeinanderfolgende Halbtage in den Ferien',
+    'Kurszeit: 09.00 – 12.00 Uhr oder 13.30 – 16.30 Uhr',
+    'Standortbestimmung zu Kursbeginn',
+    'Lerncoaching inbegriffen',
+    'Wettbewerbe & Lernspiele für mehr Motivation',
+  ],
+  regularPriceRappen: 89000,
+  currency: 'CHF',
+  overviewBullets: [
+    '5 Halbtage in den Ferien',
+    'Kurszeit: 09.00 – 12.00 Uhr oder 13.30 – 16.30 Uhr',
+    'Kleingruppen: 3 bis max. 8 Kinder',
+    'Zürich HB · Winterthur',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'lernen-mit-spass',
+      title: 'Lernen mit Spass statt Druck',
+      description: 'Lernspiele und Wettbewerbe sorgen dafür, dass Üben sich nicht wie ein Test anfühlt.',
+    },
+    {
+      id: 'praktische-strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über Konzentrationsübungen bis zur Herangehensweise an typische Aufgaben — Grundlagen, die auch später an der Gymiprüfung helfen.',
+    },
+    {
+      id: 'kleingruppen',
+      title: 'Kleingruppen von höchstens 8 Kindern',
+      description: 'Genug Raum für individuelle Fragen, ohne dass ein Kind im Kurs untergeht.',
+    },
+  ],
+  kurstyp: 'intensivkurs',
+  flowSteps: [
+    {
+      id: 'ankommen-einschaetzen',
+      title: 'Ankommen & Einschätzen',
+      body: 'Ein kurzer, spielerischer Check am ersten Tag zeigt der Lehrperson, wo Ihr Kind in Deutsch und Mathematik steht.',
+    },
+    {
+      id: 'ueben-vertiefen',
+      title: 'Üben & Vertiefen',
+      body: 'An jedem Halbtag wechseln sich Deutsch, Mathematik und eine spielerische Vertiefung ab — Lernspiele und Wettbewerbe halten die Motivation hoch.',
+    },
+    {
+      id: 'zeigen-was-man-kann',
+      title: 'Zeigen, was man kann',
+      body: 'Kein Test-Druck, aber ein kurzer, positiver Rückblick am letzten Tag zeigt, was Ihr Kind dazugelernt hat und woran es dranbleiben kann.',
+    },
+  ],
+  contentSections: [],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const vierKlasseLerncampDetailPageModel = {
+  audience: vierKlasse,
+  offer: vierKlasseLerncampSportferien,
+  sessions: vierKlasseLerncampSessions,
+} as const satisfies CourseDetailPageModel
+
+export const vierKlasseAudiencePageModel = {
+  audience: vierKlasse,
+  hero: {
+    title: 'Grundlagen stärken — 4. Klasse',
+    description:
+      'Grundlagen in Deutsch und Mathematik frühzeitig festigen — im wöchentlichen Rhythmus oder kompakt in den Ferien.',
+  },
+  offers: [vierKlasseHalbjahreskurs, vierKlasseLerncampSportferien],
+  addOnOffers: [],
+  existingCourses: [],
+} as const satisfies AudiencePageModel
