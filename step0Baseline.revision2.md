@@ -697,9 +697,29 @@ angepasst: +1 Tabelle, +1 Sequenz, +1 Constraint, +2 Indizes gegenüber Phase A;
 1 Erfolg / 9× `voll` / 1 Tabellenzeile bei 10 parallelen Versuchen auf einen einzelnen freien
 Platz — kein Overbooking, Exit-Code 0.
 
-**Noch offen:** Push dieser Migration gegen das echte Projekt (`db push --dry-run` zur Kontrolle,
-danach echter Push und direkte Nachweise gegen die echten Objekte, analog zum Vorgehen bei Phase A)
-— bewusst noch nicht ausgeführt, braucht separate Freigabe. Der verwaiste
-`learning_materials`-Bucket bleibt ebenfalls offen.
+### Echter Push der Phase-B-Migration, 20.07.2026
+
+Nach expliziter Freigabe gepusht. Schreibzugriff (`postgres`-Rolle, Session-Pooler, `--db-url`)
+ausschließlich vom Nutzer selbst in einem eigenen PowerShell-Fenster ausgeführt — das Kennwort
+wurde nie an die Konversation übergeben, exakt wie beim Phase-A-Push. `supabase db push` zeigte
+vorab genau eine ausstehende Migration (`20260720090000_booking_hardening_phase_b_rate_limit.sql`),
+bestätigt mit `y`. Dieselbe bekannte, nicht-fatale Warnung wie bei Phase A
+("failed to cache migrations catalog", pg-delta/edge-runtime-Zertifikatpfad unter Windows) —
+betrifft nur das optionale Diff-Katalog-Caching nach dem Push, nicht die Migration selbst.
+
+**Verifiziert (rein lesend, gegen die echten Objekte, über `zap_baseline_readonly` im eigenen
+Fenster des Nutzers ausgeführt, Kennwort ebenfalls nie an die Konversation übergeben):**
+- `supabase_migrations.schema_migrations` enthält `20260720090000` (`booking_hardening_phase_b_rate_limit`).
+- `intensivwoche_buchungsversuche` hat `relrowsecurity = true`.
+- `information_schema.role_table_grants` liefert **0 Zeilen** für diese Tabelle — keine Grants an
+  irgendeine Rolle, wie beabsichtigt.
+- `book_intensivwoche_kurs`: weiterhin `pronargs = 9`, `prosecdef = true`; Funktionsquelltext enthält
+  `rate_limit_exceeded`.
+
+**Ergebnis: Live-Datenbank entspricht jetzt vollständig Buchungshärtungen Phase A + B.** Damit sind
+alle acht Punkte aus Abschnitt 12 sowohl implementiert als auch live verifiziert.
+
+**Noch offen:** Der verwaiste `learning_materials`-Bucket (siehe Storage-Erhebung oben) — eigene
+künftige Entscheidung, keine Korrektur vorgenommen.
 
 **Ende von Revision 2 — auf Abschluss der offenen Nachweise und Implementierungsfreigabe warten.**
