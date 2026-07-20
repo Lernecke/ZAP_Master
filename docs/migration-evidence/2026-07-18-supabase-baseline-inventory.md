@@ -456,6 +456,14 @@ die Storage-API-Auflistung geprüft, keine Beschädigung). Der Ordner unterliegt
 formale Stilllegung des Buckets) bleibt eine eigene, separat zu entscheidende Aufgabe — jemand
 sollte die Dateiinhalte inhaltlich prüfen, bevor final entschieden wird.
 
+### Nachtrag 20.07.2026 — learning_materials-Bucket stillgelegt
+
+Nutzer hat die fünf gesicherten PDFs inhaltlich geprüft, nichts Auffälliges gefunden. Bucket per
+`scripts/decommission-learning-materials-bucket.ts` (Inhaltsabgleich gegen die erwarteten fünf
+Dateien vor jeder Löschung, Projekt-Ref-Prüfung) leergeräumt und gelöscht — siehe
+`step0Baseline.revision2.md`, Abschnitt „Stilllegung des verwaisten learning_materials-Buckets,
+20.07.2026" für Details. Dateien bleiben im lokalen Backup erhalten.
+
 ### Nicht erhoben
 
 Objektzeilen, Dateipfade, Owner-Zuordnungen einzelner Dateien — bewusst außerhalb des Scopes, wie

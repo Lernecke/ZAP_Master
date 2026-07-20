@@ -719,7 +719,17 @@ Fenster des Nutzers ausgeführt, Kennwort ebenfalls nie an die Konversation übe
 **Ergebnis: Live-Datenbank entspricht jetzt vollständig Buchungshärtungen Phase A + B.** Damit sind
 alle acht Punkte aus Abschnitt 12 sowohl implementiert als auch live verifiziert.
 
-**Noch offen:** Der verwaiste `learning_materials`-Bucket (siehe Storage-Erhebung oben) — eigene
-künftige Entscheidung, keine Korrektur vorgenommen.
+### Stilllegung des verwaisten learning_materials-Buckets, 20.07.2026
+
+Nutzer hat die fünf lokal gesicherten PDFs inhaltlich geprüft (alle vorhanden, nichts Auffälliges)
+und die Entscheidung freigegeben. `scripts/decommission-learning-materials-bucket.ts` (neu, prüft
+vor jeder Löschung, dass der Bucket-Inhalt exakt den fünf erwarteten, bereits gesicherten Dateien
+entspricht, und verweigert den Lauf gegen ein anderes Projekt als `ybzdibifgqjsbohtztmy`) vom
+Nutzer selbst mit `service_role` aus `.env` (kein Schlüssel an die Konversation übergeben)
+ausgeführt: Übereinstimmung bestätigt, alle fünf Objekte gelöscht, danach der leere Bucket gelöscht.
+Dateien bleiben lokal unter
+`docs/migration-evidence/private/2026-07-19/learning_materials_backup/` erhalten.
+
+**Damit ist auch dieser letzte offene Punkt abgeschlossen.**
 
 **Ende von Revision 2 — auf Abschluss der offenen Nachweise und Implementierungsfreigabe warten.**
