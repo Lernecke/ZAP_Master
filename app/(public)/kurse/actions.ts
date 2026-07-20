@@ -120,6 +120,11 @@ export async function submitIntensivwocheAnmeldung(
           error: 'Dieser Kurs ist inzwischen ausgebucht.',
           fieldErrors: { kurs_id: ['Bitte wähle einen anderen Kurs.'] },
         }
+      case 'rate_limit_exceeded':
+        return {
+          success: false,
+          error: 'Zu viele Anmeldeversuche mit dieser E-Mail-Adresse. Bitte warte einige Minuten und versuche es erneut.',
+        }
       default:
         return {
           success: false,

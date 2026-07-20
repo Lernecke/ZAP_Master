@@ -25,6 +25,8 @@ und referenziert die konkrete Quelle ihrer Erwartungswerte im Kopfkommentar.
 | `0002_security_definer_functions.sql` | Jede der neun `SECURITY DEFINER`-Routinen einzeln: Existenz + `SECURITY DEFINER`-Flag + expliziter `search_path`. Urspruenglich schlugen 7 von 9 Funktionen fehl (kein fixer `search_path`); behoben durch die Haertungsmigration, jetzt gruen. |
 | `0003_view_reloptions.sql` | `intensivwoche_kurse_mit_anmeldungen` existiert und hat `security_invoker = true` (bekannte Diff-Tool-Luecke bei View-Optionen) |
 | `0004_realtime_publication.sql` | `supabase_realtime` publiziert exakt `public.chat_messages` (bekannte Diff-Tool-Luecke bei Publications, da `pg_dump --schema-only` Publication-Zuordnungen nicht mit ausgibt). Urspruenglich 0 statt 1 Tabelle; behoben durch die Haertungsmigration, jetzt gruen. |
+| `0005_booking_hardening.sql` | Buchungshaertungen Phase A (Migration `20260719190025_booking_hardening_phase_a.sql`): familienfaehiger Duplikatschluessel, `idempotency_key`, Format-/Laengen-Checks, unveraenderlicher Preis-Snapshot, minimale Grants. |
+| `0006_booking_hardening_phase_b.sql` | Buchungshaertungen Phase B (Migration `20260720090000_booking_hardening_phase_b_rate_limit.sql`): dauerhafter Rate-Limiter (5 Versuche / 10 Minuten je `parent_email`, kursuebergreifend), idempotency_key-Wiederholungen zaehlen nicht als neuer Versuch, minimale Grants + RLS auf `intensivwoche_buchungsversuche`. Der automatisierte Parallelitaetstest fuer den letzten freien Platz (Abschnitt 12, letzter Punkt) ist kein pgTAP-Test -- siehe `scripts/concurrency-test-booking.ts`. |
 
 ## Bewusst noch nicht abgedeckt
 
@@ -38,10 +40,11 @@ und referenziert die konkrete Quelle ihrer Erwartungswerte im Kopfkommentar.
   Momentaufnahme, keine vollstaendige Live-Erhebung. Vor einem Bucket-bezogenen pgTAP-Test braucht
   es zuerst eine eigene, separat freizugebende Erhebung der tatsaechlichen Bucket-Konfiguration
   und -Policies.
-- **Buchungshaertungen aus Abschnitt 12** (`step0Baseline.revision2.md`): familienfaehiger
-  Duplikatschluessel, `idempotency_key`, Preis-/Waehrungs-Snapshots u. a. Diese Punkte sind laut
-  Plan explizit noch nicht implementiert ("Schritt 0 implementiert diese Punkte nicht") --
-  Tests dafuer ergeben erst nach der jeweiligen Implementierungsmigration Sinn.
+- **Buchungshaertungen aus Abschnitt 12** (`step0Baseline.revision2.md`) sind jetzt vollstaendig
+  umgesetzt (Phase A + Phase B, siehe `0005`/`0006` oben) bis auf den automatisierten
+  Parallelitaetstest fuer den letzten freien Platz, der bewusst kein pgTAP-Test ist (echte
+  Nebenlaeufigkeit braucht mehrere gleichzeitige Verbindungen) -- siehe
+  `scripts/concurrency-test-booking.ts`.
 
 Kein Test in diesem Verzeichnis darf gegen die Live-Datenbank laufen; das Gate arbeitet
 ausschliesslich gegen die lokale, aus der Baseline neu aufgebaute Datenbank.

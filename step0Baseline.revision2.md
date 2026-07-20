@@ -662,8 +662,44 @@ pgTAP-Tests grün (neue Prüfung ergänzt: alle sechs Constraints `convalidated 
 Objekte verifiziert: alle sechs Constraints jetzt `convalidated = true`. Damit ist
 **Buchungshärtungen Phase A vollständig abgeschlossen.**
 
-**Noch offen:**
+**Noch offen (Stand nach Phase A):**
 - Der verwaiste `learning_materials`-Bucket (siehe Storage-Erhebung oben).
 - Buchungshärtungen Phase B (Rate-Limiter, Concurrency-Test für den letzten Platz).
+
+### Buchungshärtungen Phase B, 20.07.2026
+
+Letzte zwei Punkte aus Abschnitt 12 umgesetzt. Migration
+`20260720090000_booking_hardening_phase_b_rate_limit.sql`:
+
+- **Dauerhafter, serverseitiger Rate-Limiter:** neue Tabelle
+  `intensivwoche_buchungsversuche` (RLS aktiviert, keine Policies, keine Grants an
+  `anon`/`authenticated` — einziger Zugriffspfad ist die SECURITY DEFINER Funktion, die als
+  Tabelleneigentümer läuft). `book_intensivwoche_kurs()` zählt darüber max. 5 Versuche pro
+  `parent_email` innerhalb eines gleitenden 10-Minuten-Fensters, kursübergreifend. Persistiert in
+  der DB statt In-Memory, damit der Limiter Kaltstarts/Neuverbindungen übersteht. Geprüft direkt in
+  der Funktion (nicht nur in der Server Action), damit auch direkte anonyme RPC-Aufrufe erfasst
+  werden. Ein per `idempotency_key` erkannter Wiederholungsaufruf zählt bewusst nicht als neuer
+  Versuch (Kurzschluss vor der Rate-Limit-Prüfung, unverändert seit Phase A) — ein Netzwerk-Retry
+  mit demselben Schlüssel verbraucht kein Kontingent. `CREATE OR REPLACE` genügte (Signatur
+  unverändert seit Phase A), Grants explizit erneut gesetzt.
+- **Automatisierter Parallelitätstest für den letzten freien Platz:** pgTAP läuft in einer
+  einzigen Session und kann echte Nebenläufigkeit nicht abbilden — stattdessen eigenständiges
+  Skript `scripts/concurrency-test-booking.ts`. Legt einen Testkurs mit `max_teilnehmer = 1` an,
+  feuert 10 gleichzeitige RPC-Aufrufe als `anon` (wie ein echter Client) und prüft: genau 1 Erfolg,
+  9× `voll`, genau 1 Zeile in der Tabelle. Verweigert den Lauf, wenn
+  `NEXT_PUBLIC_SUPABASE_URL` nicht nach `127.0.0.1`/`localhost` aussieht (legt/löscht Testdaten
+  mit `service_role`).
+
+**Verifiziert, ausschließlich lokal:** `db reset --local` (Migration wendet sauber an), `db lint
+--local --level error` fehlerfrei, `test db` **58/58 pgTAP-Tests grün** (Struktur-Zähltest 0001
+angepasst: +1 Tabelle, +1 Sequenz, +1 Constraint, +2 Indizes gegenüber Phase A; neue Datei 0006 mit
+10 Tests für Rate-Limiter/Grants/RLS). `scripts/concurrency-test-booking.ts` lokal ausgeführt:
+1 Erfolg / 9× `voll` / 1 Tabellenzeile bei 10 parallelen Versuchen auf einen einzelnen freien
+Platz — kein Overbooking, Exit-Code 0.
+
+**Noch offen:** Push dieser Migration gegen das echte Projekt (`db push --dry-run` zur Kontrolle,
+danach echter Push und direkte Nachweise gegen die echten Objekte, analog zum Vorgehen bei Phase A)
+— bewusst noch nicht ausgeführt, braucht separate Freigabe. Der verwaiste
+`learning_materials`-Bucket bleibt ebenfalls offen.
 
 **Ende von Revision 2 — auf Abschluss der offenen Nachweise und Implementierungsfreigabe warten.**

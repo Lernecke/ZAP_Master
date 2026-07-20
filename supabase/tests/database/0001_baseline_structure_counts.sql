@@ -6,6 +6,11 @@
 -- Angepasst durch 20260719190025_booking_hardening_phase_a.sql: +1 Trigger-Funktion, +6 CHECK-
 -- Constraints, netto +1 Index (−1 alter Familien-Index, +2 neue Familien-/Idempotenz-Indizes),
 -- +1 Trigger.
+--
+-- Angepasst durch 20260720090000_booking_hardening_phase_b_rate_limit.sql: +1 Tabelle
+-- (intensivwoche_buchungsversuche, RLS aktiviert), +1 Sequenz (Identity-Spalte), +1 Constraint
+-- (Primary Key), +2 Indizes (Primary-Key-Index + idx_buchungsversuche_email_time). Funktionen/
+-- SECURITY DEFINER/Trigger/Policies/Views unveraendert (CREATE OR REPLACE, gleiche Signatur).
 
 begin;
 
@@ -13,14 +18,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    26,
-    '26 Tabellen im public-Schema'
+    27,
+    '27 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    26,
-    'alle 26 public-Tabellen haben RLS aktiviert'
+    27,
+    'alle 27 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -56,8 +61,8 @@ select is(
 
 select is(
     (select count(*)::int from pg_sequences where schemaname = 'public'),
-    12,
-    '12 Sequenzen im public-Schema'
+    13,
+    '13 Sequenzen im public-Schema'
 );
 
 select is(
@@ -66,14 +71,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    90,
-    '90 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    91,
+    '91 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    73,
-    '73 Indizes im public-Schema'
+    75,
+    '75 Indizes im public-Schema'
 );
 
 select is(
