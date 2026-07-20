@@ -1,14 +1,43 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import createIntlMiddleware from "next-intl/middleware"
+import { routing } from "@/i18n/routing"
 
-export async function proxy(request: NextRequest) {
-  const token = await getToken({ 
+const intlMiddleware = createIntlMiddleware(routing)
+
+// Geschützte (dashboard)-Route-Group. Deckt jetzt auch /aufsaetze, /intensivkurse und
+// /materialien ab, die zuvor nur durch den Layout-Guard in app/(dashboard)/layout.tsx
+// geschützt waren, nicht durch diesen Proxy-Matcher. /arbeitszeiten existiert als Route noch
+// nicht (geplant für Schritt 10c), ist aber schon vorgemerkt.
+const protectedPrefixes = [
+  "/dashboard",
+  "/trainer",
+  "/uebungen",
+  "/pruefung",
+  "/profil",
+  "/aufsaetze",
+  "/intensivkurse",
+  "/materialien",
+  "/arbeitszeiten",
+]
+const authPageRoutes = ["/login", "/register"]
+
+// Bestehende, bewusst unlokalisierte öffentliche Routen, die next-intl nicht mit einem
+// Locale-Präfix versehen darf.
+const existingUnlocalizedPublicPrefixes = ["/kurse"]
+
+function isUnderPrefix(pathname: string, prefixes: string[]) {
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+}
+
+async function handleAuthRoute(request: NextRequest) {
+  const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET 
+    secret: process.env.NEXTAUTH_SECRET
   })
 
-  const isAuthPage = request.nextUrl.pathname.startsWith("/login") || 
+  const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
                      request.nextUrl.pathname.startsWith("/register")
 
   // Spezielle Route um Session zu invalidieren
@@ -41,6 +70,31 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next()
 }
 
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (
+    isUnderPrefix(pathname, protectedPrefixes) ||
+    authPageRoutes.includes(pathname) ||
+    pathname === "/api/auth/force-relogin"
+  ) {
+    return handleAuthRoute(request)
+  }
+
+  // Temporärer Sonderfall bis Schritt 7: `/` bedient weiterhin direkt die bestehende
+  // Startseite, statt auf das noch inhaltsleere /de umgeleitet zu werden.
+  if (pathname === "/") {
+    return NextResponse.next()
+  }
+
+  // Bestehende unlokalisierte öffentliche Routen bleiben unverändert an ihrem Ort.
+  if (isUnderPrefix(pathname, existingUnlocalizedPublicPrefixes)) {
+    return NextResponse.next()
+  }
+
+  return intlMiddleware(request)
+}
+
 export const config = {
   matcher: [
     "/dashboard/:path*",
@@ -48,7 +102,12 @@ export const config = {
     "/uebungen/:path*",
     "/pruefung/:path*",
     "/profil/:path*",
+    "/aufsaetze/:path*",
+    "/intensivkurse/:path*",
+    "/materialien/:path*",
+    "/arbeitszeiten/:path*",
     "/login",
     "/register",
+    "/((?!api|_next|.*\\..*).*)",
   ],
 }
