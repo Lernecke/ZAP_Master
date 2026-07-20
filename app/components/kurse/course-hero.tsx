@@ -1,10 +1,12 @@
-import type { CourseOffer } from '@/types/marketing'
+import type { CourseOffer, ExamSimulationOffer } from '@/types/marketing'
 import { PageIntro } from '@/app/components/layout/page-intro'
 import { StatusBadge } from '@/app/components/kurse/status-badge'
 import { formatOfferPrice } from '@/lib/pricing'
 
 interface CourseHeroProps {
-  offer: CourseOffer
+  // ExamSimulationOffer teilt alle hier gelesenen Felder mit CourseOffer (Schritt 11) --
+  // SelfStudyOffer bewusst ausgeschlossen (kein booking-Preis in derselben Form).
+  offer: CourseOffer | ExamSimulationOffer
 }
 
 function CourseHero({ offer }: CourseHeroProps) {

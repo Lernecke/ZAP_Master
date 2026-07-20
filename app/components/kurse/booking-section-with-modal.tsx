@@ -6,14 +6,15 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
-import type { CourseOffer, SessionRow } from '@/types/marketing'
+import type { CourseOffer, ExamSimulationOffer, SessionRow } from '@/types/marketing'
 import { AnmeldungModal } from '@/app/(public)/kurse/anmeldung-modal'
 import { BookingSection } from '@/app/components/kurse/booking-section'
 import { SUBJECT_TO_FACH } from '@/lib/kurse/mapper'
 import { audiences } from '@/app/data/marketing-site'
 
 interface BookingSectionWithModalProps {
-  offer: CourseOffer
+  // ExamSimulationOffer teilt booking/Preisfelder mit CourseOffer (Schritt 11).
+  offer: CourseOffer | ExamSimulationOffer
   sessions: SessionRow[]
 }
 

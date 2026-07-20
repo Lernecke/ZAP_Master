@@ -77,17 +77,18 @@ export function getSessionsForOfferId(offerId: string): SessionDefinition[] {
 }
 
 /**
- * Für generateStaticParams: nur CourseOffer-Slugs (halbjahreskurs/intensivkurs) -- die dafür
- * nötigen Detailseiten-Komponenten existieren seit Schritt 6. ExamSimulationOffer/SelfStudyOffer
- * (addOnOffers) brauchen eigene, noch nicht gebaute Templates (Schritt 11 bzw. Schritt 9) und sind
- * deshalb hier bewusst ausgeschlossen -- ihre Detailrouten lösen bis dahin nicht auf.
+ * Für generateStaticParams: CourseOffer- und ExamSimulationOffer-Slugs -- beide haben seit
+ * Schritt 6/11 eine Detailseiten-Vorlage. SelfStudyOffer (z. B. bmsSelbststudium, aktuell ohnehin
+ * nicht im Katalog) bleibt bewusst ausgeschlossen -- kein Renderer, siehe Schritt-9-Korrektur.
  */
 export function listCatalogedOfferParams(): { audience: AudienceId; angebot: string }[] {
   return (Object.entries(OFFER_CATALOG) as [AudienceId, OfferCatalogEntry][]).flatMap(
     ([audienceId, entry]) =>
-      entry.offers.map((offer) => ({
-        audience: audienceId,
-        angebot: offer.slug,
-      }))
+      [...entry.offers, ...entry.addOnOffers.filter((offer) => offer.kurstyp !== 'selbststudium')].map(
+        (offer) => ({
+          audience: audienceId,
+          angebot: offer.slug,
+        })
+      )
   )
 }

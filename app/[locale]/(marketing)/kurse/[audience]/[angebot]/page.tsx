@@ -5,18 +5,22 @@ import { connection } from 'next/server'
 import { setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { audiences } from '@/app/data/marketing-site'
-import type { CourseOffer, SessionDefinition } from '@/types/marketing'
+import type { CourseOffer, ExamSimulationOffer, SessionDefinition } from '@/types/marketing'
 import { Section } from '@/app/components/layout/section'
 import { CourseHero } from '@/app/components/kurse/course-hero'
 import { CourseFlow } from '@/app/components/kurse/course-flow'
 import { CourseContent } from '@/app/components/kurse/course-content'
 import { WhyUsGrid } from '@/app/components/kurse/why-us-grid'
 import { Testimonials } from '@/app/components/kurse/testimonials'
+import { ExamSimTimeline } from '@/app/components/kurse/exam-sim-timeline'
+import { FaqAccordion } from '@/app/components/marketing/faq-accordion'
 import { BookingSectionWithModal } from '@/app/components/kurse/booking-section-with-modal'
 import { getOfferBySlug, getSessionsForOffer } from '@/lib/kurse/catalog'
 import { getSessionAvailability } from '@/lib/kurse/availability'
 import { buildSessionRows } from '@/lib/kurse/session-row'
 import { listCatalogedOfferParams } from '@/lib/kurse/offer-catalog'
+
+type BookableOffer = CourseOffer | ExamSimulationOffer
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
@@ -24,14 +28,20 @@ export function generateStaticParams() {
   )
 }
 
-/** Nur CourseOffer (halbjahreskurs/intensivkurs) hat heute eine Detailseiten-Vorlage -- siehe
- *  Kommentar in lib/kurse/offer-catalog.ts. */
-async function resolveCourseOffer(audienceSlug: string, offerSlug: string): Promise<CourseOffer | null> {
+/** CourseOffer (halbjahreskurs/intensivkurs) und ExamSimulationOffer (pruefungssimulation) haben
+ *  eine Detailseiten-Vorlage; SelfStudyOffer noch nicht -- siehe Kommentar in
+ *  lib/kurse/offer-catalog.ts. */
+async function resolveBookableOffer(audienceSlug: string, offerSlug: string): Promise<BookableOffer | null> {
   const audience = audiences.find((a) => a.slug === audienceSlug)
   if (!audience) return null
 
   const offer = await getOfferBySlug(audience.id, offerSlug)
-  if (offer == null || (offer.kurstyp !== 'halbjahreskurs' && offer.kurstyp !== 'intensivkurs')) {
+  if (
+    offer == null ||
+    (offer.kurstyp !== 'halbjahreskurs' &&
+      offer.kurstyp !== 'intensivkurs' &&
+      offer.kurstyp !== 'pruefungssimulation')
+  ) {
     return null
   }
   return offer
@@ -43,7 +53,7 @@ export async function generateMetadata({
   params: Promise<{ audience: string; angebot: string }>
 }): Promise<Metadata> {
   const { audience, angebot } = await params
-  const offer = await resolveCourseOffer(audience, angebot)
+  const offer = await resolveBookableOffer(audience, angebot)
   if (!offer) return {}
   return { title: offer.displayName, description: offer.tagline }
 }
@@ -58,7 +68,7 @@ async function BookingSectionLoader({
   offer,
   sessions,
 }: {
-  offer: CourseOffer
+  offer: BookableOffer
   sessions: SessionDefinition[]
 }) {
   await connection()
@@ -75,10 +85,11 @@ export default async function CourseOfferDetailPage({
   const { locale, audience: audienceSlug, angebot } = await params
   setRequestLocale(locale)
 
-  const offer = await resolveCourseOffer(audienceSlug, angebot)
+  const offer = await resolveBookableOffer(audienceSlug, angebot)
   if (!offer) notFound()
 
   const sessions = await getSessionsForOffer(offer.id)
+  const isExamSimulation = offer.kurstyp === 'pruefungssimulation'
 
   return (
     <>
@@ -92,7 +103,19 @@ export default async function CourseOfferDetailPage({
         </Section>
       ) : null}
 
-      {offer.contentSections.length > 0 ? (
+      {isExamSimulation && offer.examTimeline.length > 0 ? (
+        <Section>
+          <ExamSimTimeline segments={offer.examTimeline} />
+        </Section>
+      ) : null}
+
+      {isExamSimulation && offer.faq.length > 0 ? (
+        <Section variant="muted">
+          <FaqAccordion items={offer.faq} />
+        </Section>
+      ) : null}
+
+      {!isExamSimulation && offer.contentSections.length > 0 ? (
         <Section>
           <CourseContent sections={offer.contentSections} />
         </Section>

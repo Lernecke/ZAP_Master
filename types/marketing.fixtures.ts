@@ -885,3 +885,88 @@ export const tipsPageModel = {
     },
   ],
 } as const satisfies TipsPageModel
+
+// ---------------------------------------------------------------------------------------------
+// 2.8 TargetedServicePageModel -- Layout_Pruefungssimulation_Landingpage.html
+// ---------------------------------------------------------------------------------------------
+
+export const pruefungssimulationPageModel = {
+  id: 'pruefungssimulation',
+  hero: {
+    eyebrow: 'Zusatzangebot · Ohne Kursverpflichtung',
+    title: 'Prüfungssimulation',
+    description:
+      'Eine echte Aufnahmeprüfung unter realen Bedingungen — inklusive schriftlicher Bewertung und individuellem Feedback. Auch ohne vorherige Kursteilnahme buchbar.',
+  },
+  eligibleAudiences: audiences.filter((audience) => audience.id === '6' || audience.id === '2-3-sek'),
+  flowSteps: [
+    {
+      id: 'anmeldung',
+      title: 'Anmeldung',
+      body: 'Buchung eines einzelnen Prüfungstermins — unabhängig davon, ob Ihr Kind sonst einen Kurs bei uns besucht.',
+    },
+    {
+      id: 'durchfuehrung',
+      title: 'Durchführung',
+      body: 'Die vollständige Aufnahmeprüfung nach aktuellem Prüfungsformat, unter denselben zeitlichen und organisatorischen Bedingungen wie am echten Prüfungstag.',
+    },
+    {
+      id: 'auswertung-feedback',
+      title: 'Auswertung & Feedback',
+      body: 'Schriftliche Korrektur aller Teile, eine Einschätzung des aktuellen Leistungsstands und konkrete Hinweise, woran Ihr Kind bis zur echten Prüfung noch arbeiten kann.',
+    },
+  ],
+  features: [
+    {
+      id: 'pruefungsnahe-bedingungen',
+      title: 'Prüfungsnahe Bedingungen',
+      description: 'Gleicher Zeitrahmen, gleiches Format und gleiche Aufgabentypen wie an der echten Aufnahmeprüfung.',
+    },
+    {
+      id: 'schriftliche-bewertung',
+      title: 'Schriftliche Bewertung',
+      description: 'Detaillierte Korrektur inkl. Aufsatz, mit Einschätzung des aktuellen Leistungsstands.',
+    },
+    {
+      id: 'offen-fuer-alle',
+      title: 'Offen für alle',
+      description: 'Keine vorherige Kursteilnahme nötig — buchbar für jedes Kind der passenden Klassenstufe.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'fuer-wen',
+      title: 'Für wen es ist',
+      groups: [
+        {
+          id: 'zwei-pruefungsjahre',
+          items: ['Die Prüfungssimulation richtet sich an zwei Prüfungsjahre.'],
+        },
+        {
+          id: 'ausschluss',
+          items: [
+            'Für alle anderen Klassenstufen (4./5. Klasse, 1. Sek) ist dieses Angebot noch nicht relevant — die jeweilige Aufnahmeprüfung findet erst nach 6. Klasse bzw. 2./3. Sek statt.',
+          ],
+        },
+      ],
+    },
+  ],
+  faq: [
+    {
+      id: 'vorheriger-kurs',
+      question: 'Muss mein Kind vorher einen Kurs bei Ihnen besucht haben?',
+      answer: 'Nein. Die Prüfungssimulation ist ein eigenständiges Angebot und unabhängig von einer Kursteilnahme buchbar.',
+    },
+    {
+      id: 'klassenstufen',
+      question: 'Für welche Klassenstufen gibt es die Prüfungssimulation?',
+      answer:
+        'Nur für 6. Klasse (Vorbereitung Langzeitgymnasium, ZAP1) und 2./3. Sek (Vorbereitung Kurzzeitgymnasium, ZAP2) — da nur in diesen beiden Jahren die jeweilige Aufnahmeprüfung stattfindet.',
+    },
+    {
+      id: 'auswertung-tempo',
+      question: 'Wie schnell erhalten wir die Auswertung?',
+      answer: 'Die schriftliche Bewertung inkl. Einschätzung des Leistungsstands erhalten Sie zeitnah nach der Simulation.',
+    },
+  ],
+} as const satisfies TargetedServicePageModel
