@@ -666,6 +666,8 @@ Objekte verifiziert: alle sechs Constraints jetzt `convalidated = true`. Damit i
 - Der verwaiste `learning_materials`-Bucket (siehe Storage-Erhebung oben).
 - Buchungshärtungen Phase B (Rate-Limiter, Concurrency-Test für den letzten Platz).
 
+(Beide Punkte am 20.07.2026 abgeschlossen — siehe die beiden folgenden Abschnitte weiter unten.)
+
 ### Buchungshärtungen Phase B, 20.07.2026
 
 Letzte zwei Punkte aus Abschnitt 12 umgesetzt. Migration
