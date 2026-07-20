@@ -734,4 +734,53 @@ Dateien bleiben lokal unter
 
 **Damit ist auch dieser letzte offene Punkt abgeschlossen.**
 
+### Schritt 1–4 des Ausführungsplans, ebenfalls 20.07.2026
+
+Bestandsaufnahme (Schnappschuss vom 18.07. bestätigt, keine Abweichung ausser dem seither selbst
+umgesetzten `idempotency_key`), `CLAUDE.md` erzeugt, next-intl-Grundgerüst für
+`app/[locale]/(marketing)` (Deutsch-only, `/` bedient weiterhin die bestehende Startseite bis
+Schritt 7), sowie `components.json` + fehlende shadcn-Primitives + fünf Layout-Primitives unter
+`app/components/layout`. Details siehe Commits `f7134c2`, `3cd477a`, `429e41f`. Nebenbei behoben:
+der abweichende, stornierte Anmeldungen mitzählende Belegungsmapper auf `/intensivkurse`
+(Commit `5759eb6`) — nutzt jetzt dieselbe View wie `/kurse`.
+
+### Schritt 5, Teil 1 — Domain-Typsystem + Fixtures, ebenfalls 20.07.2026
+
+`types/marketing.ts` (Abschnitt 2.1–2.9, vollständig transkribiert) und
+`types/marketing.fixtures.ts` (reale Inhalte aus den HTML-Referenzen, keine erfundene Copy) —
+reines TypeScript, keine DB-Änderung. Commit `573c3cf`.
+
+### Schritt 5, Teil 2 — Materialzugriff-Schema (Abschnitt 2.11), ebenfalls 20.07.2026
+
+Additive Migration `20260720140000_material_access_schema.sql`: `material_areas` (4 Bereiche),
+`learning_materials.area_id` (nullable FK, Backfill nur für eindeutige Zeilen), `self_study_enrollments`,
+`material_access_grants`. Schema-/RLS-Ebene bewusst allein — private Storage-Auslieferung,
+`/materialien/[area]`-Routen und der eigentliche Grant-Ausstellungs-Flow bleiben offen.
+
+**Zwei echte, unabhängige Bugs bei der Inventur gefunden und mitbehoben:**
+- `learning_materials` hatte eine Policy mit `qual = true` für `anon`/`authenticated` — erlaubte
+  bislang jede Zeile zu lesen, unabhängig von `is_public`, und machte die eigentlich korrekte
+  `is_public`-Policy wirkungslos (RLS-Policies sind ODER-verknüpft). Bislang folgenlos, da beide
+  Bestandszeilen ohnehin `is_public = true` sind. Ersetzt durch eine Policy, die zusätzlich den
+  neuen Grant-Mechanismus berücksichtigt.
+- Die zwei neuen Tabellen hätten ohne explizites `REVOKE` die Supabase-Standard-CRUD-Rechte für
+  `anon`/`authenticated` behalten (derselbe Fehlertyp wie beim Rate-Limiter tags zuvor) — vom
+  eigenen pgTAP-Test sofort gefangen, korrigiert.
+
+**Verifiziert, lokal:** 70/70 pgTAP-Tests grün, Lint fehlerfrei, `types/database.ts` regeneriert.
+**Verifiziert, live (rein lesend über den Supabase-MCP-Connector, kein Passwort nötig):**
+`material_areas` enthält exakt die vier erwarteten Keys; `learning_materials` weiterhin exakt die
+zwei Bestandszeilen, id=9 jetzt `area_id=1` (langzeitgymi), id=10 weiterhin `area_id=NULL`
+(needs_review, wie geplant); die fehlerhafte `qual=true`-Policy ist weg, ersetzt durch die neue,
+korrekt gescopte Policy; keine INSERT/UPDATE/DELETE-Grants für `anon`/`authenticated` auf den drei
+neuen Tabellen. Push erfolgte durch den Nutzer selbst im eigenen Fenster (Passwort nie an die
+Konversation übergeben), dieselbe bekannte, nicht-fatale pg-delta-Warnung wie bei allen bisherigen
+Pushes. Commit `debb825`.
+
+**Noch offen für künftige Runden:** Editions-/Sessions-Schema (Abschnitt 2.12), private
+Storage-Auslieferung + `/materialien/[area]`-Routen + Grant-Ausstellungs-Flow (Abschnitt 2.11,
+App-Code-Teil), allgemeine Bereinigung doppelter Schreibrechte-Policies auf `learning_materials`
+(gefunden, nicht behoben — Schreibpfad-Hygiene, unabhängig vom hier behobenen Lese-Leck), danach
+Schritt 6 ff. (Komponenten-/Seitenbau).
+
 **Ende von Revision 2 — auf Abschluss der offenen Nachweise und Implementierungsfreigabe warten.**
