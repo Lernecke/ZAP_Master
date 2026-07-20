@@ -24,6 +24,11 @@ import {
   vierKlasseHalbjahreskursSessions,
   vierKlasseLerncampSportferien,
   vierKlasseLerncampSessions,
+  zweiDreiSekAudiencePageModel,
+  zweiDreiSekHalbjahreskurs,
+  zweiDreiSekHalbjahreskursSessions,
+  zweiDreiSekIntensivkurs,
+  zweiDreiSekIntensivkursSessions,
 } from '@/types/marketing.fixtures'
 import type {
   AudienceHeroContent,
@@ -62,6 +67,13 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [sechsKlasseHalbjahreskurs, sechsKlasseIntensivkurs],
     addOnOffers: [sechsKlassePruefungssimulation],
   },
+  // '2-3-sek'.addOnOffers bewusst leer: Layout_2_Sek_Pruefungssimulation.html nutzt laut
+  // Abschnitt 4 ein fremdes Design-System und braucht eine eigene, separate Extraktionsrunde
+  // (analog zur 6.-Klasse-Trennung in Schritt 11) -- kein Content dafür in dieser Runde erfunden.
+  '2-3-sek': {
+    offers: [zweiDreiSekHalbjahreskurs, zweiDreiSekIntensivkurs],
+    addOnOffers: [],
+  },
   // bms.addOnOffers bewusst leer: bmsSelbststudium (types/marketing.fixtures.ts) hat noch keinen
   // Renderer in [angebot]/page.tsx (das rendert nur CourseOffer/halbjahreskurs+intensivkurs). Die
   // drei Selbststudium-Seiten (BMS + 6. Klasse + 2./3. Sek) gehören laut Ausführungsplan als EINE
@@ -78,6 +90,7 @@ const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> 
   '5': fuenfKlasseAudiencePageModel.hero,
   '6': sechsKlasseAudiencePageModel.hero,
   '1-sek': einsSekAudiencePageModel.hero,
+  '2-3-sek': zweiDreiSekAudiencePageModel.hero,
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
@@ -86,6 +99,8 @@ const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [fuenfKlasseHalbjahreskurs.id]: fuenfKlasseHalbjahreskursSessions,
   [einsSekVorkurs.id]: einsSekVorkursSessions,
   [einsSekLerncampSportferien.id]: einsSekLerncampSessions,
+  [zweiDreiSekHalbjahreskurs.id]: zweiDreiSekHalbjahreskursSessions,
+  [zweiDreiSekIntensivkurs.id]: zweiDreiSekIntensivkursSessions,
   [sechsKlasseIntensivkurs.id]: sechsKlasseIntensivkursSessions,
 }
 

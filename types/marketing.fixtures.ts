@@ -57,6 +57,7 @@ const vierKlasse: Audience = audiences[0]
 const fuenfKlasse: Audience = audiences[1]
 const sechsKlasse: Audience = audiences[2]
 const einsSek: Audience = audiences[3]
+const zweiDreiSek: Audience = audiences[4]
 const bms: Audience = audiences[5]
 
 // ---------------------------------------------------------------------------------------------
@@ -2074,6 +2075,504 @@ export const einsSekAudiencePageModel = {
       'Zwei Wege zur Vorbereitung auf die Aufnahmeprüfung ins Kurzzeitgymnasium — der ganzheitliche Halbjahreskurs oder ein kompaktes Ferien-Lerncamp.',
   },
   offers: [einsSekVorkurs, einsSekLerncampSportferien],
+  addOnOffers: [],
+  existingCourses: [],
+} as const satisfies AudiencePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Schritt 10, Runde 4/6 -- 2./3. Sek: Layout_2_Sek__Hauptseite.html +
+// Layout_2_Sek_Halbjahreskurs_Unterseite.html + Layout_2_Sek_Intensivkurs_Unterseite.html.
+// Prüfungssimulation/Selbststudium-Zusatzangebote dieser Zielgruppe bewusst NICHT in dieser Runde
+// -- Layout_2_Sek_Pruefungssimulation.html nutzt laut Abschnitt 4 ein fremdes Design-System und
+// braucht eine eigene, separate Extraktionsrunde (analog zur bereits erfolgten 6.-Klasse-Trennung
+// in Schritt 11).
+//
+// Preis-Notiz-Bug (Abschnitt 2.3, hier verifiziert): Halbjahreskurs zeigt auf Haupt- UND
+// Unterseite identisch "CHF 3'490" mit Notiz "Frühbucherrabatt bis Juli · regulär CHF 3'490" --
+// beide Zahlen sind gleich, der Rabatt beträgt also 0. Anders als beim 5.-Klasse-Lerncamp
+// (zwei widersprüchliche Zahlen) gibt es hier nur EINE Zahl im Quellmaterial; die Notiz behauptet
+// nur fälschlich einen Rabatt, der nicht existiert. earlyBirdPriceRappen/-Deadline bleiben deshalb
+// unset (kein zweiter, tieferer Preis wird erfunden), nur der reale, einzige Preis wird geführt.
+//
+// AblaufPhased (Halbjahreskurs): alle 6 Terminzeilen teilen sich denselben 3-Phasen-/21-Termine-
+// Ablauf (kein pro-Kurs-Unterschied in der Quelle) -- als eine gemeinsame Konstante definiert.
+// ---------------------------------------------------------------------------------------------
+
+const zweiDreiSekHalbjahreskursAblauf = {
+  kind: 'phased',
+  phases: [
+    {
+      id: 'phase-1-basis',
+      label: 'Phase 1 — Basis',
+      note: 'Standortbestimmung vor dem ersten Kurstag',
+      dates: [
+        { id: 'p1-1', date: '29.08.2026' },
+        { id: 'p1-2', date: '19.09.2026' },
+        { id: 'p1-3', date: '05.09.2026' },
+        { id: 'p1-4', date: '26.09.2026' },
+        { id: 'p1-5', date: '12.09.2026' },
+        { id: 'p1-6', date: '03.10.2026' },
+      ],
+    },
+    {
+      id: 'phase-2-aufbau',
+      label: 'Phase 2 — Aufbau',
+      dates: [
+        { id: 'p2-1', date: '24.10.2026' },
+        { id: 'p2-2', date: '21.11.2026' },
+        { id: 'p2-3', date: '31.10.2026' },
+        { id: 'p2-4', date: '28.11.2026' },
+        { id: 'p2-5', date: '07.11.2026' },
+        { id: 'p2-6', date: '05.12.2026' },
+        { id: 'p2-7', date: '14.11.2026' },
+        { id: 'p2-8', date: '12.12.2026' },
+      ],
+    },
+    {
+      id: 'phase-3-repetition',
+      label: 'Phase 3 — Repetition',
+      dates: [
+        { id: 'p3-1', date: '09.01.2027 (Probeprüfung)', highlight: true },
+        { id: 'p3-2', date: '30.01.2027' },
+        { id: 'p3-3', date: '16.01.2027' },
+        { id: 'p3-4', date: '06.02.2027' },
+        { id: 'p3-5', date: '23.01.2027' },
+        { id: 'p3-6', date: '13.02.2027' },
+        { id: 'p3-7', date: '06.03.2027' },
+      ],
+    },
+  ],
+} satisfies { kind: 'phased'; phases: unknown[] }
+
+export const zweiDreiSekHalbjahreskursSessions = [
+  { kurs: 'Kurs A', id: 5001, dateLabel: 'Samstag, 11:00–12:30', timeLabel: '11:00–12:30', standort: 'Zürich HB' as const },
+  { kurs: 'Kurs B', id: 5002, dateLabel: 'Samstag, 13:15–14:45', timeLabel: '13:15–14:45', standort: 'Zürich HB' as const },
+  { kurs: 'Kurs C', id: 5003, dateLabel: 'Samstag, 15:00–16:30', timeLabel: '15:00–16:30', standort: 'Zürich HB' as const },
+  { kurs: 'Kurs D', id: 5004, dateLabel: 'Samstag, 11:00–12:30', timeLabel: '11:00–12:30', standort: 'Winterthur' as const },
+  { kurs: 'Kurs E', id: 5005, dateLabel: 'Samstag, 13:15–14:45', timeLabel: '13:15–14:45', standort: 'Winterthur' as const },
+  { kurs: 'Kurs F', id: 5006, dateLabel: 'Samstag, 15:00–16:30', timeLabel: '15:00–16:30', standort: 'Winterthur' as const },
+].map((row) => ({
+  id: row.id,
+  offerId: 'offer-2-3sek-halbjahreskurs',
+  capacity: 10,
+  source: { kind: 'intensivwoche_kurse' as const, kursId: row.id },
+  kurs: row.kurs,
+  dateLabel: row.dateLabel,
+  timeLabel: row.timeLabel,
+  standort: row.standort,
+  deliveryModes: ['onsite' as const],
+  ablauf: zweiDreiSekHalbjahreskursAblauf,
+})) satisfies SessionDefinition[]
+
+export const zweiDreiSekHalbjahreskurs = {
+  id: 'offer-2-3sek-halbjahreskurs',
+  audienceId: '2-3-sek',
+  slug: 'halbjahreskurs',
+  href: '/kurse/2-3-sek/halbjahreskurs',
+  displayName: 'Halbjahreskurs',
+  tagline: 'Breite Vorbereitung über das ganze Semester',
+  lede: 'Umfassende Vorbereitung auf die Aufnahmeprüfung ins Kurzzeitgymnasium: fachliches Training in Deutsch und Mathematik, dazu gezielte Unterstützung beim Umgang mit Prüfungsdruck — begleitet über das ganze Semester.',
+  description:
+    'Optimale und nachhaltige Vorbereitung auf die Aufnahmeprüfung ins Kurzzeitgymnasium — gezielte, individuelle Förderung in Mathematik und Deutsch.',
+  recommended: true,
+  laufzeit: 'Sept. 2026 – März 2027',
+  dateSummary: ['Sept. 2026 – März 2027'],
+  features: [
+    'Mathematik & Deutsch inkl. Aufsatztraining',
+    'Samstag oder Mittwochnachmittag',
+    'Standortbestimmung & Prüfungssimulation inbegriffen',
+    'Betreuung auch ausserhalb der Kurszeiten',
+  ],
+  // Die Frühbucher-Notiz auf beiden Quellseiten nennt denselben Betrag (CHF 3'490) als "regulär"
+  // -- kein realer Rabatt, deshalb bleibt earlyBirdPriceRappen/-Deadline unset (siehe Kommentar
+  // oben).
+  regularPriceRappen: 349000,
+  currency: 'CHF',
+  overviewBullets: [
+    'Sept. 2026 – März 2027',
+    'Kleingruppen',
+    'Standortbestimmung & Prüfungssimulation inbegriffen',
+    'Betreuung auch ausserhalb der Kurszeiten',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'pruefungssimulation',
+      title: 'Eine echte Prüfungssimulation',
+      description:
+        'Reale Prüfungsbedingungen, korrigiert und Schritt für Schritt besprochen — einmal reicht, wenn sie gut gemacht ist.',
+    },
+    {
+      id: 'strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über den Umgang mit Prüfungsangst und Blackouts bis zu Konzentrationsübungen und der Herangehensweise an typische Prüfungsaufgaben.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  testimonials: [
+    {
+      id: 'testi-1',
+      quote: 'Über das ganze Semester hinweg habe ich richtig gemerkt, wie ich in Mathe sicherer wurde.',
+      author: 'Teilnehmerin, Halbjahreskurs 2./3. Sek',
+    },
+    {
+      id: 'testi-2',
+      quote: 'Die Prüfungssimulation hat mir die Nervosität genommen — ich wusste danach, was mich erwartet.',
+      author: 'Teilnehmer, Halbjahreskurs 2./3. Sek',
+    },
+    {
+      id: 'testi-3',
+      quote: 'Auch bei Prüfungsangst habe ich konkrete Tipps bekommen, die wirklich geholfen haben.',
+      author: 'Teilnehmerin, Halbjahreskurs 2./3. Sek',
+    },
+  ],
+  kurstyp: 'halbjahreskurs',
+  flowSteps: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung',
+      body: 'Vor dem ersten Kurstag stellen wir fest, wo Ihr Kind aktuell steht, um die Kurszeit von Beginn an gezielt zu nutzen.',
+    },
+    {
+      id: 'semestertraining',
+      title: 'Semestertraining',
+      body: 'Von September bis März wird wöchentlich an Deutsch, Mathematik und den mentalen Prüfungskompetenzen gearbeitet.',
+    },
+    {
+      id: 'pruefungssimulation-feedback',
+      title: 'Prüfungssimulation & Feedback',
+      body: 'Eine echte Prüfungssimulation zeigt den aktuellen Stand — inklusive individueller Besprechung und Empfehlungen für die letzten Wochen vor der Prüfung.',
+    },
+  ],
+  contentSections: [
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      lede: 'Aufbauend auf der Standortbestimmung zu Kursbeginn: schrittweise Anleitung zum sicheren Lösen der Aufgabentypen, die an der Prüfung vorkommen.',
+      groups: [
+        {
+          id: 'zahl-variable',
+          subhead: 'Zahl und Variable — Arithmetik und Algebra',
+          items: [
+            'Fachbegriffe und Symbole korrekt anwenden',
+            'Rechenregeln sicher anwenden (Punkt-vor-Strich, Klammerregeln) und Grundoperationen ausführen',
+            'Terme und Gleichungen ableiten, umformen und berechnen',
+          ],
+        },
+        {
+          id: 'groessen-funktionen',
+          subhead: 'Grössen, Funktionen, Daten und Zufall — Sachrechnen',
+          items: [
+            'Absolute und relative Häufigkeit sowie Wahrscheinlichkeit verstehen und anwenden',
+            'Sachaufgaben zu Längen, Flächen, Volumen, Gewichten und Zeiten lösen',
+            'Berechnungen mit Prozenten und Anteilen',
+            'Proportionale und umgekehrt proportionale Zusammenhänge',
+          ],
+        },
+        {
+          id: 'form-raum',
+          subhead: 'Form und Raum — Geometrie',
+          items: [
+            'Symmetrie von Figuren',
+            'Umfang und Fläche spezieller Dreiecke und Vierecke',
+            'Winkel berechnen, Koordinatensystem',
+            'Satz von Pythagoras und Satz von Thales anwenden',
+            'Konstruktionsaufgaben',
+            'Geometrische Körper — Würfel, Quader, Pyramide, Prismen',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'deutsch',
+      title: 'Deutsch',
+      groups: [
+        {
+          id: 'aufsatz',
+          subhead: 'Aufsatz',
+          items: [
+            'Aufbauend auf der Standortbestimmung: Grundlagen des Aufsatzschreibens werden vermittelt und intensiv geübt — inkl. Korrekturen, Feedback und individuellen Tipps.',
+            'Prüfungsrelevante Textsorten — Erzählung, Beschreibung, Bericht, Argumentation/Stellungnahme',
+            'Aktueller Schreibprozess: Ideen finden, planen, formulieren, überarbeiten',
+            'Inhalte reflektieren und in einen grösseren Zusammenhang stellen',
+            'Passender Einsatz von Redewendungen und Vergleichen',
+            'Orthografisch und grammatikalisch korrekte Schlussfassung',
+          ],
+        },
+        {
+          id: 'textverstaendnis',
+          subhead: 'Textverständnis',
+          items: [
+            'Systematischer Aufbau anhand literarischer Texte und Sachtexte, analog zur Prüfung.',
+            'Komplexe Texte verstehen, Fragen zu Inhalt & sprachlicher Form beantworten',
+            'Strategien für unterschiedliche Textarten',
+            'Wortschatz und Ausdruck in eigenen Worten wiedergeben',
+            'Textinhalt kritisch reflektieren und interpretieren',
+          ],
+        },
+        {
+          id: 'sprachbetrachtung',
+          subhead: 'Sprachbetrachtung & Grammatik',
+          items: [
+            'Verfahren und Fachbegriffe, um Sprachstrukturen gezielt zu analysieren.',
+            'Sprachstrukturen in Wörtern und Sätzen untersuchen und erklären',
+            'Differenzierten Wortschatz nutzen',
+            'Wort- und Satzlehre: Fachbegriffe kennen, bestimmen und anwenden',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'mentale-vorbereitung',
+      title: 'Mentale Vorbereitung',
+      lede: 'Neben dem Fachwissen fördern wir gezielt die Lernkompetenzen Ihres Kindes — integriert im Kursprogramm, ergänzt durch ein freiwilliges Online-Zusatzangebot, das bereits in den Kurskosten inbegriffen ist. Die genauen Kursinhalte können sich noch anpassen — die Schwerpunkte richten sich nach dem Stand der jeweiligen Kursgruppe.',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Selbstorganisation',
+            'Lernmethoden und Lernroutine',
+            'Konzentration',
+            'Motivation',
+            'Umgang mit Stress und Druck',
+            'Weitere mentale Tipps für die Prüfung',
+          ],
+        },
+      ],
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    note: 'Alle Kurse folgen demselben Terminplan (3 Phasen, Aug. 2026 – März 2027) — Details dazu unter "Ablauf".',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const zweiDreiSekHalbjahreskursDetailPageModel = {
+  audience: zweiDreiSek,
+  offer: zweiDreiSekHalbjahreskurs,
+  sessions: zweiDreiSekHalbjahreskursSessions,
+} as const satisfies CourseDetailPageModel
+
+// Intensivkurs: Wochenfilter -- die 4 realen Kalenderwochen aus der Quelle (data-week-Werte),
+// "all" wird bereits zentral von WeekFilter/ALL_WEEKS_ID verwaltet und hier nicht dupliziert.
+const zweiDreiSekIntensivkursWeekOptions = [
+  { id: '0812', label: '8.–12. Februar' },
+  { id: '1519', label: '15.–19. Februar' },
+  { id: '2226', label: '22.–26. Februar' },
+  { id: '0105', label: '01.–05. März' },
+] satisfies { id: string; label: string }[]
+
+function zweiDreiSekTagesplan(monat: string, tage: { tag: string; datum: string }[]) {
+  return {
+    kind: 'simple' as const,
+    items: tage.map(({ tag, datum }) => ({
+      id: `${tag}-${datum}`.toLowerCase(),
+      label: `${tag}, ${datum}. ${monat}.`,
+      value: tag === 'Mi' ? '13:05–18:00 (Prüfungssimulation)' : '13:15–16:30',
+      highlight: tag === 'Mi',
+    })),
+  }
+}
+
+const zweiDreiSekWochentage = [
+  { tag: 'Mo', datum: '' },
+  { tag: 'Di', datum: '' },
+  { tag: 'Mi', datum: '' },
+  { tag: 'Do', datum: '' },
+  { tag: 'Fr', datum: '' },
+]
+
+export const zweiDreiSekIntensivkursSessions = [
+  {
+    id: 5101,
+    kurs: 'Kurs B',
+    weekId: '1519',
+    dateLabel: '15.–19. Feb.',
+    standort: 'Zürich HB' as const,
+    ablauf: zweiDreiSekTagesplan(
+      'Feb',
+      zweiDreiSekWochentage.map((d, i) => ({ tag: d.tag, datum: String(15 + i).padStart(2, '0') }))
+    ),
+  },
+  {
+    id: 5102,
+    kurs: 'Kurs C',
+    weekId: '1519',
+    dateLabel: '15.–19. Feb.',
+    standort: 'Winterthur' as const,
+    ablauf: zweiDreiSekTagesplan(
+      'Feb',
+      zweiDreiSekWochentage.map((d, i) => ({ tag: d.tag, datum: String(15 + i).padStart(2, '0') }))
+    ),
+  },
+  {
+    id: 5103,
+    kurs: 'Kurs D',
+    weekId: '2226',
+    dateLabel: '22.–26. Feb.',
+    standort: 'Winterthur' as const,
+    ablauf: zweiDreiSekTagesplan(
+      'Feb',
+      zweiDreiSekWochentage.map((d, i) => ({ tag: d.tag, datum: String(22 + i).padStart(2, '0') }))
+    ),
+  },
+  {
+    id: 5104,
+    kurs: 'Kurs A',
+    weekId: '0812',
+    dateLabel: '08.–12. Feb.',
+    standort: 'Winterthur' as const,
+    ablauf: zweiDreiSekTagesplan(
+      'Feb',
+      zweiDreiSekWochentage.map((d, i) => ({ tag: d.tag, datum: String(8 + i).padStart(2, '0') }))
+    ),
+  },
+  {
+    id: 5105,
+    kurs: 'Kurs F',
+    weekId: '0105',
+    dateLabel: '01.–05. März',
+    standort: 'Zürich HB' as const,
+    ablauf: zweiDreiSekTagesplan(
+      'März',
+      zweiDreiSekWochentage.map((d, i) => ({ tag: d.tag, datum: String(1 + i).padStart(2, '0') }))
+    ),
+  },
+].map((row) => ({
+  id: row.id,
+  offerId: 'offer-2-3sek-intensivkurs-sportferien',
+  capacity: 10,
+  source: { kind: 'intensivwoche_kurse' as const, kursId: row.id },
+  kurs: row.kurs,
+  dateLabel: row.dateLabel,
+  timeLabel: '13:15–16:30',
+  standort: row.standort,
+  deliveryModes: ['onsite' as const],
+  weekId: row.weekId,
+  ablauf: row.ablauf,
+})) satisfies SessionDefinition[]
+
+export const zweiDreiSekIntensivkurs = {
+  id: 'offer-2-3sek-intensivkurs-sportferien',
+  audienceId: '2-3-sek',
+  slug: 'intensivkurs-sportferien',
+  href: '/kurse/2-3-sek/intensivkurs-sportferien',
+  displayName: 'Intensivkurs-Sportferien',
+  tagline: 'Intensives Training in den Sportferien',
+  lede: 'Möchte sich Ihr Kind explizit auf die Prüfungsaufgaben und Prüfungssituation an der Gymiprüfung vorbereiten? Im Kurs werden typische Aufgaben erklärt und Prüfungen simuliert.',
+  description:
+    'Ideal für Kinder, die sich intensiv auf die Prüfungsaufgaben und die Prüfungssituation vorbereiten wollen – inklusive praktischer Tipps & Tricks für die Gymiprüfung.',
+  laufzeit: 'Feb. – März 2027',
+  dateSummary: ['Feb. – März 2027'],
+  features: [
+    'Prüfungsaufgaben & Prüfungssituation trainieren',
+    '5 aufeinanderfolgende Kurstage in einer Schulferienwoche',
+    'Kurszeit: 13.15 – 16.30 Uhr',
+    'Tipps & Tricks zur Prüfung',
+  ],
+  regularPriceRappen: 119500,
+  currency: 'CHF',
+  overviewBullets: [
+    '5 Kurstage in den Sportferien',
+    'Kurszeit: 13:15 – 16:30 Uhr',
+    'Kleingruppen: 3 bis max. 10 Kinder',
+    'Zürich HB · Winterthur',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'pruefungssimulation',
+      title: 'Eine echte Prüfungssimulation',
+      description:
+        'Reale Prüfungsbedingungen, korrigiert und Schritt für Schritt besprochen — einmal reicht, wenn sie gut gemacht ist.',
+    },
+    {
+      id: 'strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über den Umgang mit Prüfungsangst und Blackouts bis zu Konzentrationsübungen und der Herangehensweise an typische Prüfungsaufgaben.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  testimonials: [
+    {
+      id: 'testi-1',
+      quote: 'Die Prüfungssimulation hat mir die Nervosität genommen — ich wusste danach, was mich erwartet.',
+      author: 'Teilnehmer, Intensivkurs Sportferien',
+    },
+    {
+      id: 'testi-2',
+      quote: 'In fünf Tagen habe ich mehr gelernt als ich erwartet hätte, ohne dass es sich wie Ferien-Stress anfühlte.',
+      author: 'Teilnehmerin, Intensivkurs Sportferien',
+    },
+    {
+      id: 'testi-3',
+      quote: 'Auch nach dem Kurs konnte ich noch Fragen stellen, wenn mir etwas unklar war.',
+      author: 'Teilnehmer, Intensivkurs Sportferien',
+    },
+  ],
+  kurstyp: 'intensivkurs',
+  weekOptions: zweiDreiSekIntensivkursWeekOptions,
+  flowSteps: [
+    {
+      id: 'wissen-aneignen',
+      title: 'Wissen aneignen',
+      body: 'Prüfungsrelevante Grundlagen in Deutsch und Mathematik im Schnelldurchgang repetieren, typische Aufgabentypen kennenlernen.',
+    },
+    {
+      id: 'wissen-umsetzen',
+      title: 'Wissen umsetzen',
+      body: 'Aufgaben im Unterricht und im Selbststudium trainieren, echte Prüfungssimulation durchführen.',
+    },
+    {
+      id: 'wissen-pruefen',
+      title: 'Wissen prüfen',
+      body: 'Individuelles Feedback zur Simulation, gemeinsame Besprechung — Ihr Kind weiss danach genau, wo noch Übungsbedarf besteht.',
+    },
+  ],
+  contentSections: [],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const zweiDreiSekIntensivkursDetailPageModel = {
+  audience: zweiDreiSek,
+  offer: zweiDreiSekIntensivkurs,
+  sessions: zweiDreiSekIntensivkursSessions,
+} as const satisfies CourseDetailPageModel
+
+export const zweiDreiSekAudiencePageModel = {
+  audience: zweiDreiSek,
+  hero: {
+    title: 'Vorbereitungskurse für Gymiprüfung 2027',
+    description:
+      'Zwei Wege zur Vorbereitung auf die Aufnahmeprüfung ins Kurzzeitgymnasium — ganzjährige Begleitung oder intensives Training in den Sportferien.',
+  },
+  offers: [zweiDreiSekHalbjahreskurs, zweiDreiSekIntensivkurs],
   addOnOffers: [],
   existingCourses: [],
 } as const satisfies AudiencePageModel
