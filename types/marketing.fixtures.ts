@@ -3235,3 +3235,138 @@ export const maturaAudiencePageModel = {
   addOnOffers: [],
   existingCourses: [],
 } as const satisfies AudiencePageModel
+
+// ---------------------------------------------------------------------------------------------
+// Selbststudium (BMS + 6. Klasse + 2./3. Sek) -- Layout_6_Klasse_Selbststudium_Unterseite.html +
+// Layout_2_Sek_Selbststudium_Unterseite.html. bmsSelbststudium (oben, Schritt 5) ist inhaltlich
+// unabhängig extrahiert -- diese beiden Seiten sind laut wörtlicher Prüfung bis auf
+// Zielgruppen-Label/Backlink identisch. Die BMS-Fixture-Phrase "2×30 Min. persönliches
+// Zeitguthaben für Rückfragen" kommt in KEINER der beiden Quelldateien vor -- bewusst nicht
+// nachträglich ergänzt (Quelltreue, kein Uniform-Machen über verschiedene reale Seiten hinweg).
+// ---------------------------------------------------------------------------------------------
+
+export const sechsKlasseSelbststudium = {
+  id: 'offer-6klasse-selbststudium',
+  audienceId: '6',
+  slug: 'selbststudium',
+  href: '/kurse/6-klasse/selbststudium',
+  displayName: 'Selbststudium',
+  tagline: 'Selbststudium · 6. Klasse',
+  lede: 'Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.',
+  description:
+    'Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.',
+  laufzeit: 'Zugang bis zur Prüfung im März 2027',
+  dateSummary: ['Einmalig · Zugang bis März 2027'],
+  features: [
+    'Übungsaufgaben zu allen Prüfungsbereichen — von Sprachbetrachtung bis Textverständnis und Mathematik',
+    'Bisherige Aufnahmeprüfungen im Original, jeweils mit vollständigen Lösungen zum Selbstvergleich',
+    'Bis zu 3 eigene Aufsätze einreichen und eine persönliche, schriftliche Rückmeldung erhalten',
+  ],
+  regularPriceRappen: 19000,
+  currency: 'CHF',
+  priceUnit: 'Einmalig · Zugang bis zur Prüfung im März 2027',
+  overviewBullets: [
+    'Übungsaufgaben zu allen Prüfungsbereichen',
+    'Alte Prüfungen im Original mit vollständigen Lösungen',
+    'Persönliches Aufsatz-Feedback (bis zu 3 Aufsätze)',
+  ],
+  whyUs: [
+    {
+      id: 'uebungen',
+      title: 'Übungsaufgaben',
+      description: 'Aufgaben zu allen Prüfungsbereichen — von Sprachbetrachtung bis Textverständnis und Mathematik.',
+    },
+    {
+      id: 'pruefungen',
+      title: 'Alte Prüfungen & Lösungen',
+      description: 'Bisherige Aufnahmeprüfungen im Original, jeweils mit vollständigen Lösungen zum Selbstvergleich.',
+    },
+    {
+      id: 'feedback',
+      title: 'Aufsatz-Feedback',
+      description: 'Bis zu 3 eigene Aufsätze einreichen und eine persönliche, schriftliche Rückmeldung erhalten.',
+    },
+  ],
+  kurstyp: 'selbststudium',
+  materialAreaId: 'langzeitgymi',
+  access: {
+    title: 'Zugriff verfällt nach der Gymiprüfung',
+    description:
+      'Der Zugang zur Materialplattform ist bis zur Aufnahmeprüfung im März 2027 gültig und wird danach automatisch deaktiviert. Eine Verlängerung ist nicht vorgesehen.',
+  },
+} as const satisfies SelfStudyOffer
+
+export const sechsKlasseSelbststudiumPageModel = {
+  audience: sechsKlasse,
+  hero: {
+    eyebrow: 'Selbststudium · 6. Klasse',
+    title: 'Eigenständig üben, gezielt vorbereiten',
+    description:
+      'Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.',
+  },
+  offer: sechsKlasseSelbststudium,
+  accessAction: { kind: 'disabled', label: 'Zugang erhalten', disabledReason: 'Buchung folgt in einer späteren Ausbaustufe' },
+} as const satisfies SelfStudyPageModel
+
+export const zweiDreiSekSelbststudium = {
+  id: 'offer-2-3sek-selbststudium',
+  audienceId: '2-3-sek',
+  slug: 'selbststudium',
+  href: '/kurse/2-3-sek/selbststudium',
+  displayName: 'Selbststudium',
+  tagline: 'Selbststudium · 2./3. Sek',
+  lede: 'Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.',
+  description:
+    'Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.',
+  laufzeit: 'Zugang bis zur Prüfung im März 2027',
+  dateSummary: ['Einmalig · Zugang bis März 2027'],
+  features: [
+    'Übungsaufgaben zu allen Prüfungsbereichen — von Sprachbetrachtung bis Textverständnis und Mathematik',
+    'Bisherige Aufnahmeprüfungen im Original, jeweils mit vollständigen Lösungen zum Selbstvergleich',
+    'Bis zu 3 eigene Aufsätze einreichen und eine persönliche, schriftliche Rückmeldung erhalten',
+  ],
+  regularPriceRappen: 19000,
+  currency: 'CHF',
+  priceUnit: 'Einmalig · Zugang bis zur Prüfung im März 2027',
+  overviewBullets: [
+    'Übungsaufgaben zu allen Prüfungsbereichen',
+    'Alte Prüfungen im Original mit vollständigen Lösungen',
+    'Persönliches Aufsatz-Feedback (bis zu 3 Aufsätze)',
+  ],
+  whyUs: [
+    {
+      id: 'uebungen',
+      title: 'Übungsaufgaben',
+      description: 'Aufgaben zu allen Prüfungsbereichen — von Sprachbetrachtung bis Textverständnis und Mathematik.',
+    },
+    {
+      id: 'pruefungen',
+      title: 'Alte Prüfungen & Lösungen',
+      description: 'Bisherige Aufnahmeprüfungen im Original, jeweils mit vollständigen Lösungen zum Selbstvergleich.',
+    },
+    {
+      id: 'feedback',
+      title: 'Aufsatz-Feedback',
+      description: 'Bis zu 3 eigene Aufsätze einreichen und eine persönliche, schriftliche Rückmeldung erhalten.',
+    },
+  ],
+  kurstyp: 'selbststudium',
+  materialAreaId: 'kurzgymi',
+  access: {
+    title: 'Zugriff verfällt nach der Gymiprüfung',
+    description:
+      'Der Zugang zur Materialplattform ist bis zur Aufnahmeprüfung im März 2027 gültig und wird danach automatisch deaktiviert. Eine Verlängerung ist nicht vorgesehen.',
+  },
+} as const satisfies SelfStudyOffer
+
+export const zweiDreiSekSelbststudiumPageModel = {
+  audience: zweiDreiSek,
+  hero: {
+    eyebrow: 'Selbststudium · 2./3. Sek',
+    title: 'Eigenständig üben, gezielt vorbereiten',
+    description:
+      'Zugriff auf Übungsaufgaben, alte Prüfungen mit Lösungen und persönliches Feedback zu deinen eigenen Aufsätzen — flexibel von zu Hause aus, im eigenen Tempo.',
+  },
+  offer: zweiDreiSekSelbststudium,
+  accessAction: { kind: 'disabled', label: 'Zugang erhalten', disabledReason: 'Buchung folgt in einer späteren Ausbaustufe' },
+} as const satisfies SelfStudyPageModel

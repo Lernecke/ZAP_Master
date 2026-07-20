@@ -5,7 +5,7 @@ import { connection } from 'next/server'
 import { setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { audiences } from '@/app/data/marketing-site'
-import type { CourseOffer, ExamSimulationOffer, SessionDefinition } from '@/types/marketing'
+import type { CourseOffer, ExamSimulationOffer, SelfStudyOffer, SessionDefinition } from '@/types/marketing'
 import { Section } from '@/app/components/layout/section'
 import { CourseHero } from '@/app/components/kurse/course-hero'
 import { CourseFlow } from '@/app/components/kurse/course-flow'
@@ -14,11 +14,13 @@ import { WhyUsGrid } from '@/app/components/kurse/why-us-grid'
 import { Testimonials } from '@/app/components/kurse/testimonials'
 import { ExamSimTimeline } from '@/app/components/kurse/exam-sim-timeline'
 import { FaqAccordion } from '@/app/components/marketing/faq-accordion'
+import { AudienceHero } from '@/app/components/kurse/audience-hero'
+import { SelfStudyAccess } from '@/app/components/kurse/self-study-access'
 import { BookingSectionWithModal } from '@/app/components/kurse/booking-section-with-modal'
 import { getOfferBySlug, getSessionsForOffer } from '@/lib/kurse/catalog'
 import { getSessionAvailability } from '@/lib/kurse/availability'
 import { buildSessionRows } from '@/lib/kurse/session-row'
-import { listCatalogedOfferParams } from '@/lib/kurse/offer-catalog'
+import { listCatalogedOfferParams, getSelfStudyPageExtras } from '@/lib/kurse/offer-catalog'
 
 type BookableOffer = CourseOffer | ExamSimulationOffer
 
@@ -28,9 +30,9 @@ export function generateStaticParams() {
   )
 }
 
-/** CourseOffer (halbjahreskurs/intensivkurs) und ExamSimulationOffer (pruefungssimulation) haben
- *  eine Detailseiten-Vorlage; SelfStudyOffer noch nicht -- siehe Kommentar in
- *  lib/kurse/offer-catalog.ts. */
+/** CourseOffer (halbjahreskurs/intensivkurs) und ExamSimulationOffer (pruefungssimulation) teilen
+ *  denselben Buchungs-Rendering-Pfad (Hero/Flow/Content/Booking). SelfStudyOffer hat keine
+ *  Sessions/booking und wird separat in resolveSelfStudyOffer/renderSelfStudyOffer behandelt. */
 async function resolveBookableOffer(audienceSlug: string, offerSlug: string): Promise<BookableOffer | null> {
   const audience = audiences.find((a) => a.slug === audienceSlug)
   if (!audience) return null
@@ -47,15 +49,29 @@ async function resolveBookableOffer(audienceSlug: string, offerSlug: string): Pr
   return offer
 }
 
+async function resolveSelfStudyOffer(audienceSlug: string, offerSlug: string): Promise<SelfStudyOffer | null> {
+  const audience = audiences.find((a) => a.slug === audienceSlug)
+  if (!audience) return null
+
+  const offer = await getOfferBySlug(audience.id, offerSlug)
+  if (offer == null || offer.kurstyp !== 'selbststudium') return null
+  return offer
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ audience: string; angebot: string }>
 }): Promise<Metadata> {
   const { audience, angebot } = await params
-  const offer = await resolveBookableOffer(audience, angebot)
-  if (!offer) return {}
-  return { title: offer.displayName, description: offer.tagline }
+
+  const bookableOffer = await resolveBookableOffer(audience, angebot)
+  if (bookableOffer) return { title: bookableOffer.displayName, description: bookableOffer.tagline }
+
+  const selfStudyOffer = await resolveSelfStudyOffer(audience, angebot)
+  if (selfStudyOffer) return { title: selfStudyOffer.displayName, description: selfStudyOffer.tagline }
+
+  return {}
 }
 
 function SessionTableSkeleton() {
@@ -77,6 +93,32 @@ async function BookingSectionLoader({
   return <BookingSectionWithModal offer={offer} sessions={rows} />
 }
 
+function SelfStudyOfferPage({ offer }: { offer: SelfStudyOffer }) {
+  const extras = getSelfStudyPageExtras(offer.id)
+  // Sollte laut Katalog-Wiring immer gesetzt sein (jeder SelfStudyOffer im Katalog hat einen
+  // Eintrag in SELF_STUDY_PAGE_EXTRAS) -- Fallback auf offer.lede nur zur Robustheit.
+  const hero = extras?.hero ?? { title: offer.displayName, description: offer.lede }
+  const accessAction = extras?.accessAction ?? { kind: 'disabled' as const, label: 'Zugang erhalten', disabledReason: 'Buchung folgt in einer späteren Ausbaustufe' }
+
+  return (
+    <>
+      <Section spacing="lg">
+        <AudienceHero content={hero} />
+      </Section>
+
+      {offer.whyUs.length > 0 ? (
+        <Section variant="muted">
+          <WhyUsGrid features={offer.whyUs} />
+        </Section>
+      ) : null}
+
+      <Section>
+        <SelfStudyAccess offer={offer} accessAction={accessAction} />
+      </Section>
+    </>
+  )
+}
+
 export default async function CourseOfferDetailPage({
   params,
 }: {
@@ -84,6 +126,9 @@ export default async function CourseOfferDetailPage({
 }) {
   const { locale, audience: audienceSlug, angebot } = await params
   setRequestLocale(locale)
+
+  const selfStudyOffer = await resolveSelfStudyOffer(audienceSlug, angebot)
+  if (selfStudyOffer) return <SelfStudyOfferPage offer={selfStudyOffer} />
 
   const offer = await resolveBookableOffer(audienceSlug, angebot)
   if (!offer) notFound()

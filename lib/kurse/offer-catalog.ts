@@ -10,6 +10,8 @@ import {
   bmsIntensivkurs,
   bmsIntensivkursSessions,
   bmsPruefungssimulation,
+  bmsSelbststudium,
+  bmsSelbststudiumPageModel,
   maturaAudiencePageModel,
   maturaHalbjahreskurs,
   maturaHalbjahreskursSessions,
@@ -28,6 +30,8 @@ import {
   sechsKlasseIntensivkurs,
   sechsKlasseIntensivkursSessions,
   sechsKlassePruefungssimulation,
+  sechsKlasseSelbststudium,
+  sechsKlasseSelbststudiumPageModel,
   vierKlasseAudiencePageModel,
   vierKlasseHalbjahreskurs,
   vierKlasseHalbjahreskursSessions,
@@ -38,6 +42,8 @@ import {
   zweiDreiSekHalbjahreskursSessions,
   zweiDreiSekIntensivkurs,
   zweiDreiSekIntensivkursSessions,
+  zweiDreiSekSelbststudium,
+  zweiDreiSekSelbststudiumPageModel,
 } from '@/types/marketing.fixtures'
 import type {
   AudienceHeroContent,
@@ -46,6 +52,7 @@ import type {
   ExamSimulationOffer,
   SelfStudyOffer,
   SessionDefinition,
+  UserAction,
 } from '@/types/marketing'
 
 type OfferCatalogEntry = {
@@ -74,25 +81,21 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
   },
   '6': {
     offers: [sechsKlasseHalbjahreskurs, sechsKlasseIntensivkurs],
-    addOnOffers: [sechsKlassePruefungssimulation],
+    addOnOffers: [sechsKlassePruefungssimulation, sechsKlasseSelbststudium],
   },
-  // '2-3-sek'.addOnOffers bewusst leer: Layout_2_Sek_Pruefungssimulation.html nutzt laut
-  // Abschnitt 4 ein fremdes Design-System und braucht eine eigene, separate Extraktionsrunde
-  // (analog zur 6.-Klasse-Trennung in Schritt 11) -- kein Content dafür in dieser Runde erfunden.
+  // '2-3-sek'.addOnOffers: nur Selbststudium -- Layout_2_Sek_Pruefungssimulation.html nutzt laut
+  // Abschnitt 4 weiterhin ein fremdes Design-System und braucht eine eigene, separate
+  // Extraktionsrunde (analog zur 6.-Klasse-Trennung in Schritt 11) -- kein Content dafür erfunden.
   '2-3-sek': {
     offers: [zweiDreiSekHalbjahreskurs, zweiDreiSekIntensivkurs],
-    addOnOffers: [],
+    addOnOffers: [zweiDreiSekSelbststudium],
   },
   // bms.offers: nur der Intensivkurs -- die Halbjahreskurs-Karte der Hauptseite verlinkt fälschlich
   // auf die Intensivkurs-Unterseite (kein echter eigener Detailinhalt, siehe Kommentar bei
-  // bmsIntensivkurs in types/marketing.fixtures.ts). bmsSelbststudium (dort ebenfalls bereits als
-  // Fixture vorhanden) bleibt weiterhin unverdrahtet: kein Renderer in [angebot]/page.tsx für
-  // SelfStudyOffer. Die drei Selbststudium-Seiten (BMS + 6. Klasse + 2./3. Sek) gehören laut
-  // Ausführungsplan als EINE Einheit in einen eigenen späteren Schritt -- nicht BMS allein, sonst
-  // Halb-Feature/toter Link.
+  // bmsIntensivkurs in types/marketing.fixtures.ts).
   bms: {
     offers: [bmsIntensivkurs],
-    addOnOffers: [bmsPruefungssimulation],
+    addOnOffers: [bmsPruefungssimulation, bmsSelbststudium],
   },
   matura: {
     offers: [maturaHalbjahreskurs, maturaIntensivwoche],
@@ -109,6 +112,24 @@ const AUDIENCE_HERO_OVERRIDES: Partial<Record<AudienceId, AudienceHeroContent>> 
   '2-3-sek': zweiDreiSekAudiencePageModel.hero,
   bms: bmsAudiencePageModel.hero,
   matura: maturaAudiencePageModel.hero,
+}
+
+/** Pro-Offer Hero/accessAction für SelfStudyOffer-Detailseiten -- SelfStudyPageModel hat einen
+ *  eigenen Hero (nicht den Audience-Hero) und keine Sessions/booking, siehe
+ *  [angebot]/page.tsx's SelfStudyOffer-Zweig. */
+const SELF_STUDY_PAGE_EXTRAS: Record<string, { hero: AudienceHeroContent; accessAction: UserAction }> = {
+  [bmsSelbststudium.id]: {
+    hero: bmsSelbststudiumPageModel.hero,
+    accessAction: bmsSelbststudiumPageModel.accessAction,
+  },
+  [sechsKlasseSelbststudium.id]: {
+    hero: sechsKlasseSelbststudiumPageModel.hero,
+    accessAction: sechsKlasseSelbststudiumPageModel.accessAction,
+  },
+  [zweiDreiSekSelbststudium.id]: {
+    hero: zweiDreiSekSelbststudiumPageModel.hero,
+    accessAction: zweiDreiSekSelbststudiumPageModel.accessAction,
+  },
 }
 
 const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
@@ -149,19 +170,23 @@ export function getSessionsForOfferId(offerId: string): SessionDefinition[] {
   return OFFER_SESSIONS[offerId] ?? []
 }
 
+export function getSelfStudyPageExtras(
+  offerId: string
+): { hero: AudienceHeroContent; accessAction: UserAction } | undefined {
+  return SELF_STUDY_PAGE_EXTRAS[offerId]
+}
+
 /**
- * Für generateStaticParams: CourseOffer- und ExamSimulationOffer-Slugs -- beide haben seit
- * Schritt 6/11 eine Detailseiten-Vorlage. SelfStudyOffer (z. B. bmsSelbststudium, aktuell ohnehin
- * nicht im Katalog) bleibt bewusst ausgeschlossen -- kein Renderer, siehe Schritt-9-Korrektur.
+ * Für generateStaticParams: CourseOffer-, ExamSimulationOffer- und seit der Selbststudium-Runde
+ * auch SelfStudyOffer-Slugs -- alle drei haben jetzt eine Detailseiten-Vorlage in
+ * [angebot]/page.tsx.
  */
 export function listCatalogedOfferParams(): { audience: AudienceId; angebot: string }[] {
   return (Object.entries(OFFER_CATALOG) as [AudienceId, OfferCatalogEntry][]).flatMap(
     ([audienceId, entry]) =>
-      [...entry.offers, ...entry.addOnOffers.filter((offer) => offer.kurstyp !== 'selbststudium')].map(
-        (offer) => ({
-          audience: audienceId,
-          angebot: offer.slug,
-        })
-      )
+      [...entry.offers, ...entry.addOnOffers].map((offer) => ({
+        audience: audienceId,
+        angebot: offer.slug,
+      }))
   )
 }
