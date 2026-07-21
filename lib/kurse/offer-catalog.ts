@@ -56,6 +56,7 @@ import type {
   SessionDefinition,
   UserAction,
 } from '@/types/marketing'
+import { audiences } from '@/app/data/marketing-site'
 
 type OfferCatalogEntry = {
   offers: CourseOffer[]
@@ -180,13 +181,21 @@ export function getSelfStudyPageExtras(
  * Für generateStaticParams: CourseOffer-, ExamSimulationOffer- und seit der Selbststudium-Runde
  * auch SelfStudyOffer-Slugs -- alle drei haben jetzt eine Detailseiten-Vorlage in
  * [angebot]/page.tsx.
+ *
+ * `audience` muss der Route-Slug sein (z.B. "4-klasse"), nicht die interne AudienceId (z.B. "4")
+ * -- der dynamische Routensegment-Ordner [audience] matcht den Slug aus der URL, nicht die ID.
+ * Eine frühere Fassung gab hier versehentlich die AudienceId zurück, wodurch generateStaticParams
+ * falsche Pfade wie "/kurse/4/halbjahreskurs" statt "/kurse/4-klasse/halbjahreskurs" erzeugte.
  */
-export function listCatalogedOfferParams(): { audience: AudienceId; angebot: string }[] {
+export function listCatalogedOfferParams(): { audience: string; angebot: string }[] {
   return (Object.entries(OFFER_CATALOG) as [AudienceId, OfferCatalogEntry][]).flatMap(
-    ([audienceId, entry]) =>
-      [...entry.offers, ...entry.addOnOffers].map((offer) => ({
-        audience: audienceId,
+    ([audienceId, entry]) => {
+      const slug = audiences.find((a) => a.id === audienceId)?.slug
+      if (!slug) return []
+      return [...entry.offers, ...entry.addOnOffers].map((offer) => ({
+        audience: slug,
         angebot: offer.slug,
       }))
+    }
   )
 }

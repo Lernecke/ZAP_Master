@@ -21,6 +21,16 @@ export function generateStaticParams() {
   )
 }
 
+// Hinweis (Schritt 12, Verifikations-Gate): `export const dynamicParams = false` wäre die
+// idiomatische Next.js-Lösung, um unbekannte Kombinationen mit einem sofortigen echten 404-Status
+// statt eines gestreamten 200 zu beantworten -- ist aber inkompatibel mit
+// `nextConfig.cacheComponents` ("Route segment config dynamicParams is not compatible with
+// cacheComponents") und wurde deshalb nicht gesetzt. Bekannte, dokumentierte Einschränkung: eine
+// unbekannte Zielgruppe zeigt korrekt die 404-UI, der anfängliche HTTP-Status kann unter PPR
+// dennoch 200 bleiben, weil die (cachebare) Layout-Shell bereits vor dem notFound()-Aufruf im
+// dynamischen Seitenteil gestreamt wurde. Wirkt sich nicht auf sitemap.ts (listet nur echte
+// Routen) aus, ist aber ein SEO-Detail für Abschnitt 10.4 und dort zu vermerken.
+
 function findAudience(slug: string) {
   return audiences.find((audience) => audience.slug === slug)
 }

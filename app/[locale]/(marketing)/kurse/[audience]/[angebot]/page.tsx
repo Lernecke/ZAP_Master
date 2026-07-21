@@ -30,6 +30,11 @@ export function generateStaticParams() {
   )
 }
 
+// Hinweis (Schritt 12, Verifikations-Gate): `dynamicParams = false` ist inkompatibel mit
+// `nextConfig.cacheComponents`, siehe ausführliche Begründung bei [audience]/page.tsx. Gleiche
+// bekannte, dokumentierte Einschränkung gilt hier: der HTTP-Status einer unbekannten
+// Angebotskombination kann unter PPR 200 bleiben, obwohl die 404-UI korrekt gerendert wird.
+
 /** CourseOffer (halbjahreskurs/intensivkurs) und ExamSimulationOffer (pruefungssimulation) teilen
  *  denselben Buchungs-Rendering-Pfad (Hero/Flow/Content/Booking). SelfStudyOffer hat keine
  *  Sessions/booking und wird separat in resolveSelfStudyOffer/renderSelfStudyOffer behandelt. */

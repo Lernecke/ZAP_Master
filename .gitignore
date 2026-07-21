@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# Playwright (Abschnitt 10.1) -- lokale Testartefakte, keine Quelldateien
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/
