@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { aboutPageModel } from '@/types/marketing.fixtures'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { CourseContent } from '@/app/components/kurse/course-content'
@@ -11,9 +12,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Link } from '@/i18n/navigation'
 
-export const metadata: Metadata = {
-  title: aboutPageModel.hero.title,
-  description: aboutPageModel.hero.description,
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: aboutPageModel.hero.title,
+    description: aboutPageModel.hero.description,
+    path: '/ueber-uns',
+    locale,
+  })
 }
 
 export default async function UeberUnsPage({

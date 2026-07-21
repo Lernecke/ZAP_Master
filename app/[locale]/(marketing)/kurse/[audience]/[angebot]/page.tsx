@@ -6,6 +6,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { audiences } from '@/app/data/marketing-site'
 import type { CourseOffer, ExamSimulationOffer, SelfStudyOffer, SessionDefinition } from '@/types/marketing'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { CourseHero } from '@/app/components/kurse/course-hero'
 import { CourseFlow } from '@/app/components/kurse/course-flow'
@@ -66,15 +67,20 @@ async function resolveSelfStudyOffer(audienceSlug: string, offerSlug: string): P
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ audience: string; angebot: string }>
+  params: Promise<{ locale: string; audience: string; angebot: string }>
 }): Promise<Metadata> {
-  const { audience, angebot } = await params
+  const { locale, audience, angebot } = await params
+  const path = `/kurse/${audience}/${angebot}`
 
   const bookableOffer = await resolveBookableOffer(audience, angebot)
-  if (bookableOffer) return { title: bookableOffer.displayName, description: bookableOffer.tagline }
+  if (bookableOffer) {
+    return buildPageMetadata({ title: bookableOffer.displayName, description: bookableOffer.tagline, path, locale })
+  }
 
   const selfStudyOffer = await resolveSelfStudyOffer(audience, angebot)
-  if (selfStudyOffer) return { title: selfStudyOffer.displayName, description: selfStudyOffer.tagline }
+  if (selfStudyOffer) {
+    return buildPageMetadata({ title: selfStudyOffer.displayName, description: selfStudyOffer.tagline, path, locale })
+  }
 
   return {}
 }

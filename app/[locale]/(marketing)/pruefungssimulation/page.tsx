@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { pruefungssimulationPageModel } from '@/types/marketing.fixtures'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { CourseFlow } from '@/app/components/kurse/course-flow'
@@ -9,9 +10,18 @@ import { WhyUsGrid } from '@/app/components/kurse/why-us-grid'
 import { FaqAccordion } from '@/app/components/marketing/faq-accordion'
 import { TargetedAudiencePicker } from '@/app/components/marketing/targeted-audience-picker'
 
-export const metadata: Metadata = {
-  title: pruefungssimulationPageModel.hero.title,
-  description: pruefungssimulationPageModel.hero.description,
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: pruefungssimulationPageModel.hero.title,
+    description: pruefungssimulationPageModel.hero.description,
+    path: '/pruefungssimulation',
+    locale,
+  })
 }
 
 // Beide Optionen zeigen auf die jeweilige Prüfungssimulations-Detailseite; beide haben seit der

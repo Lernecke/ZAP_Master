@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { lerncoachingPageModel } from '@/types/marketing.fixtures'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { CourseFlow } from '@/app/components/kurse/course-flow'
@@ -10,9 +11,18 @@ import { FaqAccordion } from '@/app/components/marketing/faq-accordion'
 import { Button } from '@/app/components/ui/button'
 import { Link } from '@/i18n/navigation'
 
-export const metadata: Metadata = {
-  title: lerncoachingPageModel.hero.title,
-  description: lerncoachingPageModel.hero.description,
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: lerncoachingPageModel.hero.title,
+    description: lerncoachingPageModel.hero.description,
+    path: '/lerncoaching',
+    locale,
+  })
 }
 
 export default async function LerncoachingPage({

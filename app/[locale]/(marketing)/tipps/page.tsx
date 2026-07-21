@@ -1,14 +1,24 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { tipsPageModel } from '@/types/marketing.fixtures'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { TipCategorySection } from '@/app/components/marketing/tip-category-section'
 import { FaqAccordion } from '@/app/components/marketing/faq-accordion'
 
-export const metadata: Metadata = {
-  title: tipsPageModel.hero.title,
-  description: tipsPageModel.hero.description,
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: tipsPageModel.hero.title,
+    description: tipsPageModel.hero.description,
+    path: '/tipps',
+    locale,
+  })
 }
 
 export default async function TippsPage({

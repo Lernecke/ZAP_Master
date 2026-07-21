@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ThemeSyncProvider } from "@/components/providers/ThemeSyncProvider";
 import { ClassFilterProvider } from "@/context/ClassFilterContext";
 import { Toaster } from "@/app/components/ui/sonner";
+import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,6 +40,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  // Ohne metadataBase koennen relative canonical-/OpenGraph-URLs (lib/seo.ts) nicht zu absoluten
+  // URLs aufgeloest werden -- Next.js warnt sonst bei jedem Build und faellt auf einen
+  // Default-Host zurueck. Die echte Domain kommt ausschliesslich aus NEXT_PUBLIC_APP_URL (je
+  // Umgebung getrennt, Abschnitt 10.4), nie hartkodiert.
+  metadataBase: new URL(SITE_URL),
   title: "ZAP - Zentrale Aufnahmeprüfung",
   description: "Deine Lernplattform für die Zentrale Aufnahmeprüfung",
 };

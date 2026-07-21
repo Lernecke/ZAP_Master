@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { audiences } from '@/app/data/marketing-site'
 import type { AudienceHeroContent } from '@/types/marketing'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { CourseCardGrid } from '@/app/components/kurse/course-card-grid'
@@ -38,9 +39,9 @@ function findAudience(slug: string) {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ audience: string }>
+  params: Promise<{ locale: string; audience: string }>
 }): Promise<Metadata> {
-  const { audience: audienceSlug } = await params
+  const { locale, audience: audienceSlug } = await params
   const audience = findAudience(audienceSlug)
   if (!audience) return {}
 
@@ -50,7 +51,12 @@ export async function generateMetadata({
   }
   const hero = await getAudienceHero(audience.id, fallbackHero)
 
-  return { title: hero.title, description: hero.description }
+  return buildPageMetadata({
+    title: hero.title,
+    description: hero.description,
+    path: `/kurse/${audience.slug}`,
+    locale,
+  })
 }
 
 export default async function AudienceOverviewPage({

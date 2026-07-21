@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { distanceLearningPageModel } from '@/types/marketing.fixtures'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { CourseFlow } from '@/app/components/kurse/course-flow'
@@ -8,9 +9,18 @@ import { CourseContent } from '@/app/components/kurse/course-content'
 import { FaqAccordion } from '@/app/components/marketing/faq-accordion'
 import { TargetedAudiencePicker } from '@/app/components/marketing/targeted-audience-picker'
 
-export const metadata: Metadata = {
-  title: distanceLearningPageModel.hero.title,
-  description: distanceLearningPageModel.hero.description,
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: distanceLearningPageModel.hero.title,
+    description: distanceLearningPageModel.hero.description,
+    path: '/distance-learning',
+    locale,
+  })
 }
 
 // Beide Optionen zeigen auf die jeweilige Intensivkurs-Sportferien-Detailseite. Die 2./3.-Sek-

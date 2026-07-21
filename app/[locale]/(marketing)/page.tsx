@@ -1,10 +1,26 @@
+import type { Metadata } from "next"
 import { setRequestLocale } from "next-intl/server"
 import { homePageModel } from "@/app/data/marketing-site"
+import { buildPageMetadata } from "@/lib/seo"
 import { PageContainer } from "@/app/components/layout/page-container"
 import { Section } from "@/app/components/layout/section"
 import { KlassenPicker } from "@/app/components/marketing/klassen-picker"
 import { ServiceSubgroup } from "@/app/components/marketing/service-subgroup"
 import { FeaturedTestimonial } from "@/app/components/marketing/featured-testimonial"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: homePageModel.hero.title,
+    description: homePageModel.hero.description,
+    path: '',
+    locale,
+  })
+}
 
 export default async function MarketingHomePage({
   params,

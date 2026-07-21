@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import type { LegalPageModel } from '@/types/marketing'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { LegalPageContent } from '@/app/components/marketing/legal-page-content'
 
@@ -24,7 +25,19 @@ const impressumModel: LegalPageModel = {
   ],
 }
 
-export const metadata: Metadata = { title: impressumModel.title }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: impressumModel.title,
+    description: 'Rechtliche Angaben zum Anbieter dieser Lernplattform.',
+    path: '/impressum',
+    locale,
+  })
+}
 
 export default async function ImpressumPage({
   params,

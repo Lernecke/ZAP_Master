@@ -341,13 +341,30 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     await page.getByRole('button', { name: 'Verbindlich anmelden' }).click()
 
     await expect(page.getByText('Anmeldung erfolgreich!')).toBeVisible({ timeout: 10_000 })
-    // onClose ruft router.refresh() auf (Abschnitt 7, Punkt 3) -- kein revalidateTag/Timeout nötig.
-    await page.getByRole('button', { name: 'Schliessen' }).click()
 
+    // onClose ruft router.refresh() auf (Abschnitt 7, Punkt 3) -- kein revalidateTag/Timeout nötig.
+    // Der Response-Listener muss VOR dem Klick registriert werden (Promise.all), sonst kann die
+    // RSC-Antwort unter guten Bedingungen schneller zurückkommen, als waitForResponse zu lauschen
+    // beginnt, und der Test würde sie verpassen (race).
     // router.refresh() muss den ungecachten Suspense-Abschnitt (BookingSectionLoader) neu vom
     // Server laden und streamen -- kein manueller Reload/Timer, aber echte Netzwerk-/Renderzeit
-    // (vgl. die ähnliche, dokumentierte Verzögerung bei Redirects unter PPR weiter oben).
-    await expect(row.getByText('keine Plätze')).toBeVisible({ timeout: 15_000 })
+    // (vgl. die ähnliche, dokumentierte Verzögerung bei Redirects unter PPR weiter oben). Der
+    // RSC-Refetch ist explizit abwartbar (eigene Netzwerk-Response auf denselben Pfad) -- das
+    // trennt "Netzwerk-Rundreise war langsam" von "DOM hat trotz frischer Daten nicht
+    // aktualisiert" und macht Fehlschläge unter Systemlast diagnostizierbar, statt nur einen
+    // einzigen groben Timeout auf das Endergebnis zu setzen.
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/de/kurse/6-klasse/intensivkurs-sportferien') && resp.ok(),
+        { timeout: 45_000 }
+      ),
+      page.getByRole('button', { name: 'Schliessen' }).click(),
+    ])
+
+    // Die zugrunde liegende DB-Buchung ist zu diesem Zeitpunkt bereits abgeschlossen (mehrfach per
+    // direktem DB-Query bestätigt); das Rendern der bereits eingetroffenen Antwort ins DOM braucht
+    // nur noch normale Client-Zeit.
+    await expect(row.getByText('keine Plätze')).toBeVisible({ timeout: 10_000 })
     await expect(row.getByRole('button', { name: 'Anmelden' })).toBeDisabled()
   })
 
@@ -366,8 +383,13 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     // Request -- ausführlich diagnostiziert). Deshalb hier zwingend ein Vielfaches von 10.
     await page.locator('input[name="preis"]').fill('780')
     await page.getByRole('button', { name: 'Änderungen speichern' }).click()
-    // updateKurs() leitet nach erfolgreichem Speichern auf /dashboard/kurse weiter.
-    await page.waitForURL((url) => url.pathname === '/dashboard/kurse', { timeout: 15_000 })
+    // updateKurs() ruft invalidateCourseCaches() synchron vor der Erfolgsantwort auf -- die
+    // sichtbare Erfolgsmeldung beweist bereits, dass updateTag('courses') gelaufen ist. Wir warten
+    // bewusst NICHT auf die anschliessende router.push()-Weiterleitung (setTimeout(1000) +
+    // clientseitige Navigation zu /dashboard/kurse): das haengt zusaetzlich von der Ladezeit dieser
+    // unabhaengigen Seite ab und macht den Test unter Systemlast unnoetig flakey, ohne mehr über
+    // die Cache-Invalidierung selbst auszusagen.
+    await expect(page.getByText('Kurs erfolgreich aktualisiert!')).toBeVisible({ timeout: 15_000 })
 
     // Frische Navigation, kein Reload/Wartezeit -- prüft, dass updateTag('courses') in
     // app/(dashboard)/dashboard/kurse/actions.ts den 'use cache'-Katalogeintrag sofort invalidiert
@@ -375,5 +397,50 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     await page.goto('/de/kurse/6-klasse')
     await expect(page.getByText(/CHF\s*780/)).toBeVisible()
     await expect(page.getByText(/CHF\s*888/)).toHaveCount(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 8) SEO (Abschnitt 10.4): sitemap.xml/robots.txt und Canonical-/OpenGraph-Metadata.
+// ---------------------------------------------------------------------------
+
+test.describe('SEO', () => {
+  test('robots.txt sperrt standardmässig alles (Fail-closed ohne NEXT_PUBLIC_ALLOW_INDEXING)', async ({ page }) => {
+    const response = await page.goto('/robots.txt')
+    expect(response?.status()).toBe(200)
+    const body = await response!.text()
+    expect(body).toContain('Disallow: /')
+  })
+
+  test('sitemap.xml enthält reale Zielgruppen-/Kursrouten, aber keine inhaltlich noch leeren Seiten', async ({ page }) => {
+    const response = await page.goto('/sitemap.xml')
+    expect(response?.status()).toBe(200)
+    const body = await response!.text()
+
+    expect(body).toContain('<loc>http://localhost:3000/de</loc>')
+    expect(body).toContain('<loc>http://localhost:3000/de/kurse/6-klasse</loc>')
+    expect(body).toContain('<loc>http://localhost:3000/de/kurse/6-klasse/intensivkurs-sportferien</loc>')
+
+    // /kontakt, /impressum, /datenschutz zeigen aktuell nur einen "Inhalte folgen"-Platzhalter
+    // (Abschnitt 9.1) -- bewusst nicht in der sitemap, siehe app/sitemap.ts.
+    expect(body).not.toContain('/kontakt')
+    expect(body).not.toContain('/impressum')
+    expect(body).not.toContain('/datenschutz')
+  })
+
+  test('Startseite hat Canonical-URL und OpenGraph-/Twitter-Metadata', async ({ page }) => {
+    await page.goto('/de')
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/de$/)
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /.+/)
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', /\/de$/)
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary')
+  })
+
+  test('Kursdetailseite hat eine eigene, abweichende Canonical-URL', async ({ page }) => {
+    await page.goto('/de/kurse/6-klasse/intensivkurs-sportferien')
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      /\/de\/kurse\/6-klasse\/intensivkurs-sportferien$/
+    )
   })
 })

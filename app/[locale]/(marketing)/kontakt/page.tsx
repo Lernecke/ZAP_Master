@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import type { ContactPageModel } from '@/types/marketing'
+import { buildPageMetadata } from '@/lib/seo'
 import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 
@@ -17,9 +18,18 @@ const kontaktPageModel: ContactPageModel = {
   note: 'Unsere Kontaktkanäle werden in Kürze ergänzt.',
 }
 
-export const metadata: Metadata = {
-  title: kontaktPageModel.hero.title,
-  description: kontaktPageModel.hero.description,
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return buildPageMetadata({
+    title: kontaktPageModel.hero.title,
+    description: kontaktPageModel.hero.description,
+    path: '/kontakt',
+    locale,
+  })
 }
 
 export default async function KontaktPage({
