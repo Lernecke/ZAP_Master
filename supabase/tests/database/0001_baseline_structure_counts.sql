@@ -87,6 +87,24 @@
 -- Angepasst durch 20260721092720_admin_save_rate_agreement_rpc.sql (PayrollReviewPanel-RPC):
 -- +1 Funktion (admin_save_rate_agreement(), SECURITY INVOKER -- Funktionen-Zaehler +1, SECURITY-
 -- DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/Indizes.
+--
+-- Angepasst durch 20260721095032_financial_cockpit_schema.sql (Schritt 10d, Finanz-Cockpit):
+-- +5 Tabellen (financial_events, expense_entries, financial_periods, budgets,
+-- financial_adjustments; alle RLS aktiviert), +3 Funktionen (sync_anmeldung_financial_events,
+-- sync_expense_financial_event, sync_financial_adjustment_event -- alle drei SECURITY DEFINER,
+-- Funktionen- UND SECURITY-DEFINER-Zaehler je +3), +6 RLS-Policies (financial_events_admin_read;
+-- expense_entries_admin_all; financial_periods_admin_all; budgets_admin_all;
+-- financial_adjustments_admin_all; sowie -- separat gezaehlt, aus der Folge-Migration --
+-- financial_events_admin_insert), +6 Trigger (expense_entries_bump_version,
+-- financial_periods_bump_version, budgets_bump_version, sync_anmeldung_financial_events_trigger,
+-- sync_expense_financial_event_trigger, sync_financial_adjustment_event_trigger), +25 Constraints,
+-- +12 Indizes (im Detail: financial_events 6/4; expense_entries 7/3; financial_periods 5/2;
+-- budgets 4/2; financial_adjustments 3/1). Keine neue Sequenz.
+--
+-- Angepasst durch 20260721095136_admin_close_payroll_period_ledger_sync.sql: GRANT INSERT +
+-- financial_events_admin_insert-Policy (bereits oben mitgezaehlt) sowie CREATE OR REPLACE von
+-- admin_close_payroll_period() (gleiche Signatur, kein neuer Funktions-Zaehler-Eintrag). Keine
+-- weiteren Struktur-/Zaehlaenderungen.
 
 begin;
 
@@ -94,14 +112,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    44,
-    '44 Tabellen im public-Schema'
+    49,
+    '49 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    44,
-    'alle 44 public-Tabellen haben RLS aktiviert'
+    49,
+    'alle 49 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -115,8 +133,8 @@ select is(
        from information_schema.routines
       where routine_schema = 'public'
         and routine_type = 'FUNCTION'),
-    23,
-    '23 Funktionen im public-Schema'
+    26,
+    '26 Funktionen im public-Schema'
 );
 
 select is(
@@ -125,14 +143,14 @@ select is(
        join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
         and p.prosecdef),
-    10,
-    '10 davon SECURITY DEFINER'
+    13,
+    '13 davon SECURITY DEFINER'
 );
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    161,
-    '161 RLS-Policies im public-Schema'
+    167,
+    '167 RLS-Policies im public-Schema'
 );
 
 select is(
@@ -147,14 +165,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    186,
-    '186 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    211,
+    '211 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    124,
-    '124 Indizes im public-Schema'
+    136,
+    '136 Indizes im public-Schema'
 );
 
 select is(
@@ -164,8 +182,8 @@ select is(
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'
         and not t.tgisinternal),
-    17,
-    '17 nicht-interne Trigger im public-Schema'
+    23,
+    '23 nicht-interne Trigger im public-Schema'
 );
 
 select * from finish();

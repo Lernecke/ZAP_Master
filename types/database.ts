@@ -68,6 +68,41 @@ export type Database = {
         }
         Relationships: []
       }
+      budgets: {
+        Row: {
+          amount_rappen: number
+          category: string
+          currency: string
+          id: string
+          period_id: string
+          version: number
+        }
+        Insert: {
+          amount_rappen: number
+          category: string
+          currency?: string
+          id?: string
+          period_id: string
+          version?: number
+        }
+        Update: {
+          amount_rappen?: number
+          category?: string
+          currency?: string
+          id?: string
+          period_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           attachment_urls: string[] | null
@@ -502,6 +537,209 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      expense_entries: {
+        Row: {
+          amount_rappen: number
+          category: string
+          created_at: string
+          created_by: string
+          currency: string
+          edition_id: string | null
+          id: string
+          receipt_ref: string | null
+          service_date: string
+          session_id: number | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          amount_rappen: number
+          category: string
+          created_at?: string
+          created_by: string
+          currency?: string
+          edition_id?: string | null
+          id?: string
+          receipt_ref?: string | null
+          service_date: string
+          session_id?: number | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          amount_rappen?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          edition_id?: string | null
+          id?: string
+          receipt_ref?: string | null
+          service_date?: string
+          session_id?: number | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_entries_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "offer_editions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_adjustments: {
+        Row: {
+          amount_rappen: number
+          category: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          period_id: string
+          reason: string
+        }
+        Insert: {
+          amount_rappen: number
+          category?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string
+          id?: string
+          period_id: string
+          reason: string
+        }
+        Update: {
+          amount_rappen?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          id?: string
+          period_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_adjustments_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_events: {
+        Row: {
+          amount_rappen: number
+          audience_id: string | null
+          created_at: string
+          currency: string
+          edition_id: string | null
+          event_type: string
+          event_version: number
+          id: string
+          occurred_at: string
+          recognized_at: string
+          session_id: number | null
+          source_id: string
+          source_kind: string
+          status: string
+        }
+        Insert: {
+          amount_rappen: number
+          audience_id?: string | null
+          created_at?: string
+          currency?: string
+          edition_id?: string | null
+          event_type: string
+          event_version?: number
+          id?: string
+          occurred_at?: string
+          recognized_at?: string
+          session_id?: number | null
+          source_id: string
+          source_kind: string
+          status?: string
+        }
+        Update: {
+          amount_rappen?: number
+          audience_id?: string | null
+          created_at?: string
+          currency?: string
+          edition_id?: string | null
+          event_type?: string
+          event_version?: number
+          id?: string
+          occurred_at?: string
+          recognized_at?: string
+          session_id?: number | null
+          source_id?: string
+          source_kind?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_events_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "offer_editions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_periods: {
+        Row: {
+          created_at: string
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          status: string
+          updated_at: string
+          version: number
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+          year?: number
+        }
+        Relationships: []
       }
       intensivwoche_anmeldungen: {
         Row: {
