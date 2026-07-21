@@ -14,7 +14,7 @@
 
 begin;
 
-select plan(12);
+select plan(13);
 
 -- 1) material_areas: genau 4 Zeilen mit den vier spezifizierten Keys.
 select is(
@@ -93,13 +93,22 @@ select ok(
     'anon/authenticated haben keine INSERT/UPDATE/DELETE-Rechte auf self_study_enrollments'
 );
 
+-- Ueberholt durch Schritt 11a (Migration 20260721125216_material_access_grant_admin_and_storage.sql,
+-- getestet in 0017): authenticated erhielt dort bewusst INSERT/UPDATE auf material_access_grants,
+-- RLS-gated auf is_admin() + source_kind = 'admin_grant'. anon bleibt weiterhin vollstaendig ohne
+-- Schreibrechte, und DELETE bleibt fuer beide Rollen verboten (Entzug laeuft ueber status/revoked_at,
+-- niemals Hard-Delete).
 select ok(
     not exists (
         select 1 from unnest(array['INSERT', 'UPDATE', 'DELETE']) priv
         where has_table_privilege('anon', 'public.material_access_grants', priv)
-           or has_table_privilege('authenticated', 'public.material_access_grants', priv)
     ),
-    'anon/authenticated haben keine INSERT/UPDATE/DELETE-Rechte auf material_access_grants'
+    'anon hat keine INSERT/UPDATE/DELETE-Rechte auf material_access_grants'
+);
+
+select ok(
+    not has_table_privilege('authenticated', 'public.material_access_grants', 'DELETE'),
+    'authenticated hat kein DELETE-Recht auf material_access_grants (Entzug nur ueber status/revoked_at)'
 );
 
 -- 5) Regression: die fehlerhafte qual=true-Policy ist weg, keine Ersatzpolicy erlaubt pauschal

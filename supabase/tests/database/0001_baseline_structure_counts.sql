@@ -105,6 +105,12 @@
 -- financial_events_admin_insert-Policy (bereits oben mitgezaehlt) sowie CREATE OR REPLACE von
 -- admin_close_payroll_period() (gleiche Signatur, kein neuer Funktions-Zaehler-Eintrag). Keine
 -- weiteren Struktur-/Zaehlaenderungen.
+--
+-- Angepasst durch 20260721125216_material_access_grant_admin_and_storage.sql (Schritt 11a):
+-- +2 RLS-Policies im public-Schema (material_access_grants_admin_insert/_update). Die neue
+-- Storage-Policy lernmaterialien_read_access liegt im storage-Schema und zaehlt hier bewusst
+-- nicht mit (alle Zaehlungen dieser Datei sind auf schemaname='public' begrenzt). Keine neuen
+-- Tabellen/Funktionen/Trigger/Constraints/Indizes im public-Schema.
 
 begin;
 
@@ -149,8 +155,8 @@ select is(
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    167,
-    '167 RLS-Policies im public-Schema'
+    169,
+    '169 RLS-Policies im public-Schema'
 );
 
 select is(

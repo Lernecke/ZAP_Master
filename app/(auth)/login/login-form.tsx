@@ -7,11 +7,13 @@ import { loginSchema } from '@/types/auth'
 import Link from 'next/link'
 import { Mail, Lock, ArrowRight, Loader2, Info } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { getSafeCallbackUrl } from '@/lib/auth/callback-url'
 
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isRelogin = searchParams.get('relogin') === 'true'
+  const callbackUrl = getSafeCallbackUrl(searchParams.get('callbackUrl'))
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -40,7 +42,7 @@ export function LoginForm() {
       setError('Login fehlgeschlagen. Prüfe deine Anmeldedaten.')
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      router.push(callbackUrl)
     }
   }
 

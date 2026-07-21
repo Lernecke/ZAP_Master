@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 import createIntlMiddleware from "next-intl/middleware"
 import { routing } from "@/i18n/routing"
+import { getSafeCallbackUrl } from "@/lib/auth/callback-url"
 
 const intlMiddleware = createIntlMiddleware(routing)
 
@@ -47,7 +48,8 @@ async function handleAuthRoute(request: NextRequest) {
 
   if (isAuthPage) {
     if (token) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+      const destination = getSafeCallbackUrl(request.nextUrl.searchParams.get("callbackUrl"))
+      return NextResponse.redirect(new URL(destination, request.url))
     }
     return NextResponse.next()
   }
