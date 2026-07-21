@@ -14,9 +14,8 @@ export const metadata: Metadata = {
   description: pruefungssimulationPageModel.hero.description,
 }
 
-// Beide Optionen zeigen auf die jeweilige Prüfungssimulations-Detailseite. Die 2./3.-Sek-Zielseite
-// hat mangels Schritt-10-Inhalt heute noch keinen realen Katalogeintrag und liefert bis dahin
-// notFound() -- dieselbe bekannte, akzeptierte Lücke wie bei /distance-learning.
+// Beide Optionen zeigen auf die jeweilige Prüfungssimulations-Detailseite; beide haben seit der
+// separaten Extraktionsrunde für Layout_2_Sek_Pruefungssimulation.html einen realen Katalogeintrag.
 const pickerOptions = pruefungssimulationPageModel.eligibleAudiences.map((audience) => ({
   audience,
   href: `/kurse/${audience.slug}/pruefungssimulation`,

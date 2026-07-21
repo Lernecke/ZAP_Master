@@ -3370,3 +3370,172 @@ export const zweiDreiSekSelbststudiumPageModel = {
   offer: zweiDreiSekSelbststudium,
   accessAction: { kind: 'disabled', label: 'Zugang erhalten', disabledReason: 'Buchung folgt in einer späteren Ausbaustufe' },
 } as const satisfies SelfStudyPageModel
+
+// ---------------------------------------------------------------------------------------------
+// 2.2/2.8 ExamSimulationOffer -- Layout_2_Sek_Pruefungssimulation.html (wie die 6.-Klasse-Quelle
+// laut Abschnitt 4 ein fremdes, iframe-srcdoc-exportiertes Design-System; Inhalt wörtlich aus dem
+// eingebetteten Markup übernommen, nicht aus dem Wrapper-CSS/der Navigation). Preis CHF 145
+// stimmt mit der 6.-Klasse-Detailseite und der BMS-Prüfungssimulation überein -- kein Preis-Bug
+// hier. Die Quelle enthält zusätzlich einen vierteiligen Bewertungsraster-Abschnitt ("Note" /
+// "Inhalt & Aufbau" / "Sprache & Ausdruck" / "Hinweise") sowie einen dreistufigen
+// Nachprüfungs-Feedbackfluss ("Digitalisieren" / "Rückmeldung" / "Freigeben"). Weder
+// ExamSimulationOffer/ExamSimulationPageModel (Abschnitt 2.2/2.8) noch die BookableOffer-Weiche in
+// [angebot]/page.tsx (rendert für Prüfungssimulationen nur whyUs/flowSteps/examTimeline/faq)
+// haben dafür ein Feld -- dieser Inhalt bleibt deshalb bewusst unübernommen statt in ein
+// semantisch falsches Feld gepresst zu werden.
+// ---------------------------------------------------------------------------------------------
+
+export const zweiDreiSekPruefungssimulation = {
+  id: 'offer-2-3sek-pruefungssimulation',
+  audienceId: '2-3-sek',
+  slug: 'pruefungssimulation',
+  href: '/kurse/2-3-sek/pruefungssimulation',
+  displayName: 'Prüfungssimulation',
+  tagline: 'Offen für alle',
+  lede: 'Die echte Prüfungssituation kennenlernen, Zeitmanagement trainieren und gezielt erkennen, wo bis zur Gymiprüfung noch Lernbedarf besteht.',
+  description:
+    'Eine echte Aufnahmeprüfung unter realen Bedingungen — inklusive schriftlicher Bewertung. Auch ohne vorherige Kursteilnahme buchbar.',
+  laufzeit: 'Ein Prüfungstermin, Vormittag & Nachmittag',
+  dateSummary: ['Vormittag & Nachmittag'],
+  features: [
+    'Prüfungssimulation nach aktuellem Prüfungsformat',
+    'Durchführung unter Prüfungsbedingungen',
+    'Schriftliche Bewertung des Aufsatzes',
+  ],
+  regularPriceRappen: 14500,
+  currency: 'CHF',
+  priceUnit: 'pro Teilnahme',
+  overviewBullets: [
+    'Echte Zeitvorgaben, ohne Unterbrechung',
+    'Aufgabentypen, Umfang und Schwierigkeitsgrad orientieren sich an der Aufnahmeprüfung',
+    'Ruhige, kontrollierte Umgebung',
+  ],
+  whyUs: [
+    {
+      id: 'zeitvorgaben',
+      title: 'Echte Zeitvorgaben',
+      description: 'Die Aufgaben werden im vorgesehenen Zeitrahmen und ohne Unterbrechung gelöst.',
+    },
+    {
+      id: 'aufgaben',
+      title: 'Aufgaben',
+      description: 'Aufgabentypen, Umfang und Schwierigkeitsgrad orientieren sich an der Aufnahmeprüfung.',
+    },
+    {
+      id: 'umgebung',
+      title: 'Ruhige Umgebung',
+      description: 'Eine kontrollierte Durchführung hilft, Nervosität und Konzentration realistisch zu erleben.',
+    },
+  ],
+  kurstyp: 'pruefungssimulation',
+  flowSteps: [
+    { id: 'einfuehrung', title: 'Einführung', body: 'Ablauf, Regeln und Material werden kurz erklärt.' },
+    { id: 'pruefung', title: 'Prüfung', body: 'Deutsch und Mathematik unter echten Zeitvorgaben.' },
+    { id: 'korrektur', title: 'Korrektur', body: 'Der Aufsatz wird fachlich korrigiert und benotet.' },
+    { id: 'freigabe', title: 'Freigabe', body: 'Der korrigierte Aufsatz wird im Portal bereitgestellt.' },
+  ],
+  examTimeline: [
+    { id: 'deutsch-sprache', subject: 'de', label: 'Deutsch Sprachprüfung', minutes: 45 },
+    { id: 'mathematik', subject: 'ma', label: 'Mathematik', minutes: 90 },
+    { id: 'mittagspause', subject: 'pause', label: 'Mittagspause', minutes: 0 },
+    { id: 'deutsch-aufsatz', subject: 'de', label: 'Deutsch Aufsatz', minutes: 90 },
+  ],
+  faq: [
+    {
+      id: 'faq-aufgaben',
+      question: 'Entsprechen die Aufgaben der echten Gymiprüfung?',
+      answer:
+        'Die Aufgaben orientieren sich an den relevanten Aufgabentypen, Anforderungen und Zeitvorgaben. Es werden keine zukünftigen Originalprüfungen verwendet.',
+    },
+    {
+      id: 'faq-korrektur',
+      question: 'Wird die gesamte Prüfung korrigiert?',
+      answer:
+        'Der Aufsatz wird persönlich durch eine Lehrperson korrigiert und mit schriftlichem Feedback ins Portal geladen. Für Mathematik und Deutsch Sprache stehen detaillierte Lösungen zur Selbstkorrektur bereit.',
+    },
+    {
+      id: 'faq-scan-portal',
+      question: 'Wann erscheint der gescannte Aufsatz im Portal?',
+      answer:
+        'Nach der fachlichen Korrektur wird der Scan dem persönlichen Teilnehmerkonto zugeordnet. Sobald er freigegeben ist, erhält der Teilnehmer eine Benachrichtigung.',
+    },
+    {
+      id: 'faq-feedback-sichtbarkeit',
+      question: 'Wer kann das Feedback sehen?',
+      answer:
+        'Nur berechtigte Personen im geschützten Teilnehmerkonto sowie die zuständigen Lehrpersonen können auf die Prüfungsunterlagen zugreifen.',
+    },
+    {
+      id: 'faq-besprechung',
+      question: 'Kann das Feedback mit einer Lehrperson besprochen werden?',
+      answer: 'Optional kann ein persönliches Auswertungsgespräch oder eine Nachbesprechung gebucht werden.',
+    },
+    {
+      id: 'faq-ohne-kurs',
+      question: 'Kann man auch ohne laufenden Vorbereitungskurs teilnehmen?',
+      answer: 'Ja. Die Prüfungssimulation eignet sich auch als unabhängige Standortbestimmung.',
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies ExamSimulationOffer
+
+export const zweiDreiSekPruefungssimulationSessions = [
+  {
+    id: 4101,
+    offerId: 'offer-2-3sek-pruefungssimulation',
+    capacity: 20,
+    source: { kind: 'intensivwoche_kurse', kursId: 4101 },
+    kurs: 'Mittwoch, 17. Februar',
+    dateLabel: 'Mittwoch, 17. Februar',
+    timeLabel: '09.00–11.45 & 13.15–14.45',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: { kind: 'simple', items: [] },
+  },
+  {
+    id: 4102,
+    offerId: 'offer-2-3sek-pruefungssimulation',
+    capacity: 20,
+    source: { kind: 'intensivwoche_kurse', kursId: 4102 },
+    kurs: 'Samstag, 20. Februar',
+    dateLabel: 'Samstag, 20. Februar',
+    timeLabel: '09.00–11.45 & 13.15–14.45',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: { kind: 'simple', items: [] },
+  },
+  {
+    id: 4103,
+    offerId: 'offer-2-3sek-pruefungssimulation',
+    capacity: 20,
+    source: { kind: 'intensivwoche_kurse', kursId: 4103 },
+    kurs: 'Mittwoch, 24. Februar',
+    dateLabel: 'Mittwoch, 24. Februar',
+    timeLabel: '09.00–11.45 & 13.15–14.45',
+    standort: 'Zürich HB',
+    deliveryModes: ['onsite'],
+    ablauf: { kind: 'simple', items: [] },
+  },
+  {
+    id: 4104,
+    offerId: 'offer-2-3sek-pruefungssimulation',
+    capacity: 20,
+    source: { kind: 'intensivwoche_kurse', kursId: 4104 },
+    kurs: 'Freitag, 26. Februar',
+    dateLabel: 'Freitag, 26. Februar',
+    timeLabel: '09.00–11.45 & 13.15–14.45',
+    standort: 'Winterthur',
+    deliveryModes: ['onsite'],
+    ablauf: { kind: 'simple', items: [] },
+  },
+] satisfies SessionDefinition[]
+
+export const zweiDreiSekPruefungssimulationPageModel = {
+  audience: zweiDreiSek,
+  offer: zweiDreiSekPruefungssimulation,
+  sessions: zweiDreiSekPruefungssimulationSessions,
+} as const satisfies ExamSimulationPageModel

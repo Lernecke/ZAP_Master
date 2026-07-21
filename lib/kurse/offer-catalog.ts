@@ -42,6 +42,8 @@ import {
   zweiDreiSekHalbjahreskursSessions,
   zweiDreiSekIntensivkurs,
   zweiDreiSekIntensivkursSessions,
+  zweiDreiSekPruefungssimulation,
+  zweiDreiSekPruefungssimulationSessions,
   zweiDreiSekSelbststudium,
   zweiDreiSekSelbststudiumPageModel,
 } from '@/types/marketing.fixtures'
@@ -83,12 +85,9 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [sechsKlasseHalbjahreskurs, sechsKlasseIntensivkurs],
     addOnOffers: [sechsKlassePruefungssimulation, sechsKlasseSelbststudium],
   },
-  // '2-3-sek'.addOnOffers: nur Selbststudium -- Layout_2_Sek_Pruefungssimulation.html nutzt laut
-  // Abschnitt 4 weiterhin ein fremdes Design-System und braucht eine eigene, separate
-  // Extraktionsrunde (analog zur 6.-Klasse-Trennung in Schritt 11) -- kein Content dafür erfunden.
   '2-3-sek': {
     offers: [zweiDreiSekHalbjahreskurs, zweiDreiSekIntensivkurs],
-    addOnOffers: [zweiDreiSekSelbststudium],
+    addOnOffers: [zweiDreiSekPruefungssimulation, zweiDreiSekSelbststudium],
   },
   // bms.offers: nur der Intensivkurs -- die Halbjahreskurs-Karte der Hauptseite verlinkt fälschlich
   // auf die Intensivkurs-Unterseite (kein echter eigener Detailinhalt, siehe Kommentar bei
@@ -140,6 +139,7 @@ const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [einsSekLerncampSportferien.id]: einsSekLerncampSessions,
   [zweiDreiSekHalbjahreskurs.id]: zweiDreiSekHalbjahreskursSessions,
   [zweiDreiSekIntensivkurs.id]: zweiDreiSekIntensivkursSessions,
+  [zweiDreiSekPruefungssimulation.id]: zweiDreiSekPruefungssimulationSessions,
   [bmsIntensivkurs.id]: bmsIntensivkursSessions,
   [maturaHalbjahreskurs.id]: maturaHalbjahreskursSessions,
   [maturaIntensivwoche.id]: maturaIntensivwocheSessions,
