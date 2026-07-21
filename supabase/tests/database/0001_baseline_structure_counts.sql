@@ -66,6 +66,27 @@
 -- Angepasst durch 20260721084035_admin_save_daily_release_rpc.sql (DailyReleaseManager-RPC):
 -- +1 Funktion (admin_save_daily_release(), SECURITY INVOKER -- Funktionen-Zaehler +1, SECURITY-
 -- DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/Indizes.
+--
+-- Angepasst durch 20260721091344_work_time_payroll_schema.sql (Schritt 10c, Arbeitszeiten/Lohn):
+-- btree_gist absichtlich im extensions-Schema installiert (nicht public), zaehlt deshalb hier
+-- nicht mit. +6 Tabellen (teacher_assignments, work_entries, teacher_rate_agreements,
+-- payroll_periods, payroll_snapshots, payroll_snapshot_lines; alle RLS aktiviert), +1 Funktion
+-- (validate_work_entry_status_transition(), nicht SECURITY DEFINER), +11 RLS-Policies
+-- (teacher_assignments: admin_all+own_read=2; work_entries: admin_all+own_read+
+-- own_insert_draft+own_update_draft_or_rejected=4; teacher_rate_agreements: admin_all+own_read=2;
+-- payroll_periods/_snapshots/_snapshot_lines: je admin_all=3), +3 Trigger
+-- (work_entries_bump_version, work_entries_validate_transition, payroll_periods_bump_version),
+-- +44 Constraints, +20 Indizes (im Detail: teacher_assignments 6/4; work_entries 12/5;
+-- teacher_rate_agreements 6/3 inkl. EXCLUDE; payroll_periods 6/2; payroll_snapshots 6/3;
+-- payroll_snapshot_lines 8/3). Keine neue Sequenz (alle sechs Tabellen nutzen uuid).
+--
+-- Angepasst durch 20260721091511_admin_close_payroll_period_rpc.sql (PayrollReviewPanel-RPC):
+-- +1 Funktion (admin_close_payroll_period(), SECURITY INVOKER -- Funktionen-Zaehler +1, SECURITY-
+-- DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/Indizes.
+--
+-- Angepasst durch 20260721092720_admin_save_rate_agreement_rpc.sql (PayrollReviewPanel-RPC):
+-- +1 Funktion (admin_save_rate_agreement(), SECURITY INVOKER -- Funktionen-Zaehler +1, SECURITY-
+-- DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/Indizes.
 
 begin;
 
@@ -73,14 +94,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    38,
-    '38 Tabellen im public-Schema'
+    44,
+    '44 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    38,
-    'alle 38 public-Tabellen haben RLS aktiviert'
+    44,
+    'alle 44 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -94,8 +115,8 @@ select is(
        from information_schema.routines
       where routine_schema = 'public'
         and routine_type = 'FUNCTION'),
-    20,
-    '20 Funktionen im public-Schema'
+    23,
+    '23 Funktionen im public-Schema'
 );
 
 select is(
@@ -110,8 +131,8 @@ select is(
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    150,
-    '150 RLS-Policies im public-Schema'
+    161,
+    '161 RLS-Policies im public-Schema'
 );
 
 select is(
@@ -126,14 +147,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    142,
-    '142 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    186,
+    '186 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    104,
-    '104 Indizes im public-Schema'
+    124,
+    '124 Indizes im public-Schema'
 );
 
 select is(
@@ -143,8 +164,8 @@ select is(
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'
         and not t.tgisinternal),
-    14,
-    '14 nicht-interne Trigger im public-Schema'
+    17,
+    '17 nicht-interne Trigger im public-Schema'
 );
 
 select * from finish();

@@ -8,8 +8,8 @@ const intlMiddleware = createIntlMiddleware(routing)
 
 // Geschützte (dashboard)-Route-Group. Deckt jetzt auch /aufsaetze, /intensivkurse und
 // /materialien ab, die zuvor nur durch den Layout-Guard in app/(dashboard)/layout.tsx
-// geschützt waren, nicht durch diesen Proxy-Matcher. /arbeitszeiten existiert als Route noch
-// nicht (geplant für Schritt 10c), ist aber schon vorgemerkt.
+// geschützt waren, nicht durch diesen Proxy-Matcher. /arbeitszeiten (Lehrpersonen-Dashboard,
+// Schritt 10c) ist seitdem eine echte Route unter dieser Route-Group.
 const protectedPrefixes = [
   "/dashboard",
   "/trainer",

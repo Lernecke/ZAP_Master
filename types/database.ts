@@ -1268,6 +1268,132 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_periods: {
+        Row: {
+          created_at: string
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          month: number
+          status: string
+          updated_at: string
+          version: number
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          month: number
+          status?: string
+          updated_at?: string
+          version?: number
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          month?: number
+          status?: string
+          updated_at?: string
+          version?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      payroll_snapshot_lines: {
+        Row: {
+          amount_rappen: number
+          duration_minutes: number
+          hourly_rate_rappen: number
+          id: string
+          rate_agreement_id: string
+          snapshot_id: string
+          work_entry_id: string
+        }
+        Insert: {
+          amount_rappen: number
+          duration_minutes: number
+          hourly_rate_rappen: number
+          id?: string
+          rate_agreement_id: string
+          snapshot_id: string
+          work_entry_id: string
+        }
+        Update: {
+          amount_rappen?: number
+          duration_minutes?: number
+          hourly_rate_rappen?: number
+          id?: string
+          rate_agreement_id?: string
+          snapshot_id?: string
+          work_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_snapshot_lines_rate_agreement_id_fkey"
+            columns: ["rate_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_rate_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_snapshot_lines_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_snapshot_lines_work_entry_id_fkey"
+            columns: ["work_entry_id"]
+            isOneToOne: true
+            referencedRelation: "work_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_snapshots: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          period_id: string
+          teacher_id: string
+          total_amount_rappen: number
+          total_minutes: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          period_id: string
+          teacher_id: string
+          total_amount_rappen: number
+          total_minutes: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          period_id?: string
+          teacher_id?: string
+          total_amount_rappen?: number
+          total_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_snapshots_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1560,6 +1686,80 @@ export type Database = {
           },
         ]
       }
+      teacher_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          session_id: number
+          teacher_id: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          session_id: number
+          teacher_id: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: number
+          teacher_id?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_assignments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_rate_agreements: {
+        Row: {
+          created_at: string
+          created_by: string
+          currency: string
+          hourly_rate_rappen: number
+          id: string
+          teacher_id: string
+          valid_from: string
+          valid_until: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          currency?: string
+          hourly_rate_rappen: number
+          id?: string
+          teacher_id: string
+          valid_from: string
+          valid_until?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          currency?: string
+          hourly_rate_rappen?: number
+          id?: string
+          teacher_id?: string
+          valid_from?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       trainer_exams: {
         Row: {
           created_at: string | null
@@ -1703,6 +1903,75 @@ export type Database = {
         }
         Relationships: []
       }
+      work_entries: {
+        Row: {
+          activity_type: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          note: string | null
+          rejection_reason: string | null
+          session_id: number | null
+          status: string
+          submission_id: string | null
+          teacher_id: string
+          updated_at: string
+          version: number
+          work_date: string
+        }
+        Insert: {
+          activity_type: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          note?: string | null
+          rejection_reason?: string | null
+          session_id?: number | null
+          status?: string
+          submission_id?: string | null
+          teacher_id: string
+          updated_at?: string
+          version?: number
+          work_date: string
+        }
+        Update: {
+          activity_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          note?: string | null
+          rejection_reason?: string | null
+          session_id?: number | null
+          status?: string
+          submission_id?: string | null
+          teacher_id?: string
+          updated_at?: string
+          version?: number
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_entries_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "student_essays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       intensivwoche_kurse_mit_anmeldungen: {
@@ -1736,6 +2005,10 @@ export type Database = {
         Args: { request_id: string }
         Returns: string
       }
+      admin_close_payroll_period: {
+        Args: { p_month: number; p_year: number }
+        Returns: string
+      }
       admin_save_daily_release: {
         Args: {
           p_closes_at?: string
@@ -1743,6 +2016,14 @@ export type Database = {
           p_items?: Json
           p_opens_at?: string
           p_status: string
+        }
+        Returns: string
+      }
+      admin_save_rate_agreement: {
+        Args: {
+          p_hourly_rate_rappen: number
+          p_teacher_id: string
+          p_valid_from: string
         }
         Returns: string
       }
