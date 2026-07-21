@@ -172,6 +172,35 @@ export type Database = {
           },
         ]
       }
+      course_days: {
+        Row: {
+          course_date: string
+          id: string
+          sequence: number
+          session_id: number
+        }
+        Insert: {
+          course_date: string
+          id?: string
+          sequence: number
+          session_id: number
+        }
+        Update: {
+          course_date?: string
+          id?: string
+          sequence?: number
+          session_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_days_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_occurrences: {
         Row: {
           course_id: number | null
@@ -286,6 +315,89 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_release_items: {
+        Row: {
+          content_item_id: string
+          position: number
+          release_id: string
+        }
+        Insert: {
+          content_item_id: string
+          position: number
+          release_id: string
+        }
+        Update: {
+          content_item_id?: string
+          position?: number
+          release_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_release_items_content_item_id_fkey"
+            columns: ["content_item_id"]
+            isOneToOne: false
+            referencedRelation: "release_content_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_release_items_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "daily_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_releases: {
+        Row: {
+          closes_at: string | null
+          course_day_id: string
+          created_at: string
+          id: string
+          opens_at: string | null
+          published_at: string | null
+          published_by: string | null
+          revoked_at: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          closes_at?: string | null
+          course_day_id: string
+          created_at?: string
+          id?: string
+          opens_at?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          closes_at?: string | null
+          course_day_id?: string
+          created_at?: string
+          id?: string
+          opens_at?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_releases_course_day_id_fkey"
+            columns: ["course_day_id"]
+            isOneToOne: true
+            referencedRelation: "course_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       essay_ai_corrections: {
         Row: {
           essay_id: string
@@ -393,6 +505,7 @@ export type Database = {
       }
       intensivwoche_anmeldungen: {
         Row: {
+          beneficiary_user_id: string | null
           booked_price_rappen: number | null
           child_class_level: string
           child_firstname: string
@@ -412,6 +525,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          beneficiary_user_id?: string | null
           booked_price_rappen?: number | null
           child_class_level: string
           child_firstname: string
@@ -431,6 +545,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          beneficiary_user_id?: string | null
           booked_price_rappen?: number | null
           child_class_level?: string
           child_firstname?: string
@@ -1222,6 +1337,45 @@ export type Database = {
         }
         Relationships: []
       }
+      release_content_catalog: {
+        Row: {
+          created_at: string
+          exercise_id: number | null
+          id: string
+          kind: string
+          trainer_exam_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          exercise_id?: number | null
+          id?: string
+          kind: string
+          trainer_exam_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: number | null
+          id?: string
+          kind?: string
+          trainer_exam_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_content_catalog_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: true
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_content_catalog_trainer_exam_id_fkey"
+            columns: ["trainer_exam_id"]
+            isOneToOne: true
+            referencedRelation: "trainer_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       self_study_enrollments: {
         Row: {
           access_until: string | null
@@ -1580,6 +1734,16 @@ export type Database = {
     Functions: {
       accept_mentorship_request: {
         Args: { request_id: string }
+        Returns: string
+      }
+      admin_save_daily_release: {
+        Args: {
+          p_closes_at?: string
+          p_course_day_id: string
+          p_items?: Json
+          p_opens_at?: string
+          p_status: string
+        }
         Returns: string
       }
       admin_upsert_course_session: {

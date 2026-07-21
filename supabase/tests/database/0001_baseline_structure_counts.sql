@@ -48,6 +48,24 @@
 -- +1 Funktion (admin_upsert_course_session(), SECURITY INVOKER -- Funktionen-Zaehler +1,
 -- SECURITY-DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/
 -- Indizes.
+--
+-- Angepasst durch 20260721082939_daily_releases_schema.sql (Schritt 10b, Tagesfreigaben):
+-- +4 Tabellen (course_days, release_content_catalog, daily_releases, daily_release_items; alle RLS
+-- aktiviert), +7 RLS-Policies (course_days_admin_all; release_content_catalog_public_read/
+-- _admin_write; daily_releases_admin_all/_enrolled_read; daily_release_items_admin_all/
+-- _enrolled_read), +1 Funktion (link_anmeldung_beneficiary(), SECURITY DEFINER -- Funktionen- UND
+-- SECURITY-DEFINER-Zaehler je +1), +2 Trigger (link_anmeldung_beneficiary_before_insert auf
+-- intensivwoche_anmeldungen, daily_releases_bump_version), +22 Constraints
+-- (intensivwoche_anmeldungen: +1 FK fuer beneficiary_user_id; course_days: PK+FK+CHECK+2×UNIQUE=5;
+-- release_content_catalog: PK+2 FK+2 CHECK+2×UNIQUE=7; daily_releases: PK+UNIQUE+FK+CHECK+FK+CHECK=6;
+-- daily_release_items: PK(composite)+2 FK=3), +11 Indizes (idx_anmeldungen_beneficiary_user_id=1;
+-- course_days: PK+2×UNIQUE+idx_course_days_session_id=4; release_content_catalog: PK+2×UNIQUE=3;
+-- daily_releases: PK+UNIQUE=2; daily_release_items: PK=1). Keine neue Sequenz (alle vier Tabellen
+-- nutzen uuid/gen_random_uuid() statt Identity-Spalten).
+--
+-- Angepasst durch 20260721084035_admin_save_daily_release_rpc.sql (DailyReleaseManager-RPC):
+-- +1 Funktion (admin_save_daily_release(), SECURITY INVOKER -- Funktionen-Zaehler +1, SECURITY-
+-- DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/Indizes.
 
 begin;
 
@@ -55,14 +73,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    34,
-    '34 Tabellen im public-Schema'
+    38,
+    '38 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    34,
-    'alle 34 public-Tabellen haben RLS aktiviert'
+    38,
+    'alle 38 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -76,8 +94,8 @@ select is(
        from information_schema.routines
       where routine_schema = 'public'
         and routine_type = 'FUNCTION'),
-    18,
-    '18 Funktionen im public-Schema'
+    20,
+    '20 Funktionen im public-Schema'
 );
 
 select is(
@@ -86,14 +104,14 @@ select is(
        join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
         and p.prosecdef),
-    9,
-    '9 davon SECURITY DEFINER'
+    10,
+    '10 davon SECURITY DEFINER'
 );
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    143,
-    '143 RLS-Policies im public-Schema'
+    150,
+    '150 RLS-Policies im public-Schema'
 );
 
 select is(
@@ -108,14 +126,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    120,
-    '120 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    142,
+    '142 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    93,
-    '93 Indizes im public-Schema'
+    104,
+    '104 Indizes im public-Schema'
 );
 
 select is(
@@ -125,8 +143,8 @@ select is(
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'
         and not t.tgisinternal),
-    12,
-    '12 nicht-interne Trigger im public-Schema'
+    14,
+    '14 nicht-interne Trigger im public-Schema'
 );
 
 select * from finish();

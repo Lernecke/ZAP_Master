@@ -84,7 +84,16 @@ export function EditionWorkspace({
             Alle Kursangebote, Preise, Termine und Veröffentlichungen an einem Ort bearbeiten.
           </p>
         </div>
-        <Badge variant={edition?.status === 'published' ? 'default' : 'secondary'}>{statusLabel}</Badge>
+        <div className="flex items-center gap-3">
+          {edition && catalogEntry.kurstyp !== 'selbststudium' && (
+            <Link href={`/dashboard/kurse/angebote/${offerId}/durchfuehrungen/${edition.id}/tagesfreigaben`}>
+              <Button variant="outline" size="sm">
+                Tagesfreigaben
+              </Button>
+            </Link>
+          )}
+          <Badge variant={edition?.status === 'published' ? 'default' : 'secondary'}>{statusLabel}</Badge>
+        </div>
       </div>
 
       {/* Bearbeitungskontext */}
