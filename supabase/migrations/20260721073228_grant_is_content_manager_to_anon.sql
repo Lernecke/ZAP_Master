@@ -1,0 +1,16 @@
+-- Anon kann is_content_manager() bisher nicht ausfuehren (REVOKE ALL ... FROM PUBLIC in der
+-- Baseline 20260719133741_live_schema_baseline.sql, GRANT nur an authenticated/service_role).
+-- Mehrere RLS-Policies rufen die Funktion aber TO anon, authenticated auf:
+-- learning_materials_read_public_own_or_granted (Migration 20260720140000),
+-- offer_editions_read_published_or_content_manager und
+-- course_sessions_read_published_or_content_manager (Migration 20260720170000). Fuer anon ergibt
+-- das nicht "false", sondern einen Postgres-Fehler ("permission denied for function
+-- is_content_manager") -- jede anonyme SELECT-Anfrage auf diese drei Tabellen schlaegt komplett
+-- fehl, auch fuer eigentlich oeffentlich sichtbare Zeilen (is_public = true bzw.
+-- status = 'published'). Gefunden beim lokalen Verifizieren des 5.-Klasse-Lerncamp-
+-- Platzhalter-Seeds in offer_editions (supabase/seed.sql).
+--
+-- Die Funktion ist SECURITY DEFINER und rein lesend (EXISTS-Check gegen public.profiles per
+-- auth.uid()); fuer anon ist auth.uid() NULL, das EXISTS liefert also sicher false -- keine
+-- Rechteausweitung durch diesen Grant.
+GRANT EXECUTE ON FUNCTION public.is_content_manager() TO anon;
