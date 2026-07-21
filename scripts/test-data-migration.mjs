@@ -34,13 +34,14 @@ console.log(`Sentinel-Test fuer die neueste Migration: ${latestMigration}`)
 
 function finalizeLocalDb() {
   console.log('\nStelle vollstaendigen, kanonischen lokalen DB-Zustand wieder her ...')
-  runSupabaseCli(['db', 'reset', '--local'])
-  const seed = spawnSync('node', [path.join(projectRoot, 'scripts', 'seed-e2e-users.mjs')], {
+  // db-reset-local.mjs kombiniert bereits db reset + E2E-Nutzer- + E2E-Kursfixture-Seed
+  // (dieselbe Reihenfolge wie Schritt 3 des Gates) -- keine doppelte Logik hier.
+  const reset = spawnSync('node', [path.join(projectRoot, 'scripts', 'db-reset-local.mjs')], {
     cwd: projectRoot,
     stdio: 'inherit',
   })
-  if (seed.status !== 0) {
-    console.error('Warnung: E2E-Nutzer-Seed nach dem finalen Reset ist fehlgeschlagen.')
+  if (reset.status !== 0) {
+    console.error('Warnung: finaler db-reset-local.mjs-Lauf ist fehlgeschlagen.')
   }
 }
 

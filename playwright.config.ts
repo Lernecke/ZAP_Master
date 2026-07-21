@@ -27,10 +27,16 @@ export default defineConfig({
   // Der Produktionsserver muss ueber scripts/with-local-supabase.mjs laufen (siehe
   // package.json "start:test") -- Route-/Cache-Tests pruefen echtes Produktionsverhalten
   // (cacheComponents/use cache), nicht `next dev`.
+  //
+  // reuseExistingServer bewusst IMMER false, nicht nur in CI: ein wiederverwendeter `next start`-
+  // Prozess haelt den 'use cache'-Katalog (lib/kurse/catalog.ts) und den kompilierten Code eines
+  // fruehen Laufs im Speicher -- Preis-/Cache-Regressionstests wuerden dann gegen einen veralteten
+  // Stand pruefen, unabhaengig vom aktuellen Build oder DB-Inhalt. Dieses Gate soll bei jedem Lauf
+  // reproduzierbar von einem frischen Serverstart aus pruefen.
   webServer: {
     command: 'npm run start:test',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 })

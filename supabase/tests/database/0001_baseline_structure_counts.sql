@@ -111,6 +111,13 @@
 -- Storage-Policy lernmaterialien_read_access liegt im storage-Schema und zaehlt hier bewusst
 -- nicht mit (alle Zaehlungen dieser Datei sind auf schemaname='public' begrenzt). Keine neuen
 -- Tabellen/Funktionen/Trigger/Constraints/Indizes im public-Schema.
+--
+-- Angepasst durch 20260721153000_fix_public_availability_count_rls_gap.sql: +1 Funktion
+-- (count_active_anmeldungen(), SECURITY DEFINER -- Funktionen- UND SECURITY-DEFINER-Zaehler je
+-- +1) sowie CREATE OR REPLACE von intensivwoche_kurse_mit_anmeldungen (gleiche Signatur/
+-- Spaltenliste/security_invoker-Option, kein neuer View-Zaehler-Eintrag). Behebt eine reale
+-- RLS-Regression: die View zaehlte fuer anon wegen security_invoker=true bislang immer 0
+-- Anmeldungen. Keine neuen Tabellen/Trigger/Constraints/Indizes/Policies im public-Schema.
 
 begin;
 
@@ -139,8 +146,8 @@ select is(
        from information_schema.routines
       where routine_schema = 'public'
         and routine_type = 'FUNCTION'),
-    26,
-    '26 Funktionen im public-Schema'
+    27,
+    '27 Funktionen im public-Schema'
 );
 
 select is(
@@ -149,8 +156,8 @@ select is(
        join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
         and p.prosecdef),
-    13,
-    '13 davon SECURITY DEFINER'
+    14,
+    '14 davon SECURITY DEFINER'
 );
 
 select is(

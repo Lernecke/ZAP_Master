@@ -3,7 +3,17 @@
 import { createAuthenticatedSupabaseClient, createServerSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { kursFormSchema, type KursFormInput, type KursDB, type KursDBMitAnmeldungen } from '@/types/kurs-form'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
+
+// Die neuen Marketing-Kursseiten (Schritt 8) lesen Bestandskurse über getExistingCoursesForAudience
+// (lib/kurse/catalog.ts), 'use cache' + cacheTag('courses', `courses:audience:${id}`). Ohne dieses
+// updateTag() blieben Preis-/Detailänderungen aus diesem Admin-Formular dort bis zu cacheLife('hours')
+// unsichtbar -- ein Verstoss gegen Abschnitt 7 ("Preisänderung ... updateTag('courses') ... damit der
+// Bearbeiter seine Änderung sofort sieht"). Der breite Tag 'courses' genügt: jeder audience-spezifische
+// Cache-Eintrag trägt ihn zusätzlich zu seinem eigenen Tag, Invalidierung wirkt also auf alle Audiences.
+function invalidateCourseCaches() {
+  updateTag('courses')
+}
 
 export type KursResult<T = void> = 
   | { success: true; data?: T; message: string }
@@ -179,6 +189,7 @@ export async function createKurs(input: KursFormInput): Promise<KursResult<KursD
 
   revalidatePath('/dashboard/kurse')
   revalidatePath('/kurse')
+  invalidateCourseCaches()
 
   return {
     success: true,
@@ -255,6 +266,7 @@ export async function updateKurs(id: number, input: KursFormInput): Promise<Kurs
 
   revalidatePath('/dashboard/kurse')
   revalidatePath('/kurse')
+  invalidateCourseCaches()
 
   return {
     success: true,
@@ -293,6 +305,7 @@ export async function deleteKurs(id: number): Promise<KursResult> {
 
   revalidatePath('/dashboard/kurse')
   revalidatePath('/kurse')
+  invalidateCourseCaches()
 
   return {
     success: true,
@@ -330,6 +343,7 @@ export async function toggleKursStatus(id: number, istAktiv: boolean): Promise<K
 
   revalidatePath('/dashboard/kurse')
   revalidatePath('/kurse')
+  invalidateCourseCaches()
 
   return {
     success: true,

@@ -15,7 +15,10 @@ export async function getSessionAvailability(
   if (kursIds.length === 0) return result
 
   // Anon-Client genügt -- die View ist öffentlich lesbar für aktive Kurse (RLS), keine
-  // personenbezogenen Anmeldedaten enthalten.
+  // personenbezogenen Anmeldedaten enthalten. aktuelle_teilnehmer/status werden serverseitig über
+  // die SECURITY DEFINER-Funktion count_active_anmeldungen() aggregiert (Migration
+  // 20260721153000_fix_public_availability_count_rls_gap.sql) -- ohne sie wäre die Zahl für anon
+  // wegen security_invoker=true auf der View immer 0.
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
