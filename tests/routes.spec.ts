@@ -351,22 +351,7 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     await expect(row.getByRole('button', { name: 'Anmelden' })).toBeDisabled()
   })
 
-  // BEKANNTER, UNGELÖSTER FUND (nicht Teil dieser Session behoben): das Formular unter
-  // /dashboard/kurse/[id] ("Kurs bearbeiten") submitted überhaupt nicht -- weder per Klick auf
-  // "Änderungen speichern" (Playwright- UND natives DOM-.click()), noch per
-  // form.requestSubmit(). Reproduziert mit vollständig gültig ausgefüllten Feldern (kein
-  // Zod-/Hydration-Problem beim <select name="fach"> -- geprüft und ausgeschlossen), mit
-  // aria-invalid=[] und ohne jede sichtbare Fehlermeldung; selbst ein roher, react-hook-form-
-  // unabhängiger `onSubmit={() => document.title = '...'}` auf demselben <form>-Element feuert
-  // nicht. Andere Client-Component-Formulare auf ebenfalls PPR-vorgerenderten Routen (z.B. die
-  // Buchungs-Modal in AnmeldungModal, siehe Test oben) funktionieren einwandfrei, d.h. es ist kein
-  // pauschales PPR-Problem. Ursache nicht gefunden trotz ausführlicher Diagnose (Netzwerk-Tracing,
-  // DOM-Verschachtelung, aria-invalid, roher onSubmit-Handler) -- vermutlich ein eigenständiger,
-  // von der Cache-/RLS-Arbeit dieser Session unabhängiger Bug in kurs-formular.tsx oder seinem
-  // Layout-Baum. test.fixme() hält den Test sichtbar/reproduzierbar, ohne das Gate rot zu machen.
-  test.fixme(
-    'Admin-Preisänderung ist nach dem Speichern sofort auf der Zielgruppen-Hauptseite sichtbar',
-    async ({ page }) => {
+  test('Admin-Preisänderung ist nach dem Speichern sofort auf der Zielgruppen-Hauptseite sichtbar', async ({ page }) => {
     await page.goto('/de/kurse/6-klasse')
     await expect(page.getByText('E2E Preistest-Kurs')).toBeVisible()
     await expect(page.getByText(/CHF\s*888/)).toBeVisible()
@@ -374,7 +359,12 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     await loginAs(page, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD)
     await page.goto(`/dashboard/kurse/${PRICE_TEST_KURS_ID}`)
     await expect(page.locator('select[name="fach"]')).not.toHaveValue('')
-    await page.locator('input[name="preis"]').fill('777')
+    // Das preis-<input> hat step={10} (natives HTML5-Constraint, kurs-formular.tsx) -- ein Wert,
+    // der kein Vielfaches von 10 ist, lässt checkValidity() fehlschlagen und blockiert die
+    // Formularübermittlung bereits auf Browser-Ebene, BEVOR der submit-Event überhaupt an React
+    // weitergereicht wird (kein onSubmit-Aufruf, keine sichtbare Fehlermeldung, kein Netzwerk-
+    // Request -- ausführlich diagnostiziert). Deshalb hier zwingend ein Vielfaches von 10.
+    await page.locator('input[name="preis"]').fill('780')
     await page.getByRole('button', { name: 'Änderungen speichern' }).click()
     // updateKurs() leitet nach erfolgreichem Speichern auf /dashboard/kurse weiter.
     await page.waitForURL((url) => url.pathname === '/dashboard/kurse', { timeout: 15_000 })
@@ -383,8 +373,7 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     // app/(dashboard)/dashboard/kurse/actions.ts den 'use cache'-Katalogeintrag sofort invalidiert
     // (Abschnitt 7, Punkt 3), statt bis cacheLife('hours') abzulaufen.
     await page.goto('/de/kurse/6-klasse')
-    await expect(page.getByText(/CHF\s*777/)).toBeVisible()
+    await expect(page.getByText(/CHF\s*780/)).toBeVisible()
     await expect(page.getByText(/CHF\s*888/)).toHaveCount(0)
-    }
-  )
+  })
 })
