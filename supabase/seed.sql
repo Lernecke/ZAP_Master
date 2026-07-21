@@ -21,12 +21,13 @@
 -- Abschnitt 2.12 kuenftig hingehoert: offer_editions.regular_price_rappen. Der Wert hier ist ein
 -- bewusst unverwechselbarer Platzhalter (0 Rappen) statt einer der beiden erfundenen Zahlen; die
 -- Edition bleibt status='draft' und ist per RLS (offer_editions_read_published_or_content_manager)
--- nur fuer is_content_manager() sichtbar, nie oeffentlich lesbar. Die echte Zahl und die
--- Verdrahtung des Katalogs auf diese Tabelle sind ein spaeterer, fachlich freigegebener Schritt
--- (Schritt 10a/Admin-Maske).
-insert into public.offers (audience_id, kurstyp, slug)
-values ('5', 'intensivkurs', 'lerncamp-sportferien');
-
+-- nur fuer is_content_manager() sichtbar, nie oeffentlich lesbar. Die echte Zahl folgt als
+-- fachlich freigegebene Bearbeitung ueber die Admin-Maske (Schritt 10a); die Verdrahtung des
+-- oeffentlichen Katalogs auf diese Tabelle bleibt ein spaeterer Schritt.
+--
+-- Die zugehoerige offers-Zeile (audience_id='5', kurstyp='intensivkurs',
+-- slug='lerncamp-sportferien') wird seit Migration 20260721074103_seed_offer_catalog.sql zusammen
+-- mit allen anderen 19 stabilen Angeboten dort angelegt, nicht mehr hier.
 insert into public.offer_editions (
   offer_id, school_year, public_title, tagline, description,
   regular_price_rappen, early_bird_enabled, status

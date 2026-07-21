@@ -24,12 +24,19 @@ export default async function KurseAdminPage() {
             Erstelle und verwalte Intensivwoche-Kurse
           </p>
         </div>
-        <Link href="/dashboard/kurse/neu">
-          <Button className="rounded-xl">
-            <Plus className="mr-2 h-4 w-4" />
-            Neuer Kurs
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/kurse/angebote">
+            <Button variant="outline" className="rounded-xl">
+              Kursangebote verwalten
+            </Button>
+          </Link>
+          <Link href="/dashboard/kurse/neu">
+            <Button className="rounded-xl">
+              <Plus className="mr-2 h-4 w-4" />
+              Neuer Kurs
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Kurse-Liste */}

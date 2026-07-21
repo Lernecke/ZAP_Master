@@ -31,6 +31,23 @@
 -- intensivwoche_anmeldungen: idx_anmeldungen_edition_id+idx_anmeldungen_session_id=2). Funktionen/
 -- SECURITY DEFINER/Trigger unveraendert (enforce_anmeldung_price_snapshot_immutable() per
 -- CREATE OR REPLACE erweitert, gleiche Signatur, bestehender Trigger unangetastet).
+--
+-- 20260721073228_grant_is_content_manager_to_anon.sql: nur ein GRANT, keine Struktur-/Zaehlaenderung.
+--
+-- 20260721074103_seed_offer_catalog.sql: reine Daten-Inserts (20 offers-Zeilen), keine
+-- Struktur-/Zaehlaenderung.
+--
+-- Angepasst durch 20260721074500_offer_editions_admin_writes.sql (Schritt 10a, Admin-Maske):
+-- +1 Funktion (bump_version_and_updated_at(), nicht SECURITY DEFINER -- Funktionen-Zaehler +1,
+-- SECURITY-DEFINER-Zaehler unveraendert), +5 RLS-Policies (offer_editions_admin_insert/_update,
+-- course_sessions_admin_insert/_update, audit_log_admin_insert), +2 Trigger
+-- (offer_editions_bump_version, course_sessions_bump_version). Keine neuen Tabellen/Views/
+-- Sequenzen/Constraints/Indizes -- nur GRANT/CREATE POLICY/CREATE TRIGGER auf bestehenden Tabellen.
+--
+-- Angepasst durch 20260721075036_admin_upsert_course_session_rpc.sql (SessionEditor-RPC):
+-- +1 Funktion (admin_upsert_course_session(), SECURITY INVOKER -- Funktionen-Zaehler +1,
+-- SECURITY-DEFINER-Zaehler unveraendert). Keine neuen Tabellen/Policies/Trigger/Constraints/
+-- Indizes.
 
 begin;
 
@@ -59,8 +76,8 @@ select is(
        from information_schema.routines
       where routine_schema = 'public'
         and routine_type = 'FUNCTION'),
-    16,
-    '16 Funktionen im public-Schema'
+    18,
+    '18 Funktionen im public-Schema'
 );
 
 select is(
@@ -75,8 +92,8 @@ select is(
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    138,
-    '138 RLS-Policies im public-Schema'
+    143,
+    '143 RLS-Policies im public-Schema'
 );
 
 select is(
@@ -108,8 +125,8 @@ select is(
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'
         and not t.tgisinternal),
-    10,
-    '10 nicht-interne Trigger im public-Schema'
+    12,
+    '12 nicht-interne Trigger im public-Schema'
 );
 
 select * from finish();

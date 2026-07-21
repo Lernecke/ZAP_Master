@@ -7,23 +7,25 @@
 
 begin;
 
-select plan(15);
+select plan(16);
 
--- 1) offers: Eindeutigkeit auf (audience_id, kurstyp, slug).
+-- 1) offers: Eindeutigkeit auf (audience_id, kurstyp, slug). audience_id 'pgtap-test' ist bewusst
+--    kein echtes Audience-Kuerzel -- vermeidet eine Kollision mit den 20 echten, seit
+--    20260721074103_seed_offer_catalog.sql vorhandenen Referenz-Angeboten.
 select lives_ok(
-    $$insert into public.offers (audience_id, kurstyp, slug) values ('6', 'intensivkurs', 'intensivkurs-sportferien')$$,
+    $$insert into public.offers (audience_id, kurstyp, slug) values ('pgtap-test', 'intensivkurs', 'pgtap-fixture')$$,
     'erstes offers-Insert gelingt'
 );
 
 select throws_ok(
-    $$insert into public.offers (audience_id, kurstyp, slug) values ('6', 'intensivkurs', 'intensivkurs-sportferien')$$,
+    $$insert into public.offers (audience_id, kurstyp, slug) values ('pgtap-test', 'intensivkurs', 'pgtap-fixture')$$,
     '23505'::char(5),
     NULL,
     'doppeltes (audience_id, kurstyp, slug) wird abgelehnt'
 );
 
 with fixture_offer as (
-    select id from public.offers where audience_id = '6' and slug = 'intensivkurs-sportferien'
+    select id from public.offers where audience_id = 'pgtap-test' and slug = 'pgtap-fixture'
 )
 select set_config('pgtap.offer_id', (select id::text from fixture_offer), true);
 
@@ -150,9 +152,26 @@ select ok(
           from unnest(array['offers', 'offer_editions', 'course_sessions', 'audit_log']) tbl,
                unnest(array['INSERT', 'UPDATE', 'DELETE']) priv
          where has_table_privilege('anon', 'public.' || tbl, priv)
-            or has_table_privilege('authenticated', 'public.' || tbl, priv)
     ),
-    'anon/authenticated haben keine INSERT/UPDATE/DELETE-Rechte auf den vier neuen Tabellen'
+    'anon hat weiterhin keine INSERT/UPDATE/DELETE-Rechte auf den vier neuen Tabellen'
+);
+
+-- offers bleibt Migrations-Referenzdaten (Schritt 10a fuegt bewusst keinen "Neues Kursangebot"-
+-- Flow hinzu); authenticated bekommt seit Migration 20260721074500 gezielt INSERT/UPDATE auf
+-- offer_editions/course_sessions und INSERT auf audit_log (Admin-Maske), aber nach wie vor kein
+-- DELETE irgendwo und keine Rechte auf offers.
+select ok(
+    not exists (
+        select 1
+          from unnest(array['offers', 'offer_editions', 'course_sessions', 'audit_log']) tbl,
+               unnest(array['INSERT', 'UPDATE', 'DELETE']) priv
+         where has_table_privilege('authenticated', 'public.' || tbl, priv)
+           and not (
+             (tbl in ('offer_editions', 'course_sessions') and priv in ('INSERT', 'UPDATE'))
+             or (tbl = 'audit_log' and priv = 'INSERT')
+           )
+    ),
+    'authenticated hat nur die fuer die Admin-Maske vorgesehenen INSERT/UPDATE-Rechte, kein DELETE, keine Rechte auf offers'
 );
 
 -- 6) published/draft-Sichtbarkeitsregel (Policy-Ebene, konsistent mit dem Stil dieser Testdatei).

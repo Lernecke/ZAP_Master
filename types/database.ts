@@ -1582,6 +1582,24 @@ export type Database = {
         Args: { request_id: string }
         Returns: string
       }
+      admin_upsert_course_session: {
+        Args: {
+          p_beschreibung: string
+          p_delivery_modes?: string[]
+          p_edition_id: string
+          p_end_datum: string
+          p_fach: string
+          p_kurs_id?: number
+          p_lehrer: string
+          p_max_teilnehmer: number
+          p_name: string
+          p_ort: string
+          p_registration_status?: string
+          p_start_datum: string
+          p_uhrzeit: string
+        }
+        Returns: number
+      }
       book_intensivwoche_kurs: {
         Args: {
           p_child_class_level: string
@@ -1739,7 +1757,6 @@ export const Constants = {
   },
 } as const
 
-
 // ============================================================
 // Convenience Types fuer die App
 // ============================================================
@@ -1750,3 +1767,4 @@ export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"]
 
 export type UserRole = "user" | "lehrperson" | "admin"
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say"
+
