@@ -4,6 +4,7 @@ import { homePageModel } from "@/app/data/marketing-site"
 import { buildPageMetadata } from "@/lib/seo"
 import { PageContainer } from "@/app/components/layout/page-container"
 import { Section } from "@/app/components/layout/section"
+import { Badge } from "@/app/components/ui/badge"
 import { KlassenPicker } from "@/app/components/marketing/klassen-picker"
 import { ServiceSubgroup } from "@/app/components/marketing/service-subgroup"
 import { FeaturedTestimonial } from "@/app/components/marketing/featured-testimonial"
@@ -35,10 +36,15 @@ export default async function MarketingHomePage({
       <Section spacing="lg">
         <PageContainer>
           <div className="flex flex-col items-center gap-8 text-center">
-            <div className="flex flex-col gap-3">
-              <p className="font-mono text-xs tracking-wide text-secondary-foreground uppercase">
+            <div className="flex flex-col items-center gap-3">
+              {/* Abschnitt 10.4 (Accessibility-Audit): text-secondary-foreground (weiss) stand
+                  hier direkt auf dem Seitenhintergrund statt auf bg-secondary -- Kontrast 1.08:1
+                  statt der geforderten 4.5:1 (axe-core color-contrast, WCAG 2 AA). secondary-
+                  foreground ist ausschliesslich als Paar mit bg-secondary korrekt, siehe Badge
+                  "secondary"-Variante bzw. app/components/layout/page-intro.tsx. */}
+              <Badge variant="secondary" className="font-mono text-xs tracking-wide uppercase">
                 {homePageModel.hero.eyebrow}
-              </p>
+              </Badge>
               <h1 className="font-serif text-3xl font-semibold text-foreground md:text-4xl">
                 {homePageModel.hero.title}
               </h1>

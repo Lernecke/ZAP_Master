@@ -23,6 +23,15 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Abschnitt 10.4 "Browser-/Mobile-Testmatrix": testMatch beschraenkt dieses Projekt bewusst
+    // auf tests/performance.spec.ts, damit die uebrigen Suiten (routes/links/accessibility/
+    // flag-rollback) nicht versehentlich ein zweites Mal unter einem Mobile-Viewport laufen und
+    // sich die Laufzeit des Haupt-Gates verdoppelt. `npm run test:performance` (kein
+    // Projekt-Filter) fuehrt performance.spec.ts dadurch automatisch unter "chromium" (Desktop,
+    // matcht per Default alles) UND "mobile-chrome" aus -- die tatsaechliche, wenn auch bewusst
+    // kleine Matrix; Firefox/WebKit sind (noch) nicht installiert, siehe
+    // accessibility-performance-runbook.md.
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] }, testMatch: /performance\.spec\.ts/ },
   ],
   // Der Produktionsserver muss ueber scripts/with-local-supabase.mjs laufen (siehe
   // package.json "start:test") -- Route-/Cache-Tests pruefen echtes Produktionsverhalten

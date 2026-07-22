@@ -16,7 +16,9 @@
     "test:routes": "node scripts/with-local-supabase.mjs playwright test tests/routes.spec.ts",
     "test:links": "node scripts/with-local-supabase.mjs playwright test tests/links.spec.ts",
     "test:flag-rollback": "node scripts/with-local-supabase.mjs playwright test --config=playwright.flag-off.config.ts",
-    "check:secrets": "node scripts/check-no-leaked-secrets.mjs"
+    "check:secrets": "node scripts/check-no-leaked-secrets.mjs",
+    "test:a11y": "node scripts/with-local-supabase.mjs playwright test tests/accessibility.spec.ts --project=chromium",
+    "test:performance": "node scripts/with-local-supabase.mjs playwright test tests/performance.spec.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
@@ -72,6 +74,7 @@
     "edge >= 88"
   ],
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@next/bundle-analyzer": "^16.2.2",
     "@playwright/test": "1.61.1",
     "@radix-ui/react-slot": "^1.2.4",

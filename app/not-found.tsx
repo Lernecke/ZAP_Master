@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, MotionConfig } from "framer-motion"
 import { Zap, ArrowLeft, Home } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/app/components/ui/button"
@@ -9,6 +9,14 @@ import { Suspense } from "react"
 
 export default function NotFound() {
   return (
+    // Abschnitt 10.4 (Accessibility-Audit, "Reduced Motion"): die vorherige Fassung ignorierte
+    // prefers-reduced-motion vollständig, insbesondere ein endlos wiederholender Y-Bounce
+    // (repeat: Infinity) -- genau die Art von automatisch startender, dauerhafter, nicht
+    // pausierbarer Bewegung, die WCAG 2.2 SC 2.2.2 (Pause, Stop, Hide) und SC 2.3.3 (Animation
+    // from Interactions) adressieren. MotionConfig mit reducedMotion="user" deaktiviert für ALLE
+    // motion.*-Nachfahren automatisch Eintritts- wie Endlos-Animationen, sobald das Betriebssystem
+    // "Bewegung reduzieren" meldet -- kein manuelles Durchreichen an jede einzelne Stelle nötig.
+    <MotionConfig reducedMotion="user">
     <main className="brand-marketing relative min-h-screen bg-background">
       <Suspense fallback={null}>
         <MathBackground />
@@ -118,5 +126,6 @@ export default function NotFound() {
         </div>
       </div>
     </main>
+    </MotionConfig>
   )
 }
