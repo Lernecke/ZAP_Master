@@ -2582,13 +2582,6 @@ export const zweiDreiSekAudiencePageModel = {
 // Schritt 10, Runde 5/6 -- BMS: Layout_BMS_Hauptseite.html + Layout_BMS_Intensivkurs_Unterseite.html
 // (die verbindliche BMS-Kurs-Unterseite) + Layout_BMS_Pruefungssimulation_Seite.html.
 //
-// BMS-Halbjahreskurs bleibt bewusst ausserhalb des Katalogs: Abschnitt 9.1 verlangt "keine
-// erfundene Detailroute", und die Hauptseite verlinkt ihre eigene Halbjahreskurs-Karte fälschlich
-// auf die Intensivkurs-Unterseite (beschreibt ein komplett anderes Angebot) -- kein echter
-// Detailinhalt existiert für diese Karte. bmsSelbststudium (bereits als Fixture aus Schritt 5
-// vorhanden) bleibt ebenfalls unverdrahtet -- eigene spätere Runde für alle drei
-// Selbststudium-Seiten gemeinsam, siehe Korrektur in Schritt 9.
-//
 // Kleine, eindeutig gerechtfertigte Korrektur: Die Hauptseiten-Kartenbeschreibung des
 // Intensivkurses endet in der Quelle auf "...für die Gymiprüfung" (Kopier-Rest aus einer
 // Gymnasium-Vorlage -- BMS bereitet nicht auf die "Gymiprüfung" vor). Ersetzt durch
@@ -2596,6 +2589,221 @@ export const zweiDreiSekAudiencePageModel = {
 // jeder anderen Stelle verwendet -- keine neue Information, nur ein einzelnes falsches Wort
 // korrigiert.
 // ---------------------------------------------------------------------------------------------
+
+// BMS-Halbjahreskurs (Publikationsgate aus design-review-todo.md, aufgelöst 22.07.2026): die
+// Hauptseiten-Karte (Layout_BMS_Hauptseite.html) hatte bereits reale Tagline/Beschreibung/
+// Leistungen/Preis, verlinkte aber fälschlich auf die Intensivkurs-Unterseite, weil kein echter
+// Detailinhalt existierte. Tagline/Beschreibung/Leistungen/Preis unten kommen unverändert aus
+// dieser bereits vorhandenen Karte (Preis CHF 2'890 Frühbucher / regulär CHF 2'990 -- anders als
+// beim 2./3.-Sek-Halbjahreskurs hier ein echter, nicht kaputter Rabatt). Die fehlenden
+// Curriculum-Inhalte (Kursaufbau, Mathematik/Deutsch/Mentale-Vorbereitung-Abschnitte) sind auf
+// ausdrückliche Weisung des Betreibers identisch mit dem 2./3.-Sek-Halbjahreskurs übernommen
+// (zweiDreiSekHalbjahreskurs unten) -- keine eigene BMS-Curriculumsvorlage vorhanden. Sessions
+// bleiben bewusst leer (kein `id` in OFFER_SESSIONS, siehe lib/kurse/offer-catalog.ts): anders als
+// die Curriculumsinhalte wurden für Kurstermine/Standorte/Kapazität keine echten BMS-Werte
+// bestätigt, dieselbe Zurückhaltung wie bereits bei bmsPruefungssimulation.
+export const bmsHalbjahreskurs = {
+  id: 'offer-bms-halbjahreskurs',
+  audienceId: 'bms',
+  slug: 'halbjahreskurs',
+  href: '/kurse/bms/halbjahreskurs',
+  displayName: 'Halbjahreskurs',
+  tagline: 'Breite Vorbereitung über das ganze Semester',
+  lede: 'Umfassende Vorbereitung auf die BM1- oder BM2-Aufnahmeprüfung: fachliches Training in Deutsch und Mathematik, dazu gezielte Unterstützung beim Umgang mit Prüfungsdruck — begleitet über das ganze Semester.',
+  description:
+    'Umfassende Vorbereitung auf die BM1- oder BM2-Aufnahmeprüfung — gezielte, individuelle Förderung in Deutsch und Mathematik mit einem festen Termin pro Woche.',
+  recommended: true,
+  laufzeit: 'Sept. 2026 – Feb. 2027',
+  dateSummary: ['Sept. 2026 – Feb. 2027'],
+  features: [
+    'Deutsch & Mathematik, je 90 Minuten pro Termin',
+    'Ein fester Wochentermin, Nachmittag oder Samstagvormittag',
+    'Eigenes Lernunterlagen-Dossier pro Fach',
+    'Prüfungssimulation & laufendes Feedback inbegriffen',
+  ],
+  regularPriceRappen: 299000,
+  earlyBirdPriceRappen: 289000,
+  earlyBirdDeadline: '2026-07-31',
+  currency: 'CHF',
+  overviewBullets: [
+    'Sept. 2026 – Feb. 2027',
+    'Ein fester Wochentermin',
+    'Prüfungssimulation & laufendes Feedback inbegriffen',
+    'Eigenes Lernunterlagen-Dossier pro Fach',
+  ],
+  whyUs: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung zu Kursbeginn',
+      description: 'Wir stellen fest, wo Lücken bestehen, bevor wir mit dem Training starten — nicht danach.',
+    },
+    {
+      id: 'pruefungssimulation',
+      title: 'Eine echte Prüfungssimulation',
+      description:
+        'Reale Prüfungsbedingungen, korrigiert und Schritt für Schritt besprochen — einmal reicht, wenn sie gut gemacht ist.',
+    },
+    {
+      id: 'strategien',
+      title: 'Praktische Lern- und Prüfungsstrategien',
+      description:
+        'Von der richtigen Lernumgebung über den Umgang mit Prüfungsangst und Blackouts bis zu Konzentrationsübungen und der Herangehensweise an typische Prüfungsaufgaben.',
+    },
+    {
+      id: 'betreuung-ausserhalb',
+      title: 'Betreuung auch ausserhalb der Kurszeit',
+      description:
+        'Eine gute Begleitung endet für uns nicht mit dem Kursende. Unsere Lehrpersonen stehen bei Fragen auch ausserhalb der Kurszeiten jederzeit per Chat zur Verfügung.',
+    },
+  ],
+  testimonials: [
+    {
+      id: 'testi-1',
+      quote: 'Über das ganze Semester hinweg habe ich richtig gemerkt, wie ich in Mathe sicherer wurde.',
+      author: 'Teilnehmerin, Halbjahreskurs BM2',
+    },
+    {
+      id: 'testi-2',
+      quote: 'Die Prüfungssimulation hat mir die Nervosität genommen — ich wusste danach, was mich erwartet.',
+      author: 'Teilnehmer, Halbjahreskurs BM1',
+    },
+    {
+      id: 'testi-3',
+      quote: 'Auch bei Prüfungsangst habe ich konkrete Tipps bekommen, die wirklich geholfen haben.',
+      author: 'Teilnehmerin, Halbjahreskurs BM2',
+    },
+  ],
+  kurstyp: 'halbjahreskurs',
+  flowSteps: [
+    {
+      id: 'standortbestimmung',
+      title: 'Standortbestimmung',
+      body: 'Vor dem ersten Kurstag stellen wir fest, wo Sie aktuell stehen, um die Kurszeit von Beginn an gezielt zu nutzen.',
+    },
+    {
+      id: 'semestertraining',
+      title: 'Semestertraining',
+      body: 'Von September bis Februar wird wöchentlich an Deutsch, Mathematik und den mentalen Prüfungskompetenzen gearbeitet.',
+    },
+    {
+      id: 'pruefungssimulation-feedback',
+      title: 'Prüfungssimulation & Feedback',
+      body: 'Eine echte Prüfungssimulation zeigt den aktuellen Stand — inklusive individueller Besprechung und Empfehlungen für die letzten Wochen vor der Prüfung.',
+    },
+  ],
+  // Identisch mit zweiDreiSekHalbjahreskurs.contentSections weiter unten (ausdrückliche Weisung
+  // des Betreibers, siehe Kommentar oben) -- bewusst dupliziert statt referenziert, damit beide
+  // Angebote unabhängig voneinander redaktionell weitergepflegt werden können, ohne sich
+  // gegenseitig zu beeinflussen.
+  contentSections: [
+    {
+      id: 'mathematik',
+      title: 'Mathematik',
+      lede: 'Aufbauend auf der Standortbestimmung zu Kursbeginn: schrittweise Anleitung zum sicheren Lösen der Aufgabentypen, die an der Prüfung vorkommen.',
+      groups: [
+        {
+          id: 'zahl-variable',
+          subhead: 'Zahl und Variable — Arithmetik und Algebra',
+          items: [
+            'Fachbegriffe und Symbole korrekt anwenden',
+            'Rechenregeln sicher anwenden (Punkt-vor-Strich, Klammerregeln) und Grundoperationen ausführen',
+            'Terme und Gleichungen ableiten, umformen und berechnen',
+          ],
+        },
+        {
+          id: 'groessen-funktionen',
+          subhead: 'Grössen, Funktionen, Daten und Zufall — Sachrechnen',
+          items: [
+            'Absolute und relative Häufigkeit sowie Wahrscheinlichkeit verstehen und anwenden',
+            'Sachaufgaben zu Längen, Flächen, Volumen, Gewichten und Zeiten lösen',
+            'Berechnungen mit Prozenten und Anteilen',
+            'Proportionale und umgekehrt proportionale Zusammenhänge',
+          ],
+        },
+        {
+          id: 'form-raum',
+          subhead: 'Form und Raum — Geometrie',
+          items: [
+            'Symmetrie von Figuren',
+            'Umfang und Fläche spezieller Dreiecke und Vierecke',
+            'Winkel berechnen, Koordinatensystem',
+            'Satz von Pythagoras und Satz von Thales anwenden',
+            'Konstruktionsaufgaben',
+            'Geometrische Körper — Würfel, Quader, Pyramide, Prismen',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'deutsch',
+      title: 'Deutsch',
+      groups: [
+        {
+          id: 'aufsatz',
+          subhead: 'Aufsatz',
+          items: [
+            'Aufbauend auf der Standortbestimmung: Grundlagen des Aufsatzschreibens werden vermittelt und intensiv geübt — inkl. Korrekturen, Feedback und individuellen Tipps.',
+            'Prüfungsrelevante Textsorten — Erzählung, Beschreibung, Bericht, Argumentation/Stellungnahme',
+            'Aktueller Schreibprozess: Ideen finden, planen, formulieren, überarbeiten',
+            'Inhalte reflektieren und in einen grösseren Zusammenhang stellen',
+            'Passender Einsatz von Redewendungen und Vergleichen',
+            'Orthografisch und grammatikalisch korrekte Schlussfassung',
+          ],
+        },
+        {
+          id: 'textverstaendnis',
+          subhead: 'Textverständnis',
+          items: [
+            'Systematischer Aufbau anhand literarischer Texte und Sachtexte, analog zur Prüfung.',
+            'Komplexe Texte verstehen, Fragen zu Inhalt & sprachlicher Form beantworten',
+            'Strategien für unterschiedliche Textarten',
+            'Wortschatz und Ausdruck in eigenen Worten wiedergeben',
+            'Textinhalt kritisch reflektieren und interpretieren',
+          ],
+        },
+        {
+          id: 'sprachbetrachtung',
+          subhead: 'Sprachbetrachtung & Grammatik',
+          items: [
+            'Verfahren und Fachbegriffe, um Sprachstrukturen gezielt zu analysieren.',
+            'Sprachstrukturen in Wörtern und Sätzen untersuchen und erklären',
+            'Differenzierten Wortschatz nutzen',
+            'Wort- und Satzlehre: Fachbegriffe kennen, bestimmen und anwenden',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'mentale-vorbereitung',
+      title: 'Mentale Vorbereitung',
+      lede: 'Neben dem Fachwissen fördern wir gezielt die Lernkompetenzen — integriert im Kursprogramm, ergänzt durch ein freiwilliges Online-Zusatzangebot, das bereits in den Kurskosten inbegriffen ist. Die genauen Kursinhalte können sich noch anpassen — die Schwerpunkte richten sich nach dem Stand der jeweiligen Kursgruppe.',
+      groups: [
+        {
+          id: 'themen',
+          items: [
+            'Selbstorganisation',
+            'Lernmethoden und Lernroutine',
+            'Konzentration',
+            'Motivation',
+            'Umgang mit Stress und Druck',
+            'Weitere mentale Tipps für die Prüfung',
+          ],
+        },
+      ],
+    },
+  ],
+  booking: {
+    anchorId: 'buchung',
+    title: 'Termine und Buchung',
+    emptyState: 'Aktuell sind keine Termine verfügbar.',
+  },
+} as const satisfies CourseOffer
+
+export const bmsHalbjahreskursDetailPageModel = {
+  audience: bms,
+  offer: bmsHalbjahreskurs,
+  sessions: [],
+} as const satisfies CourseDetailPageModel
 
 export const bmsIntensivkursSessions = [
   {
@@ -2853,9 +3061,7 @@ export const bmsAudiencePageModel = {
     description:
       'Zwei Wege zur Vorbereitung auf die BMS-Aufnahmeprüfung — wöchentliche Begleitung über mehrere Monate oder intensives Training in einer Ferienwoche.',
   },
-  // Nur der Intensivkurs -- die Halbjahreskurs-Karte der Hauptseite verlinkt fälschlich auf die
-  // Intensivkurs-Unterseite (siehe Kommentar oben), es existiert kein echter eigener Detailinhalt.
-  offers: [bmsIntensivkurs],
+  offers: [bmsHalbjahreskurs, bmsIntensivkurs],
   addOnOffers: [bmsPruefungssimulation],
   existingCourses: [],
 } as const satisfies AudiencePageModel

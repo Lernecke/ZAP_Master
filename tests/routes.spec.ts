@@ -106,6 +106,7 @@ const courseDetailRoutes = [
   '/de/kurse/2-3-sek/intensivkurs-sportferien',
   '/de/kurse/2-3-sek/pruefungssimulation',
   '/de/kurse/2-3-sek/selbststudium',
+  '/de/kurse/bms/halbjahreskurs',
   '/de/kurse/bms/intensivkurs',
   '/de/kurse/bms/pruefungssimulation',
   '/de/kurse/bms/selbststudium',

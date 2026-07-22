@@ -7,6 +7,7 @@
 
 import {
   bmsAudiencePageModel,
+  bmsHalbjahreskurs,
   bmsIntensivkurs,
   bmsIntensivkursSessions,
   bmsPruefungssimulation,
@@ -90,11 +91,8 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [zweiDreiSekHalbjahreskurs, zweiDreiSekIntensivkurs],
     addOnOffers: [zweiDreiSekPruefungssimulation, zweiDreiSekSelbststudium],
   },
-  // bms.offers: nur der Intensivkurs -- die Halbjahreskurs-Karte der Hauptseite verlinkt fälschlich
-  // auf die Intensivkurs-Unterseite (kein echter eigener Detailinhalt, siehe Kommentar bei
-  // bmsIntensivkurs in types/marketing.fixtures.ts).
   bms: {
-    offers: [bmsIntensivkurs],
+    offers: [bmsHalbjahreskurs, bmsIntensivkurs],
     addOnOffers: [bmsPruefungssimulation, bmsSelbststudium],
   },
   matura: {

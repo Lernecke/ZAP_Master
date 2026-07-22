@@ -31,6 +31,7 @@ const ENTRY_ROUTES = [
   '/de/kurse/6-klasse/selbststudium',
   '/de/kurse/2-3-sek/halbjahreskurs',
   '/de/kurse/2-3-sek/intensivkurs-sportferien',
+  '/de/kurse/bms/halbjahreskurs',
   '/de/kurse/bms/intensivkurs',
   '/de/kurse/matura/halbjahreskurs',
   '/kurse',
