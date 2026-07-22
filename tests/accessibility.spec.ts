@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import type { Result } from 'axe-core'
 
@@ -92,6 +92,49 @@ test.describe('Buchungsdialog', () => {
       .withTags(WCAG_TAGS)
       .include('[role="dialog"]')
       .analyze()
+    expect(results.violations, formatViolations(results.violations)).toEqual([])
+  })
+})
+
+test.describe('Buchungsdialog im geschützten Dashboard (/intensivkurse)', () => {
+  // app/(dashboard)/intensivkurse/anmeldung-modal-dashboard.tsx ist ein strukturell fast
+  // identisches Duplikat von app/(public)/kurse/anmeldung-modal.tsx (derselbe Radix-Dialog-Fix,
+  // siehe accessibility-performance-runbook.md) -- eigener, bewusst schlanker Test hier, weil der
+  // Aufruf-Kontext (eingeloggt, Karten- statt Tabellen-Layout, Profil-Vorausfüllung) ein anderer
+  // ist als beim öffentlichen Modal, dessen Dialog-Verhalten bereits oben ausführlich getestet ist.
+  const E2E_USER_EMAIL = process.env.E2E_USER_EMAIL!
+  const E2E_USER_PASSWORD = process.env.E2E_USER_PASSWORD!
+
+  async function loginAsE2eUser(page: Page) {
+    await page.goto('/login')
+    await page.getByLabel('Email').fill(E2E_USER_EMAIL)
+    await page.getByLabel('Passwort').fill(E2E_USER_PASSWORD)
+    await page.getByRole('button', { name: /Anmelden/i }).click()
+    await page.waitForURL((url) => url.pathname !== '/login', { timeout: 15_000 })
+  }
+
+  test('geöffneter Anmelde-Dialog im Dashboard hat keine WCAG-AA-Verstösse und trägt eine ARIA-Dialogrolle', async ({ page }) => {
+    test.skip(!E2E_USER_EMAIL || !E2E_USER_PASSWORD, 'E2E_USER_EMAIL/PASSWORD fehlen (.env.test.local)')
+    await loginAsE2eUser(page)
+    await page.goto('/intensivkurse')
+
+    // Karten-Layout statt SessionTable, und /intensivkurse liest `name` direkt aus der DB-Zeile
+    // statt aus der editorialen Marketing-Fixture -- die dieselbe kursId=9001 dort als "Kurs B"
+    // anzeigt (types/marketing.fixtures.ts), hier aber unter dem in
+    // scripts/seed-e2e-course-fixtures.mjs gesetzten echten Spaltenwert "E2E Verfügbarkeitstest"
+    // erscheint. Per sichtbarer Überschrift finden, Karte durch Klick darauf aufklappen
+    // (KursKarte.onToggle sitzt auf dem umschliessenden Header-<div>, Klick auf die Überschrift
+    // bubbelt dorthin), dann innerhalb DERSELBEN Karte den "Anmelden"-Button auslösen.
+    const heading = page.getByRole('heading', { name: 'E2E Verfügbarkeitstest', exact: true })
+    await expect(heading).toBeVisible()
+    await heading.click()
+    const card = heading.locator('xpath=ancestor::div[contains(@class, "rounded-2xl")][1]')
+    const trigger = card.getByRole('button', { name: /Anmelden/i })
+    await expect(trigger).toBeEnabled()
+    await trigger.click()
+
+    await expect(page.getByRole('dialog')).toBeVisible()
+    const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).include('[role="dialog"]').analyze()
     expect(results.violations, formatViolations(results.violations)).toEqual([])
   })
 })

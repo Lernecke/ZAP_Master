@@ -101,11 +101,28 @@ Schliessen wieder fokussiert). Alle Formularfelder erhielten `id`/`htmlFor`, `ar
 `aria-describedby` auf die zugehörige Fehlermeldung; die Geschlecht-Gruppe wurde zu
 `<fieldset>`/`<legend>` umgebaut.
 
-**Nicht behoben, dokumentierter Folgefund:** `app/(dashboard)/intensivkurse/anmeldung-modal-dashboard.tsx`
-ist ein strukturell fast identisches, aber separates Duplikat für den geschützten
-Dashboard-Buchungsflow und vermutlich von denselben Problemen betroffen. Ausserhalb des Scopes
-dieses Schritts (kein automatisierter Accessibility-Test deckt es aktuell ab); zeitnaher, klar
-umrissener Folgeschritt.
+**Nachtrag -- ebenfalls behoben:** `app/(dashboard)/intensivkurse/anmeldung-modal-dashboard.tsx`,
+das strukturell fast identische, separate Duplikat für den geschützten Dashboard-Buchungsflow, war
+tatsächlich von denselben Problemen betroffen. Mit demselben Radix-Dialog-Fix nachgezogen
+(inklusive `onCloseAutoFocus`, `fieldset`/`legend`, Label-Assoziationen) und mit einem eigenen,
+authentifizierten Testfall in `tests/accessibility.spec.ts` abgedeckt.
+
+#### Nebenfund beim Testen des Dashboard-Modals: RLS-Regression auf `/intensivkurse`
+
+Der neue authentifizierte Testfall deckte einen zweiten, von der Dialog-Frage unabhängigen
+Fehler auf: `/intensivkurse` zeigte für jeden eingeloggten Nutzer ohne Lehrperson-/Admin-Rechte
+**"0 Kurse gefunden"**, obwohl aktive Kurse existierten. Ursache: `intensivwoche_kurse` hatte nur
+eine SELECT-Policy `anon_select_active_kurse` (`TO anon`) für aktive Kurse und eine
+Owner-beschränkte `lehrperson_select_own_kurse` (`TO authenticated`) -- keine Policy erlaubte einem
+gewöhnlichen eingeloggten Nutzer das Lesen aktiver Kurse. Ein eingeloggter Nutzer war dadurch
+schlechter gestellt als ein anonymer Gast auf der öffentlichen `/kurse`-Seite.
+
+Behoben additiv in `supabase/migrations/20260722084521_grant_authenticated_select_active_kurse.sql`
+(neue Policy `authenticated_select_active_kurse`, spiegelt die anon-Policy für `TO authenticated`;
+keine Rechteausweitung, da dieselben Zeilen bereits über `anon` lesbar sind). Regressionsgeschützt
+durch `supabase/tests/database/0019_authenticated_select_active_kurse.sql` (pgTAP) sowie den oben
+genannten Playwright-Test, der jetzt den echten Dialog auf der echten, mit Daten befüllten Seite
+öffnet statt an einer leeren Kursliste zu scheitern.
 
 ### `app/not-found.tsx` -- Reduced Motion
 

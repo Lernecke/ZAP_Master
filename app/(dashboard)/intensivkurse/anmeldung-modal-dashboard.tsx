@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { 
-  X, 
-  User, 
-  Mail, 
-  Phone, 
-  GraduationCap, 
+import {
+  X,
+  User,
+  Mail,
+  Phone,
+  GraduationCap,
   MessageSquare,
-  Loader2, 
+  Loader2,
   CheckCircle2,
   Calendar,
   MapPin,
@@ -19,10 +19,11 @@ import {
   Sparkles
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { FACH_LABELS, FACH_FARBEN } from '@/types/kurs'
-import { 
-  intensivwocheAnmeldungSchema, 
-  type IntensivwocheAnmeldungInput 
+import {
+  intensivwocheAnmeldungSchema,
+  type IntensivwocheAnmeldungInput
 } from '@/types/intensivwoche'
 import { submitIntensivwocheAnmeldung } from '@/app/(public)/kurse/actions'
 import type { UserProfileData } from './page'
@@ -53,6 +54,13 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
   // erlaubt der DB, einen wiederholten Submit (Doppelklick, Netzwerk-Retry) idempotent zu
   // behandeln statt eine doppelte Buchung anzulegen.
   const [idempotencyKey] = useState(() => crypto.randomUUID())
+  // Abschnitt 10.4 (Accessibility-Audit): siehe die identische Begründung in
+  // app/(public)/kurse/anmeldung-modal.tsx -- dieselbe Struktur, derselbe Fix. Das ausloesende
+  // "Anmelden" liegt ausserhalb dieser Komponente (kein <DialogTrigger>), Radix' eingebaute
+  // Fokus-Rueckgabe kennt es deshalb nicht; onCloseAutoFocus unten stellt sie explizit her.
+  const [triggerElement] = useState<HTMLElement | null>(() =>
+    typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null
+  )
 
   // Bestimme welche Felder vorausgefüllt werden können
   const hasProfileData = userProfile.first_name || userProfile.email || userProfile.phone
@@ -75,23 +83,6 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
       notes: '',
     },
   })
-
-  // ESC-Taste zum Schliessen
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
-  }, [onClose])
-
-  // Body-Scroll verhindern
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [])
 
   const onSubmit = async (data: IntensivwocheAnmeldungInput) => {
     setSubmitState('loading')
@@ -116,6 +107,17 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
     }
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) onClose()
+  }
+
+  const handleCloseAutoFocus = (event: Event) => {
+    if (triggerElement) {
+      event.preventDefault()
+      triggerElement.focus()
+    }
+  }
+
   const farben = FACH_FARBEN[kurs.fach]
 
   const formatDatum = (datum: string) => {
@@ -130,20 +132,20 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
   // Erfolgs-Ansicht
   if (submitState === 'success') {
     return (
-      <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <div 
-          className="w-full max-w-md bg-card rounded-2xl shadow-xl p-8 text-center"
-          onClick={(e) => e.stopPropagation()}
+      <Dialog open onOpenChange={handleOpenChange}>
+        <DialogContent
+          className="max-w-md gap-0 rounded-2xl p-8 text-center"
+          showCloseButton={false}
+          onCloseAutoFocus={handleCloseAutoFocus}
         >
           <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
             <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Anmeldung erfolgreich!
-          </h2>
+          <DialogTitle asChild>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Anmeldung erfolgreich!
+            </h2>
+          </DialogTitle>
           <p className="text-muted-foreground mb-2">
             {serverMessage}
           </p>
@@ -154,19 +156,17 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
           <Button onClick={onClose} className="rounded-xl">
             Schliessen
           </Button>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     )
   }
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
-      onClick={onClose}
-    >
-      <div 
-        className="w-full max-w-2xl bg-card rounded-2xl shadow-xl my-8"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="max-w-2xl max-h-[85vh] gap-0 overflow-y-auto rounded-2xl p-0"
+        showCloseButton={false}
+        onCloseAutoFocus={handleCloseAutoFocus}
       >
         {/* Header */}
         <div className={`${farben.bg} px-6 py-4 rounded-t-2xl flex items-start justify-between`}>
@@ -174,12 +174,16 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
             <span className={`text-xs font-medium ${farben.text} uppercase tracking-wider`}>
               {FACH_LABELS[kurs.fach]}
             </span>
-            <h2 className="text-xl font-bold text-foreground mt-1">
-              Anmeldung: {kurs.name}
-            </h2>
+            <DialogTitle asChild>
+              <h2 className="text-xl font-bold text-foreground mt-1">
+                Anmeldung: {kurs.name}
+              </h2>
+            </DialogTitle>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Schliessen"
             className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
           >
             <X className="h-5 w-5 text-foreground" />
@@ -231,51 +235,60 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Vorname */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="child_firstname" className="block text-sm font-medium text-foreground mb-2">
                   Vorname *
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
+                    id="child_firstname"
                     type="text"
                     {...register('child_firstname')}
                     placeholder="Max"
+                    aria-invalid={!!errors.child_firstname}
+                    aria-describedby={errors.child_firstname ? 'child_firstname-error' : undefined}
                     className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
                   />
                 </div>
                 {errors.child_firstname && (
-                  <p className="mt-1.5 text-sm text-destructive">{errors.child_firstname.message}</p>
+                  <p id="child_firstname-error" className="mt-1.5 text-sm text-destructive">{errors.child_firstname.message}</p>
                 )}
               </div>
 
               {/* Nachname */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="child_lastname" className="block text-sm font-medium text-foreground mb-2">
                   Nachname *
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
+                    id="child_lastname"
                     type="text"
                     {...register('child_lastname')}
                     placeholder="Muster"
+                    aria-invalid={!!errors.child_lastname}
+                    aria-describedby={errors.child_lastname ? 'child_lastname-error' : undefined}
                     className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
                   />
                 </div>
                 {errors.child_lastname && (
-                  <p className="mt-1.5 text-sm text-destructive">{errors.child_lastname.message}</p>
+                  <p id="child_lastname-error" className="mt-1.5 text-sm text-destructive">{errors.child_lastname.message}</p>
                 )}
               </div>
 
               {/* Klassenstufe */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="child_class_level" className="block text-sm font-medium text-foreground mb-2">
                   Klassenstufe *
                 </label>
                 <div className="relative">
                   <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <select
+                    id="child_class_level"
                     {...register('child_class_level')}
+                    aria-invalid={!!errors.child_class_level}
+                    aria-describedby={errors.child_class_level ? 'child_class_level-error' : undefined}
                     className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors appearance-none cursor-pointer"
                   >
                     <option value="">— Bitte wählen —</option>
@@ -287,15 +300,19 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
                   </select>
                 </div>
                 {errors.child_class_level && (
-                  <p className="mt-1.5 text-sm text-destructive">{errors.child_class_level.message}</p>
+                  <p id="child_class_level-error" className="mt-1.5 text-sm text-destructive">{errors.child_class_level.message}</p>
                 )}
               </div>
 
-              {/* Geschlecht */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+              {/* Geschlecht -- fieldset/legend statt <label>, weil ein <label> nur EIN Control
+                  beschreiben darf, nicht eine Gruppe von drei Radios (WCAG 1.3.1/4.1.2). */}
+              <fieldset
+                className="min-w-0 border-0 p-0 m-0"
+                aria-describedby={errors.child_gender ? 'child_gender-error' : undefined}
+              >
+                <legend className="block text-sm font-medium text-foreground mb-2">
                   Geschlecht *
-                </label>
+                </legend>
                 <div className="flex gap-4 h-11 items-center">
                   {[
                     { value: 'm', label: 'Männlich' },
@@ -317,9 +334,9 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
                   ))}
                 </div>
                 {errors.child_gender && (
-                  <p className="mt-1.5 text-sm text-destructive">{errors.child_gender.message}</p>
+                  <p id="child_gender-error" className="mt-1.5 text-sm text-destructive">{errors.child_gender.message}</p>
                 )}
-              </div>
+              </fieldset>
             </div>
           </div>
 
@@ -328,43 +345,49 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
               Kontaktdaten der Eltern
             </h3>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* E-Mail */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="parent_email" className="block text-sm font-medium text-foreground mb-2">
                   E-Mail *
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
+                    id="parent_email"
                     type="email"
                     {...register('parent_email')}
                     placeholder="eltern@beispiel.ch"
+                    aria-invalid={!!errors.parent_email}
+                    aria-describedby={errors.parent_email ? 'parent_email-error' : undefined}
                     className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
                   />
                 </div>
                 {errors.parent_email && (
-                  <p className="mt-1.5 text-sm text-destructive">{errors.parent_email.message}</p>
+                  <p id="parent_email-error" className="mt-1.5 text-sm text-destructive">{errors.parent_email.message}</p>
                 )}
               </div>
 
               {/* Telefon */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="parent_phone" className="block text-sm font-medium text-foreground mb-2">
                   Telefon *
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
+                    id="parent_phone"
                     type="tel"
                     {...register('parent_phone')}
                     placeholder="+41 79 123 45 67"
+                    aria-invalid={!!errors.parent_phone}
+                    aria-describedby={errors.parent_phone ? 'parent_phone-error' : undefined}
                     className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
                   />
                 </div>
                 {errors.parent_phone && (
-                  <p className="mt-1.5 text-sm text-destructive">{errors.parent_phone.message}</p>
+                  <p id="parent_phone-error" className="mt-1.5 text-sm text-destructive">{errors.parent_phone.message}</p>
                 )}
               </div>
             </div>
@@ -372,20 +395,23 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
 
           {/* Bemerkungen */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label htmlFor="notes" className="block text-sm font-medium text-foreground mb-2">
               Bemerkungen (optional)
             </label>
             <div className="relative">
               <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <textarea
+                id="notes"
                 {...register('notes')}
                 rows={2}
                 placeholder="Allergien, besondere Bedürfnisse, etc."
+                aria-invalid={!!errors.notes}
+                aria-describedby={errors.notes ? 'notes-error' : undefined}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-none"
               />
             </div>
             {errors.notes && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.notes.message}</p>
+              <p id="notes-error" className="mt-1.5 text-sm text-destructive">{errors.notes.message}</p>
             )}
           </div>
 
@@ -429,7 +455,7 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
             Mit der Anmeldung akzeptierst du unsere Datenschutzbestimmungen und AGB.
           </p>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

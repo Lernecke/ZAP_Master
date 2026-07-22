@@ -118,6 +118,13 @@
 -- Spaltenliste/security_invoker-Option, kein neuer View-Zaehler-Eintrag). Behebt eine reale
 -- RLS-Regression: die View zaehlte fuer anon wegen security_invoker=true bislang immer 0
 -- Anmeldungen. Keine neuen Tabellen/Trigger/Constraints/Indizes/Policies im public-Schema.
+--
+-- Angepasst durch 20260722084521_grant_authenticated_select_active_kurse.sql: +1 RLS-Policy
+-- (authenticated_select_active_kurse). Behebt eine reale, beim Accessibility-Audit gefundene
+-- Regression: die einzige bisherige SELECT-Policy fuer aktive Kurse war TO anon beschraenkt,
+-- wodurch ein eingeloggter Nicht-Lehrperson-Nutzer auf /intensivkurse schlechter gestellt war als
+-- ein anonymer Gast (0 sichtbare Kurse). Keine neuen Tabellen/Funktionen/Trigger/Constraints/
+-- Indizes/Views im public-Schema.
 
 begin;
 
@@ -162,8 +169,8 @@ select is(
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    169,
-    '169 RLS-Policies im public-Schema'
+    170,
+    '170 RLS-Policies im public-Schema'
 );
 
 select is(
