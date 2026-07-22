@@ -14,7 +14,8 @@
     "build:test": "node scripts/with-local-supabase.mjs next build",
     "start:test": "node scripts/with-local-supabase.mjs next start",
     "test:routes": "node scripts/with-local-supabase.mjs playwright test tests/routes.spec.ts",
-    "test:links": "node scripts/with-local-supabase.mjs playwright test tests/links.spec.ts"
+    "test:links": "node scripts/with-local-supabase.mjs playwright test tests/links.spec.ts",
+    "test:flag-rollback": "node scripts/with-local-supabase.mjs playwright test --config=playwright.flag-off.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

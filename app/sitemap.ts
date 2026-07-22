@@ -3,6 +3,7 @@ import { routing } from '@/i18n/routing'
 import { audiences } from '@/app/data/marketing-site'
 import { listCatalogedOfferParams } from '@/lib/kurse/offer-catalog'
 import { SITE_URL } from '@/lib/seo'
+import { isMarketingSiteLive } from '@/lib/marketing-flag'
 
 // Abschnitt 10.4 des Architektur-Briefings: "sitemap.ts enthält nur veröffentlichte kanonische
 // DE-Routen." Enthält deshalb bewusst NICHT /kontakt, /impressum, /datenschutz -- alle drei zeigen
@@ -25,6 +26,14 @@ const STATIC_CONTENT_PATHS = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = []
+
+  // Abschnitt 10.4 Feature-Flag/Cutover: bei deaktiviertem Marketing-Release-Flag (siehe
+  // lib/marketing-flag.ts) sind die lokalisierten Marketingrouten per proxy.ts ohnehin auf /kurse
+  // umgeleitet -- sie hier trotzdem zu listen würde Suchmaschinen zum toten Indexieren von Zielen
+  // einladen, die live gerade nicht erreichbar sind. Die Bestandsroute /kurse bleibt in jedem Fall.
+  if (!isMarketingSiteLive()) {
+    return [{ url: `${SITE_URL}/kurse`, changeFrequency: 'daily', priority: 0.5 }]
+  }
 
   for (const locale of routing.locales) {
     for (const path of STATIC_CONTENT_PATHS) {

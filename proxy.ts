@@ -4,6 +4,7 @@ import { getToken } from "next-auth/jwt"
 import createIntlMiddleware from "next-intl/middleware"
 import { routing } from "@/i18n/routing"
 import { getSafeCallbackUrl } from "@/lib/auth/callback-url"
+import { isMarketingSiteLive, MARKETING_FALLBACK_PATH } from "@/lib/marketing-flag"
 
 const intlMiddleware = createIntlMiddleware(routing)
 
@@ -83,9 +84,16 @@ export async function proxy(request: NextRequest) {
     return handleAuthRoute(request)
   }
 
-  // Bestehende unlokalisierte öffentliche Routen bleiben unverändert an ihrem Ort.
+  // Bestehende unlokalisierte öffentliche Routen bleiben unverändert an ihrem Ort -- unabhängig
+  // vom Marketing-Release-Flag, das ist gerade das Rollback-Ziel unten.
   if (isUnderPrefix(pathname, existingUnlocalizedPublicPrefixes)) {
     return NextResponse.next()
+  }
+
+  // Abschnitt 10.4 Feature-Flag/Cutover: bei deaktiviertem Flag fällt jede neue, lokalisierte
+  // Marketingroute (inkl. "/") auf die bewährte Bestandsroute zurück, siehe lib/marketing-flag.ts.
+  if (!isMarketingSiteLive()) {
+    return NextResponse.redirect(new URL(MARKETING_FALLBACK_PATH, request.url))
   }
 
   return intlMiddleware(request)
