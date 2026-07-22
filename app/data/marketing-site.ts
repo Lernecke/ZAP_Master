@@ -192,6 +192,10 @@ export const siteNav = {
   audiences,
   primaryItems: [
     { id: 'nachhilfe', label: 'Nachhilfe', href: '/nachhilfe' },
+    // Ursprünglich bewusst nicht im Top-Level-Nav (Architektur-Briefing Abschnitt 3: "Tipps
+    // bleiben über die Startseiten-Kacheln ... auffindbar, aber nicht im Top-Level-Nav"). Auf
+    // ausdrücklichen Wunsch des Betreibers am 22.07.2026 hier ergänzt.
+    { id: 'tipps', label: 'Tipps', href: '/tipps' },
     { id: 'ueber-uns', label: 'Über uns', href: '/ueber-uns' },
     { id: 'kontakt', label: 'Kontakt', href: '/kontakt' },
   ],

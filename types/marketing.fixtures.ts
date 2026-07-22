@@ -871,6 +871,28 @@ export const tipsPageModel = {
         },
       ],
     },
+    // Neue Kategorie auf Wunsch des Betreibers (22.07.2026): sinngemäss und stark gekürzt aus den
+    // öffentlich einsehbaren F-Antworten von
+    // https://gymivorbereitung-zuerich.ch/tipps/haeufige-fragen-und-antworten übernommen, in
+    // eigenen Worten neu formuliert -- keine Übernahme von Sätzen/Formulierungen der Quelle.
+    {
+      id: 'nach-der-pruefung',
+      title: 'Nach der Prüfung',
+      tips: [
+        {
+          id: 'wenn-es-nicht-klappt',
+          title: 'Und wenn die Prüfung nicht klappt?',
+          excerpt:
+            'Ein Nicht-Bestehen ist nicht das Ende des Weges: Je nach Ausgangslage bleiben ein späterer Anlauf über die Kurzzeit-Aufnahmeprüfung oder gleichwertige Wege wie BMS, FMS, IMS oder die Passerelle offen.',
+        },
+        {
+          id: 'erstes-semester-gymi',
+          title: 'Der Sprung ins erste Gymi-Semester',
+          excerpt:
+            'Am Gymnasium liegt die Verantwortung fürs Lernen deutlich stärker beim Kind selbst — Stoffmenge und Tempo steigen spürbar. Wer sich bereits in der Vorbereitung eine gute Lernstruktur angewöhnt hat, tut sich beim Einstieg leichter.',
+        },
+      ],
+    },
   ],
   faq: [
     {
