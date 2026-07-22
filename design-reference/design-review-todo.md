@@ -70,17 +70,24 @@ Abschnitt 9.1.
 - [x] **Team- und Testimonial-Bilder entschieden: weglassen.** Bestätigt am 22.07.2026. Geprüft: Keine Fixture setzt `Testimonial.avatar` oder `TeamGroup.image` (beide optional laut Typ). `Testimonials`/`FeaturedTestimonial`/die Team-Karten auf `/ueber-uns` rendern dadurch bereits nie ein Bild -- nicht einmal einen generierten Platzhalter-Avatar. Kein Code-Änderung nötig, nur dieser Punkt nachträglich abgehakt.
 - [ ] **Selbststudium-Zugang Ende-zu-Ende freigeben.** Checkout, Grant, Login-Rückleitung, Materialzugriff, Ablauf und Entzug/Rückerstattung testen; bis dahin keinen aktiven „Zugang erhalten“-Link anzeigen.
 - [ ] **Nachhilfe-Abo-Ziel freigeben.** Realen Checkout oder ausdrücklich bestätigten Kontaktflow testen; bis dahin keinen aktiven „Abo buchen“-Link anzeigen.
-- [x] **Impressum und Datenschutz freigegeben, anwaltliche Prüfung ausdrücklich übersprungen.**
-  Bestätigt am 22.07.2026 ("skip legal review"). Impressum enthält die vom Betreiber bestätigte
-  reale Kontaktadresse (Lernecke, Bolleystrasse 33, 8006 Zürich, lerneckezueri@gmail.com) sowie
-  generische, nicht identitätsbezogene Schweizer Standardklauseln (Haftungsausschluss, Haftung für
-  Links, Urheberrechte, allgemeiner DSG-Absatz). Datenschutz enthält denselben generischen
-  DSG-Absatz als eigene Seite. Beide sind jetzt Teil der sitemap (`app/sitemap.ts`). Bewusst
-  NICHT übernommen: Google-Analytics-/Google-+1-Klauseln aus der ursprünglich vorgeschlagenen
-  Fremdvorlage -- diese Website betreibt kein Analytics, eine solche Klausel wäre schlicht falsch.
-  **AGB bleibt davon unabhängig offen:** kein Betreiber-Text existiert bisher überhaupt, das
-  Überspringen der Prüfung ersetzt keinen fehlenden Inhalt -- `/agb` zeigt weiterhin nur den
-  "Inhalte folgen"-Platzhalter und ist nicht in der sitemap.
+- [x] **Impressum, AGB und Datenschutz freigegeben, anwaltliche Prüfung ausdrücklich
+  übersprungen.** Bestätigt am 22.07.2026 ("skip legal review"). Impressum enthält die vom
+  Betreiber bestätigte reale Kontaktadresse (Lernecke, Bolleystrasse 33, 8006 Zürich,
+  lerneckezueri@gmail.com) sowie generische, nicht identitätsbezogene Schweizer Standardklauseln
+  (Haftungsausschluss, Haftung für Links, Urheberrechte, allgemeiner DSG-Absatz). Datenschutz
+  enthält denselben generischen DSG-Absatz als eigene Seite. AGB übernimmt die vom Betreiber
+  vorgegebene Konkurrenzvorlage mit mehreren angeordneten Korrekturen: Vertragspartei durchgehend
+  auf "Lernecke Zürich GmbH" korrigiert, Stripe-Zahlungsabschnitt entfernt, und die
+  Drittanbieter-Materialpartnerschaft ("modular lernen" in der Vorlage) durch den vom Betreiber
+  bestätigten tatsächlichen Partner "yondy" (https://www.yondy.ch/) ersetzt. Der übrige, nicht
+  bestätigte Teil des ursprünglichen "Kauf von Material"-Abschnitts (Lernkarten-Eigenverkauf/
+  -Versand/-Rücksendung als Lerneckes eigenes Produkt) bleibt aussen vor. Zusätzlich, eigenständig
+  vorgenommen: die Kursplattform-Klausel von der namentlich genannten, tatsächlich nicht genutzten
+  "Google Workspace/Google Classroom" auf "unsere digitale Kursplattform" verallgemeinert. Alle
+  drei Seiten sind jetzt Teil der sitemap (`app/sitemap.ts`). Bewusst NICHT
+  übernommen: Google-Analytics-/Google-+1-Klauseln aus der ursprünglich vorgeschlagenen
+  Fremdvorlage für Impressum/Datenschutz -- diese Website betreibt kein Analytics, eine solche
+  Klausel wäre schlicht falsch.
 
 ## Bewusst so belassen (Stärken erhalten)
 

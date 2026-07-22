@@ -6,13 +6,11 @@ import { SITE_URL } from '@/lib/seo'
 import { isMarketingSiteLive } from '@/lib/marketing-flag'
 
 // Abschnitt 10.4 des Architektur-Briefings: "sitemap.ts enthält nur veröffentlichte kanonische
-// DE-Routen." /kontakt, /impressum, /datenschutz sind seit 22.07.2026 dabei: alle drei haben jetzt
-// echte, vom Betreiber bestätigte Inhalte (Kontaktkanal, Adresse, generische Rechtsklauseln); für
-// Impressum/Datenschutz wurde die anwaltliche Prüfung ausdrücklich vom Betreiber übersprungen
-// ("skip legal review"). /agb und /standorte bleiben bewusst draussen: /agb zeigt weiterhin nur den
-// "Inhalte folgen"-Platzhalter (kein Text existiert, unabhängig vom Review-Verzicht), /standorte
-// nennt zwar echte Ortsnamen, aber keine vollständigen Adressen. Beide bleiben über die
-// SiteFooter-Links weiterhin normal erreichbar/crawlbar, nur eben nicht aktiv beworben.
+// DE-Routen." /kontakt, /impressum, /agb, /datenschutz sind seit 22.07.2026 dabei: alle vier haben
+// jetzt echte, vom Betreiber bestätigte Inhalte; für Impressum/AGB/Datenschutz wurde die
+// anwaltliche Prüfung ausdrücklich vom Betreiber übersprungen ("skip legal review"). /standorte
+// bleibt bewusst draussen: nennt zwar echte Ortsnamen, aber keine vollständigen Adressen. Bleibt
+// über den SiteFooter-Link weiterhin normal erreichbar/crawlbar, nur eben nicht aktiv beworben.
 // listCatalogedOfferParams() ist bereits dieselbe Quelle, die generateStaticParams() für die
 // Kursdetailseiten verwendet -- sie enthält von sich aus nur redaktionell freigegebene Angebote
 // (z.B. fehlt der preiskonflikt-behaftete 5.-Klasse-Lerncamp dort bewusst, siehe
@@ -21,6 +19,7 @@ const STATIC_CONTENT_PATHS = [
   '',
   '/kontakt',
   '/impressum',
+  '/agb',
   '/datenschutz',
   '/lerncoaching',
   '/nachhilfe',
