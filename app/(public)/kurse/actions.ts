@@ -1,6 +1,7 @@
 'use server'
 
 import { unstable_cache } from 'next/cache'
+import { after } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { type KursDBMitAnmeldungen } from '@/types/kurs-form'
@@ -14,6 +15,7 @@ import {
   logRateLimitRejected,
   logBookingUnexpectedError,
 } from '@/lib/observability/logger'
+import { dispatchOutboxForAnmeldung } from '@/lib/mail/dispatch-outbox'
 
 export const getPublicKurse = unstable_cache(
   async (): Promise<KursDBMitAnmeldungen[]> => {
@@ -82,7 +84,7 @@ export async function submitIntensivwocheAnmeldung(
   // Wiederholungen über idempotencyKey und snapshotted den Preis. Direkte Inserts sind seit der
   // ursprünglichen Migration 014 per REVOKE nicht mehr erlaubt
   // (verifiziert live am 18.07.2026 über den Supabase-Connector).
-  const { error } = await supabase.rpc('book_intensivwoche_kurs', {
+  const { data: anmeldungId, error } = await supabase.rpc('book_intensivwoche_kurs', {
     p_kurs_id: kursId,
     p_child_firstname: parsed.data.child_firstname.trim(),
     p_child_lastname: parsed.data.child_lastname.trim(),
@@ -146,6 +148,21 @@ export async function submitIntensivwocheAnmeldung(
           error: 'Die Anmeldung konnte nicht gespeichert werden. Bitte versuche es später erneut.',
         }
     }
+  }
+
+  // Abschnitt 10.4 (E-Mail-Outbox): die Outbox-Zeile existiert bereits (Trigger auf
+  // intensivwoche_anmeldungen, siehe 20260722092503_mail_outbox_schema.sql) -- das ist die Quelle
+  // der Wahrheit, unabhängig davon, ob dieser Best-Effort-Versand jetzt gelingt. "Eine Buchung
+  // gilt nicht wegen erfolgreichem Mailversand als gespeichert" heisst hier bewusst nicht nur
+  // "ein Mailfehler darf die Erfolgsantwort nicht verändern", sondern auch "die Buchungsantwort
+  // darf nicht auf den Mailversand warten" -- next/server after() haengt den Versandversuch NACH
+  // der bereits gesendeten Antwort an, statt die Nutzerin durch ein synchrones await zu verzögern
+  // (frueher fiel dadurch u. a. tests/routes.spec.ts' Cache-Regressionstest intermittierend unter
+  // Systemlast in den Timeout, siehe der bereits dokumentierte Hintergrund in Commit ae03117).
+  // Ein Fehler im Dispatch wird dort selbst abgefangen und markiert die Outbox-Zeile als 'failed'
+  // mit Backoff -- kein zusätzliches try/catch hier nötig.
+  if (anmeldungId) {
+    after(() => dispatchOutboxForAnmeldung(anmeldungId))
   }
 
   return {

@@ -23,6 +23,7 @@ import {
   UserCheck,
   PanelLeft,
   PanelLeftClose,
+  Mail,
 } from 'lucide-react'
 
 // Haupt-Navigation (immer sichtbar)
@@ -63,6 +64,7 @@ const lehrpersonNavigation = [
 // Navigation nur für System-Admins
 const adminNavigation = [
   { name: 'Benutzer', href: '/dashboard/admin/benutzer', icon: Users },
+  { name: 'Mail-Warteschlange', href: '/dashboard/mail-outbox', icon: Mail },
   { name: 'Einstellungen', href: '/dashboard/admin/einstellungen', icon: Settings },
 ]
 

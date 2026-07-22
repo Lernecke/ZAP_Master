@@ -125,6 +125,15 @@
 -- wodurch ein eingeloggter Nicht-Lehrperson-Nutzer auf /intensivkurse schlechter gestellt war als
 -- ein anonymer Gast (0 sichtbare Kurse). Keine neuen Tabellen/Funktionen/Trigger/Constraints/
 -- Indizes/Views im public-Schema.
+--
+-- Angepasst durch 20260722092503_mail_outbox_schema.sql (E-Mail-Outbox, Abschnitt 10.4): +1
+-- Tabelle mail_outbox (RLS aktiviert -- Tabellen- UND RLS-Tabellen-Zaehler je +1), +1 Funktion
+-- (enqueue_booking_confirmation_mail(), SECURITY DEFINER -- Funktionen- UND
+-- SECURITY-DEFINER-Zaehler je +1), +1 RLS-Policy (mail_outbox_admin_select), +1 Trigger
+-- (intensivwoche_anmeldungen_enqueue_mail), +5 Constraints (PK, 2x CHECK, UNIQUE, FK), +2 Indizes
+-- (PK- und UNIQUE-Index). Keine neue Sequenz (uuid-PK per gen_random_uuid(), kein serial/identity).
+-- Alle Werte empirisch per psql gegen die lokale Instanz nach `supabase db reset --local`
+-- verifiziert, nicht nur rechnerisch hergeleitet.
 
 begin;
 
@@ -132,14 +141,14 @@ select plan(10);
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public'),
-    49,
-    '49 Tabellen im public-Schema'
+    50,
+    '50 Tabellen im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-    49,
-    'alle 49 public-Tabellen haben RLS aktiviert'
+    50,
+    'alle 50 public-Tabellen haben RLS aktiviert'
 );
 
 select is(
@@ -153,8 +162,8 @@ select is(
        from information_schema.routines
       where routine_schema = 'public'
         and routine_type = 'FUNCTION'),
-    27,
-    '27 Funktionen im public-Schema'
+    28,
+    '28 Funktionen im public-Schema'
 );
 
 select is(
@@ -163,14 +172,14 @@ select is(
        join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
         and p.prosecdef),
-    14,
-    '14 davon SECURITY DEFINER'
+    15,
+    '15 davon SECURITY DEFINER'
 );
 
 select is(
     (select count(*)::int from pg_policies where schemaname = 'public'),
-    170,
-    '170 RLS-Policies im public-Schema'
+    171,
+    '171 RLS-Policies im public-Schema'
 );
 
 select is(
@@ -185,14 +194,14 @@ select is(
        join pg_class c on c.oid = con.conrelid
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'),
-    211,
-    '211 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
+    216,
+    '216 Constraints (PK/UNIQUE/FK/CHECK) im public-Schema'
 );
 
 select is(
     (select count(*)::int from pg_indexes where schemaname = 'public'),
-    136,
-    '136 Indizes im public-Schema'
+    138,
+    '138 Indizes im public-Schema'
 );
 
 select is(
@@ -202,8 +211,8 @@ select is(
        join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public'
         and not t.tgisinternal),
-    23,
-    '23 nicht-interne Trigger im public-Schema'
+    24,
+    '24 nicht-interne Trigger im public-Schema'
 );
 
 select * from finish();

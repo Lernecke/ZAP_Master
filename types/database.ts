@@ -986,6 +986,59 @@ export type Database = {
           },
         ]
       }
+      mail_outbox: {
+        Row: {
+          anmeldung_id: string
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          max_attempts: number
+          next_attempt_at: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          anmeldung_id: string
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Update: {
+          anmeldung_id?: string
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mail_outbox_anmeldung_id_fkey"
+            columns: ["anmeldung_id"]
+            isOneToOne: false
+            referencedRelation: "intensivwoche_anmeldungen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       material_access_grants: {
         Row: {
           area_id: number
@@ -2297,6 +2350,7 @@ export type Database = {
         }
         Returns: string
       }
+      count_active_anmeldungen: { Args: { p_kurs_id: number }; Returns: number }
       get_upcoming_courses: { Args: never; Returns: Json[] }
       increment_material_view_count: {
         Args: { material_id: number }
