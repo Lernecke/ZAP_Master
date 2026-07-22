@@ -6,16 +6,22 @@ import { SITE_URL } from '@/lib/seo'
 import { isMarketingSiteLive } from '@/lib/marketing-flag'
 
 // Abschnitt 10.4 des Architektur-Briefings: "sitemap.ts enthält nur veröffentlichte kanonische
-// DE-Routen." Enthält deshalb bewusst NICHT /kontakt, /impressum, /datenschutz -- alle drei zeigen
-// aktuell nur einen ehrlichen "Inhalte folgen"-Platzhalter (Abschnitt 9.1, noch keine fachlich
-// freigegebenen Inhalte) und sollen Suchmaschinen nicht zur Indexierung leerer Seiten einladen.
-// Sie bleiben über die SiteFooter-Links weiterhin normal erreichbar/crawlbar, nur eben nicht aktiv
-// beworben. listCatalogedOfferParams() ist bereits dieselbe Quelle, die generateStaticParams() für
-// die Kursdetailseiten verwendet -- sie enthält von sich aus nur redaktionell freigegebene Angebote
+// DE-Routen." /kontakt, /impressum, /datenschutz sind seit 22.07.2026 dabei: alle drei haben jetzt
+// echte, vom Betreiber bestätigte Inhalte (Kontaktkanal, Adresse, generische Rechtsklauseln); für
+// Impressum/Datenschutz wurde die anwaltliche Prüfung ausdrücklich vom Betreiber übersprungen
+// ("skip legal review"). /agb und /standorte bleiben bewusst draussen: /agb zeigt weiterhin nur den
+// "Inhalte folgen"-Platzhalter (kein Text existiert, unabhängig vom Review-Verzicht), /standorte
+// nennt zwar echte Ortsnamen, aber keine vollständigen Adressen. Beide bleiben über die
+// SiteFooter-Links weiterhin normal erreichbar/crawlbar, nur eben nicht aktiv beworben.
+// listCatalogedOfferParams() ist bereits dieselbe Quelle, die generateStaticParams() für die
+// Kursdetailseiten verwendet -- sie enthält von sich aus nur redaktionell freigegebene Angebote
 // (z.B. fehlt der preiskonflikt-behaftete 5.-Klasse-Lerncamp dort bewusst, siehe
 // lib/kurse/offer-catalog.ts), es gibt also keine zweite, separat zu pflegende Gate-Liste hier.
 const STATIC_CONTENT_PATHS = [
   '',
+  '/kontakt',
+  '/impressum',
+  '/datenschutz',
   '/lerncoaching',
   '/nachhilfe',
   '/distance-learning',

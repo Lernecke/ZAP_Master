@@ -6,20 +6,27 @@ import { Section } from '@/app/components/layout/section'
 import { AudienceHero } from '@/app/components/kurse/audience-hero'
 import { ContactForm } from '@/app/components/marketing/contact-form'
 
-// Kein HTML-Mockup und keine echten Kontaktkanäle im Projekt vorhanden (Abschnitt 6 der
-// Routentabelle: "kein Mockup"). Abschnitt 9.1 erlaubt ausdrücklich, die Route technisch zu bauen,
-// solange kein erfundener Name/Telefon/Adresse gezeigt wird -- deshalb hier lokal statt in
-// app/data/marketing-site.ts (das explizit als "reale Inhalte"-Quelle dokumentiert ist). Das
-// Kontaktformular (ContactForm) ist unabhängig davon vollständig gebaut, sendet aber noch nirgends
-// hin -- siehe Kommentar dort.
+// Kein HTML-Mockup im Projekt vorhanden (Abschnitt 6 der Routentabelle: "kein Mockup") -- deshalb
+// hier lokal statt in app/data/marketing-site.ts (das explizit als "reale Inhalte"-Quelle
+// dokumentiert ist). E-Mail-Adresse vom Betreiber am 22.07.2026 bestätigt (dieselbe wie im
+// Impressum). Kein Telefon/keine Postadresse -- hier nichts erfinden, solange nicht bestätigt.
+// Das Kontaktformular (ContactForm) ist unabhängig davon vollständig gebaut, sendet aber noch
+// nirgends hin -- siehe Kommentar dort.
 const kontaktPageModel: ContactPageModel = {
   hero: {
     title: 'Kontakt',
     description:
       'Haben Sie Fragen zu den Kursen? Möchten Sie sich für einen Gymivorbereitungskurs anmelden oder sich beraten lassen? Wir helfen Ihnen gerne weiter!',
   },
-  channels: [],
-  note: 'Unsere Kontaktkanäle werden in Kürze ergänzt.',
+  channels: [
+    {
+      id: 'email',
+      kind: 'email',
+      label: 'E-Mail',
+      value: 'lerneckezueri@gmail.com',
+      href: 'mailto:lerneckezueri@gmail.com',
+    },
+  ],
 }
 
 export async function generateMetadata({
@@ -47,17 +54,20 @@ export default async function KontaktPage({
   return (
     <Section spacing="lg">
       <AudienceHero content={kontaktPageModel.hero} />
-      {kontaktPageModel.channels.length > 0 ? (
-        <ul className="mt-8 flex flex-col gap-3">
-          {kontaktPageModel.channels.map((channel) => (
-            <li key={channel.id} className="text-foreground">
-              <span className="font-medium">{channel.label}:</span> {channel.value}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-8 text-muted-foreground">{kontaktPageModel.note}</p>
-      )}
+      <ul className="mt-8 flex flex-col gap-3">
+        {kontaktPageModel.channels.map((channel) => (
+          <li key={channel.id} className="text-foreground">
+            <span className="font-medium">{channel.label}:</span>{' '}
+            {channel.href ? (
+              <a href={channel.href} className="text-primary underline underline-offset-4 hover:no-underline">
+                {channel.value}
+              </a>
+            ) : (
+              channel.value
+            )}
+          </li>
+        ))}
+      </ul>
       <div className="mt-10">
         <ContactForm />
       </div>

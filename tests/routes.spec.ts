@@ -454,13 +454,16 @@ test.describe('SEO', () => {
     expect(body).toContain('<loc>http://localhost:3000/de/kurse/6-klasse</loc>')
     expect(body).toContain('<loc>http://localhost:3000/de/kurse/6-klasse/intensivkurs-sportferien</loc>')
 
-    // /kontakt, /impressum, /agb, /datenschutz, /standorte zeigen aktuell nur einen "Inhalte
-    // folgen"-Platzhalter bzw. unvollständige Angaben (Abschnitt 9.1) -- bewusst nicht in der
-    // sitemap, siehe app/sitemap.ts.
-    expect(body).not.toContain('/kontakt')
-    expect(body).not.toContain('/impressum')
+    // /kontakt, /impressum, /datenschutz haben jetzt echte, vom Betreiber bestätigte Inhalte
+    // (siehe app/sitemap.ts) und sind Teil der sitemap.
+    expect(body).toContain('<loc>http://localhost:3000/de/kontakt</loc>')
+    expect(body).toContain('<loc>http://localhost:3000/de/impressum</loc>')
+    expect(body).toContain('<loc>http://localhost:3000/de/datenschutz</loc>')
+
+    // /agb (kein Text existiert) und /standorte (keine vollständigen Adressen) zeigen weiterhin nur
+    // einen "Inhalte folgen"-Platzhalter bzw. unvollständige Angaben -- bewusst nicht in der
+    // sitemap.
     expect(body).not.toContain('/agb')
-    expect(body).not.toContain('/datenschutz')
     expect(body).not.toContain('/standorte')
   })
 

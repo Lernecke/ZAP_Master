@@ -65,14 +65,22 @@ Abschnitt 9.1.
 
 - [ ] **Widersprüchliche Kurspreise fachlich freigeben.** Je Angebot genau einen numerischen Wert samt Quelle bestätigen; insbesondere die in Abschnitt 2.3 des Architektur-Briefings dokumentierten Abweichungen. Bis dahin keine produktive Preis-/Buchungsfreigabe.
 - [x] **BMS-Halbjahreskurs entschieden: Detailinhalt liefern.** Bestätigt am 22.07.2026. Curriculum (Kursaufbau, Mathematik/Deutsch/Mentale-Vorbereitung) ausdrücklich identisch mit dem 2./3.-Sek-Halbjahreskurs übernommen (`bmsHalbjahreskurs` in `types/marketing.fixtures.ts`), Tagline/Beschreibung/Leistungen/Preis stammen aus der bereits vorhandenen, zuvor falsch verlinkten Hauptseiten-Karte. `/kurse/bms/halbjahreskurs` jetzt im Katalog (`lib/kurse/offer-catalog.ts`). Sessions bleiben leer (keine echten BMS-Termine bestätigt). Der Preis unterliegt weiterhin der noch offenen generellen Preis-Freigabe oben.
-- [ ] **Kontaktinhalt freigeben.** Mindestens echte Kontaktkanäle und einen freigegebenen Kurztext für `/kontakt` bereitstellen. Ein Kontaktformular oder Terminbuchungsflow ist für die erste Veröffentlichung optional.
+- [x] **Kontaktinhalt freigegeben.** Bestätigt am 22.07.2026. Reale E-Mail-Adresse (`lerneckezueri@gmail.com`, dieselbe wie im Impressum) plus bereits vorhandener Kurztext in `kontaktPageModel` (`kontakt/page.tsx`) hinterlegt; Adresse als `mailto:`-Link gerendert. Kein Telefon/keine Postadresse -- weiterhin nichts Unbestätigtes erfunden. `/kontakt` ist jetzt Teil der sitemap (siehe `app/sitemap.ts`). Das Kontaktformular bleibt wie zuvor entschieden vorerst ohne echten Versand.
 - [x] **Über-uns-Kennzahlen entschieden: weglassen.** Bestätigt am 22.07.2026. Die migrierte `/ueber-uns`-Seite (`aboutPageModel` in `types/marketing.fixtures.ts`) enthält bereits keine Zahlensektion -- die Platzhalterzahlen aus `Layout_UeberUns_Seite.html` wurden beim Seitenbau nie übernommen. Kein Code-Änderung nötig, nur dieser Punkt nachträglich abgehakt.
-- [ ] **Team- und Testimonial-Bilder freigeben.** Echte Assets nur mit geklärten Nutzungs-/Einwilligungsrechten und passenden Alternativtexten einsetzen. Generierte Initialen-Avatare nicht als echte Personenfotos darstellen.
+- [x] **Team- und Testimonial-Bilder entschieden: weglassen.** Bestätigt am 22.07.2026. Geprüft: Keine Fixture setzt `Testimonial.avatar` oder `TeamGroup.image` (beide optional laut Typ). `Testimonials`/`FeaturedTestimonial`/die Team-Karten auf `/ueber-uns` rendern dadurch bereits nie ein Bild -- nicht einmal einen generierten Platzhalter-Avatar. Kein Code-Änderung nötig, nur dieser Punkt nachträglich abgehakt.
 - [ ] **Selbststudium-Zugang Ende-zu-Ende freigeben.** Checkout, Grant, Login-Rückleitung, Materialzugriff, Ablauf und Entzug/Rückerstattung testen; bis dahin keinen aktiven „Zugang erhalten“-Link anzeigen.
 - [ ] **Nachhilfe-Abo-Ziel freigeben.** Realen Checkout oder ausdrücklich bestätigten Kontaktflow testen; bis dahin keinen aktiven „Abo buchen“-Link anzeigen.
-- [ ] **Impressum und Datenschutz freigeben.** Fachlich geprüfte Texte und Verantwortlichkeiten
-  liefern; bis dahin kein öffentlicher Cutover. Technische Routen und `LegalPageModel` sind im
-  Architektur-Briefing verbindlich eingeplant.
+- [x] **Impressum und Datenschutz freigegeben, anwaltliche Prüfung ausdrücklich übersprungen.**
+  Bestätigt am 22.07.2026 ("skip legal review"). Impressum enthält die vom Betreiber bestätigte
+  reale Kontaktadresse (Lernecke, Bolleystrasse 33, 8006 Zürich, lerneckezueri@gmail.com) sowie
+  generische, nicht identitätsbezogene Schweizer Standardklauseln (Haftungsausschluss, Haftung für
+  Links, Urheberrechte, allgemeiner DSG-Absatz). Datenschutz enthält denselben generischen
+  DSG-Absatz als eigene Seite. Beide sind jetzt Teil der sitemap (`app/sitemap.ts`). Bewusst
+  NICHT übernommen: Google-Analytics-/Google-+1-Klauseln aus der ursprünglich vorgeschlagenen
+  Fremdvorlage -- diese Website betreibt kein Analytics, eine solche Klausel wäre schlicht falsch.
+  **AGB bleibt davon unabhängig offen:** kein Betreiber-Text existiert bisher überhaupt, das
+  Überspringen der Prüfung ersetzt keinen fehlenden Inhalt -- `/agb` zeigt weiterhin nur den
+  "Inhalte folgen"-Platzhalter und ist nicht in der sitemap.
 
 ## Bewusst so belassen (Stärken erhalten)
 
