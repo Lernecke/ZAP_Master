@@ -213,7 +213,7 @@ export const siteFooter = {
     { label: 'AGB', href: '/agb' },
     { label: 'Datenschutzerklärung', href: '/datenschutz' },
   ],
-  copyright: '© 2026 Gymivorbereitung Zürich',
+  copyright: '© 2026 Lernecke',
 } satisfies SiteFooterModel
 
 export const marketingLayoutModel = {
