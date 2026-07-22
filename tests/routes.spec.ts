@@ -63,7 +63,9 @@ const publicMarketingRoutes = [
   '/de',
   '/de/kontakt',
   '/de/impressum',
+  '/de/agb',
   '/de/datenschutz',
+  '/de/standorte',
   '/de/lerncoaching',
   '/de/nachhilfe',
   '/de/distance-learning',
@@ -451,11 +453,14 @@ test.describe('SEO', () => {
     expect(body).toContain('<loc>http://localhost:3000/de/kurse/6-klasse</loc>')
     expect(body).toContain('<loc>http://localhost:3000/de/kurse/6-klasse/intensivkurs-sportferien</loc>')
 
-    // /kontakt, /impressum, /datenschutz zeigen aktuell nur einen "Inhalte folgen"-Platzhalter
-    // (Abschnitt 9.1) -- bewusst nicht in der sitemap, siehe app/sitemap.ts.
+    // /kontakt, /impressum, /agb, /datenschutz, /standorte zeigen aktuell nur einen "Inhalte
+    // folgen"-Platzhalter bzw. unvollständige Angaben (Abschnitt 9.1) -- bewusst nicht in der
+    // sitemap, siehe app/sitemap.ts.
     expect(body).not.toContain('/kontakt')
     expect(body).not.toContain('/impressum')
+    expect(body).not.toContain('/agb')
     expect(body).not.toContain('/datenschutz')
+    expect(body).not.toContain('/standorte')
   })
 
   test('Startseite hat Canonical-URL und OpenGraph-/Twitter-Metadata', async ({ page }) => {

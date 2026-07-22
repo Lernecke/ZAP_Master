@@ -200,13 +200,18 @@ export const siteNav = {
 
 export const siteFooter = {
   brand: 'Lernecke',
+  // Zwei Spalten im Footer (SiteFooter-Komponente): `navigation` sind allgemeine Seiten-Links,
+  // `legal` bleiben laut Typ-Kommentar "nur reale Ziele" -- beide Listen zeigen ausschliesslich
+  // bereits existierende Routen, kein "AGB"/"Standorte" ohne zugehörige Seite mehr.
   navigation: [
-    { id: 'impressum', label: 'Impressum', href: '/impressum' },
-    { id: 'datenschutz', label: 'Datenschutz', href: '/datenschutz' },
+    { id: 'ueber-uns', label: 'Über uns', href: '/ueber-uns' },
+    { id: 'kontakt', label: 'Kontakt', href: '/kontakt' },
+    { id: 'standorte', label: 'Standorte', href: '/standorte' },
   ],
   legal: [
     { label: 'Impressum', href: '/impressum' },
-    { label: 'Datenschutz', href: '/datenschutz' },
+    { label: 'AGB', href: '/agb' },
+    { label: 'Datenschutzerklärung', href: '/datenschutz' },
   ],
   copyright: '© 2026 Gymivorbereitung Zürich',
 } satisfies SiteFooterModel
