@@ -9,6 +9,11 @@ import {
   intensivwocheAnmeldungSchema,
   type IntensivwocheAnmeldungInput,
 } from '@/types/intensivwoche'
+import {
+  logBookingRejected,
+  logRateLimitRejected,
+  logBookingUnexpectedError,
+} from '@/lib/observability/logger'
 
 export const getPublicKurse = unstable_cache(
   async (): Promise<KursDBMitAnmeldungen[]> => {
@@ -90,42 +95,52 @@ export async function submitIntensivwocheAnmeldung(
   })
 
   if (error) {
-    console.error('Supabase Anmeldung Error:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    })
-
+    // Abschnitt 10.4 (Observability): erwartete Buchungsablehnungen sind kein Vorfall und würden
+    // als durchgehendes console.error nur Alarm-Rauschen erzeugen -- deshalb hier nach Fall
+    // korrekt geleveltes strukturiertes Event statt einer einzigen Fehlerausgabe für alles. Keines
+    // der Felder unten ist personenbezogen (kein Name/E-Mail/Telefon/Notiz), siehe
+    // lib/observability/logger.ts.
     switch (error.message) {
       case 'kurs_nicht_gefunden':
+        logBookingRejected({ kursId, reason: error.message })
         return {
           success: false,
           error: 'Der ausgewählte Kurs existiert nicht oder ist nicht mehr verfügbar.',
           fieldErrors: { kurs_id: ['Bitte wähle einen anderen Kurs.'] },
         }
       case 'bereits_angemeldet':
+        logBookingRejected({ kursId, reason: error.message })
         return {
           success: false,
           error: 'Du bist bereits für diesen Kurs angemeldet.',
         }
       case 'kurs_inaktiv':
+        logBookingRejected({ kursId, reason: error.message })
         return {
           success: false,
           error: 'Der Kurs ist leider nicht mehr für Anmeldungen verfügbar.',
         }
       case 'voll':
+        logBookingRejected({ kursId, reason: error.message })
         return {
           success: false,
           error: 'Dieser Kurs ist inzwischen ausgebucht.',
           fieldErrors: { kurs_id: ['Bitte wähle einen anderen Kurs.'] },
         }
       case 'rate_limit_exceeded':
+        logRateLimitRejected({ kursId })
         return {
           success: false,
           error: 'Zu viele Anmeldeversuche mit dieser E-Mail-Adresse. Bitte warte einige Minuten und versuche es erneut.',
         }
       default:
+        logBookingUnexpectedError({
+          kursId,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        })
         return {
           success: false,
           error: 'Die Anmeldung konnte nicht gespeichert werden. Bitte versuche es später erneut.',
