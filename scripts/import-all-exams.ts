@@ -26,6 +26,18 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
+// Sicherheitsnetz nachgetragen (Env-Separation-Audit, Abschnitt 10.4): .env.local zeigt laut
+// CLAUDE.md bewusst auf das LIVE-Projekt. Dieses Skript schrieb bisher ungeprueft mit
+// service_role (RLS-Bypass) dorthin -- ein versehentlicher Lauf haette Pruefungsdaten direkt in
+// Produktion geschrieben. Wie scripts/concurrency-test-booking.ts: nur gegen eine lokale
+// Loopback-Instanz zulassen.
+if (!/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(supabaseUrl)) {
+  console.error(
+    `Refusing to run: NEXT_PUBLIC_SUPABASE_URL ("${supabaseUrl}") sieht nicht nach einer lokalen Supabase-Instanz aus. Dieses Skript darf nur gegen "supabase start" laufen.`
+  )
+  process.exit(1)
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // Path to JSON files

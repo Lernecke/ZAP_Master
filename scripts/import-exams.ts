@@ -10,6 +10,18 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
+// Sicherheitsnetz nachgetragen (Env-Separation-Audit, Abschnitt 10.4): dieses Skript schreibt mit
+// service_role (RLS-Bypass) und las frueher .env.local direkt ein, das laut CLAUDE.md bewusst auf
+// das LIVE-Projekt zeigt. Ohne diesen Check haette ein versehentlicher Lauf mit geladenem
+// .env.local Pruefungsdaten direkt in Produktion geschrieben. Wie
+// scripts/concurrency-test-booking.ts: nur gegen eine lokale Loopback-Instanz zulassen.
+if (!/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(supabaseUrl)) {
+  console.error(
+    `Refusing to run: NEXT_PUBLIC_SUPABASE_URL ("${supabaseUrl}") sieht nicht nach einer lokalen Supabase-Instanz aus. Dieses Skript darf nur gegen "supabase start" laufen.`
+  )
+  process.exit(1)
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 interface ExamJson {
@@ -28,15 +40,9 @@ async function importExams() {
   
   if (!fs.existsSync(jsonDir)) {
     console.error(`Directory not found: ${jsonDir}`)
-    console.log('Trying alternative path...')
-    const altDir = '/Users/robinmuhlemann/Documents/BFH/Master/DIFA/ZAP/bahrdi-projekt/app/data/json'
-    if (!fs.existsSync(altDir)) {
-      console.error(`Alternative directory also not found: ${altDir}`)
-      process.exit(1)
-    }
-    return importFromDir(altDir)
+    process.exit(1)
   }
-  
+
   return importFromDir(jsonDir)
 }
 
