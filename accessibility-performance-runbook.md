@@ -179,6 +179,35 @@ AA), der Text war de facto unsichtbar. Behoben durch `Badge variant="secondary"`
 korrekte Hintergrund-/Vordergrund-Paar), demselben Muster wie an anderer Stelle bereits verwendet
 (`app/components/layout/page-intro.tsx`).
 
+### Dashboard-Buchungsdialog (`app/(dashboard)/intensivkurse/anmeldung-modal-dashboard.tsx`) -- Kontrast, fälschlich mehrfach als "Flake" abgetan
+
+Über mehrere vorangegangene Commits hinweg tauchte derselbe Test
+(`Buchungsdialog im geschützten Dashboard ... hat keine WCAG-AA-Verstösse`) wiederholt und
+scheinbar zufällig auf wechselnden Browsern fehlschlagend auf (Chromium, dann WebKit, dann
+Firefox, dann WebKit **und** Firefox gleichzeitig) und wurde jedes Mal als reproduzierbar
+bestehender, umgebungsbedingter Flake dokumentiert, weil er in Isolation stets sofort wieder grün
+war. Das war eine Fehldiagnose: axe-core meldete durchgehend `color-contrast` für den
+Profil-Vorausgefüllt-Hinweis im Dialog -- `text-green-700 dark:text-green-300` auf
+`bg-green-50 dark:bg-green-950/30` (freie Tailwind-Farben statt der semantischen Projekt-Token aus
+Abschnitt 1) lag mit 4.31:1 hauchdünn unter der geforderten 4.5:1-Schwelle. Genau ein derart
+knapper Grenzfall wird von unterschiedlichen Browser-Rendering-Engines (Subpixel-/
+Antialiasing-Unterschiede) mal knapp über, mal knapp unter die Schwelle gerundet -- daher die
+Illusion eines browser-/lastabhängigen Flakes über mehrere Commits hinweg, obwohl die Ursache die
+ganze Zeit ein echter, deterministischer Kontrastfehler war.
+
+**Behoben** durch Umstellung auf die bereits etablierten semantischen Token statt eines neuen
+Grünwerts: `bg-secondary/10 border-secondary/25` für die Fläche, `text-secondary` fürs Icon,
+`text-foreground` für den eigentlichen Fliesstext -- exakt das Muster, das die Erfolgsansicht in
+`app/(public)/kurse/anmeldung-modal.tsx` für denselben Zweck bereits verwendet (Text bleibt
+`text-foreground`/`text-muted-foreground`, nur das Icon trägt die Akzentfarbe). Dadurch entfällt
+das Problem strukturell, statt nur einen neuen, ebenfalls manuell zu kalibrierenden Grünton zu
+suchen. Nach der Korrektur lief die Suite mehrfach vollständig grün auf allen drei Browsern.
+
+**Lehre für künftige Funde:** Ein Test, der nur auf einzelnen Browsern und nur manchmal fehlschlägt,
+ist nicht automatisch ein Timing-/Lastproblem -- bei axe-core-`color-contrast`-Verstössen nahe der
+Schwelle zuerst den tatsächlichen Kontrastwert im Fehlerreport prüfen, bevor die Ursache auf die
+Testumgebung geschoben wird.
+
 ## Ausführung
 
 ```powershell

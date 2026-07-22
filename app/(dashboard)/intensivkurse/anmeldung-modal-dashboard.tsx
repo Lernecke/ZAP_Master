@@ -213,9 +213,9 @@ export function AnmeldungModalDashboard({ kurs, userProfile, onClose }: Anmeldun
 
         {/* Info: Profil-Daten vorausgefüllt */}
         {hasProfileData && (
-          <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-3">
-            <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
-            <p className="text-sm text-green-700 dark:text-green-300">
+          <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl bg-secondary/10 border border-secondary/25 p-3">
+            <Sparkles className="h-4 w-4 text-secondary shrink-0" />
+            <p className="text-sm text-foreground">
               Einige Felder wurden aus deinem Profil vorausgefüllt.
             </p>
           </div>
