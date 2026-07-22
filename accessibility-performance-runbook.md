@@ -45,12 +45,19 @@ bewusst ein grober Regressions-Wächter auf unkomprimierten Bytes (z. B. gegen e
 client-seitig importierte schwere Bibliothek), keine reale Transfer-Zusage -- eine echte,
 komprimierte Produktionsmessung bräuchte eine echte CDN-/Edge-Auslieferung.
 
-**Browser-/Mobile-Testmatrix:** `playwright.config.ts` hat jetzt zwei Projekte. `chromium`
+**Browser-/Mobile-Testmatrix:** `playwright.config.ts` hat jetzt vier Projekte. `chromium`
 (Desktop) läuft für alle Test-Dateien wie bisher. `mobile-chrome` (Pixel-5-Emulation) ist über
 `testMatch` bewusst nur auf `performance.spec.ts` beschränkt -- die übrigen Suiten
 (`routes`/`links`/`accessibility`/`flag-rollback`) laufen dadurch unverändert nur unter Desktop
 Chrome, ohne dass sich die Laufzeit des Haupt-Gates verdoppelt. `npm run test:performance` deckt
-dadurch automatisch Desktop **und** Mobile ab.
+dadurch automatisch Desktop **und** Mobile ab. `firefox` und `webkit` (jeweils Desktop) sind analog
+per `testMatch` bewusst nur auf `tests/accessibility.spec.ts` beschränkt statt auf alle Suiten:
+axe-core-Ergebnisse und insbesondere Fokus-/Dialog-/Escape-Verhalten (Radix Dialog) unterscheiden
+sich real zwischen Browser-Engines, während Route-/Link-/Cache-Verhalten Next.js-/Server-seitig ist
+und keine dritte/vierte Wiederholung braucht. `npm run test:a11y` (kein Projekt-Filter mehr) deckt
+dadurch automatisch Chromium + Firefox + WebKit ab -- die zuvor hier als offene Lücke geführte
+Browser-Matrix jenseits von Chrome ist damit geschlossen (siehe Fund weiter unten, den genau diese
+Erweiterung aufgedeckt hat).
 
 ## Was bewusst NICHT abgedeckt ist (offene Lücken, nicht stillschweigend übersprungen)
 
@@ -60,10 +67,11 @@ dadurch automatisch Desktop **und** Mobile ab.
   insbesondere für Lesereihenfolge, Ankündigungen bei dynamischen Änderungen (z. B. Live-Region
   bei "Anmeldung erfolgreich!") -- erfordert einen menschlichen Tester und ein echtes
   Screenreader-Setup; in dieser Umgebung nicht ausführbar.
-- **Browser-Matrix jenseits von Chrome:** Firefox und WebKit sind lokal nicht installiert
-  (`npm exec -- playwright install firefox webkit` würde sie ergänzen). Aktuell nur Chrome
-  Desktop + Chrome Mobile (Pixel 5). Naheliegender, aber bewusst nicht in diesem Schritt
-  durchgeführter Folgeschritt.
+- **Firefox/WebKit nur für die Accessibility-Suite, nicht für routes/links/flag-rollback:** eine
+  bewusste Abwägung (siehe oben), keine vollständige 4-fache Browser-Matrix über das gesamte Gate.
+  Cache-/Routing-/Redirect-Verhalten ist serverseitig (Next.js) und branchenüblich
+  engine-unabhängig; ein realer Zugewinn wurde hier nicht erwartet und stünde in keinem Verhältnis
+  zur vervierfachten Gate-Laufzeit.
 - **Performance-Budgets sind lokale Indikatoren, keine Produktionsmessung:** Läuft gegen
   `next start` auf einer Windows-Entwicklungsmaschine mit lokalem Docker-Supabase im Hintergrund,
   nicht gegen eine echte CDN-/Edge-Auslieferung. Werte können unter Systemlast schwanken; bei
@@ -133,6 +141,35 @@ adressieren. Behoben durch `<MotionConfig reducedMotion="user">` um den gesamten
 framer-motion deaktiviert damit für alle `motion.*`-Nachfahren automatisch sowohl die Eintritts-
 als auch die Endlos-Animation, sobald das Betriebssystem "Bewegung reduzieren" meldet.
 
+### Buchungs-CTA (`app/components/kurse/booking-button.tsx`) -- Fokus-Rückgabe versagte in WebKit/Safari
+
+Gefunden, nachdem die neu ergänzten `firefox`/`webkit`-Projekte (siehe oben) zum ersten Mal gegen
+`tests/accessibility.spec.ts` liefen: Der Escape-Test (Dialog schliesst, Fokus kehrt zum
+auslösenden "Anmelden"-Button zurück) bestand unter Chromium und Firefox, schlug unter WebKit aber
+reproduzierbar fehl -- `document.activeElement` landete nach dem Schliessen auf `<body>` statt auf
+dem Button.
+
+**Root Cause:** `anmeldung-modal.tsx` erfasst den Trigger für die spätere Fokus-Rückgabe über
+`document.activeElement` im Moment, in dem das Modal mountet (siehe Fund oben, "Buchungsdialog").
+Das setzt voraus, dass der geklickte Button zu diesem Zeitpunkt bereits fokussiert ist. Chromium und
+Firefox fokussieren Buttons automatisch bei einem Maus-Klick -- WebKit/Safari tut das nicht
+(bekannter, langjähriger Engine-Unterschied). `document.activeElement` war beim Öffnen des Modals in
+WebKit deshalb bereits `<body>`, die anschliessende Fokus-Rückgabe (`triggerElement.focus()`) rief
+folgerichtig `body.focus()` auf -- ein Aufruf ohne Effekt, kein Fehler, aber auch keine
+Fokus-Rückgabe. Kein Bug in Radix oder in der `onCloseAutoFocus`-Logik selbst, sondern eine falsche
+Annahme über nativ browserübergreifend identisches Klick-Fokus-Verhalten.
+
+**Behoben:** `BookingButton` ruft beim Klick jetzt explizit `event.currentTarget.focus()` auf,
+bevor es `onBook()` aufruft -- macht das Verhalten browserunabhängig, statt sich auf natives
+Klick-Fokussierungsverhalten zu verlassen, das es in Safari für Buttons so nicht gibt. Das behebt
+den Fehler nicht nur im Test: reale Safari-/iOS-Nutzende hätten nach dem Schliessen des Dialogs per
+Escape denselben Fokusverlust erlebt (Fokus fällt zurück auf `<body>`, Tastaturnutzung muss danach
+wieder manuell zur Buchungstabelle navigieren) -- ein echter Accessibility-Fund, kein reines
+Test-Artefakt. Kein weiterer Workaround (z. B. verzögerte `requestAnimationFrame`-Fokussierung in
+`anmeldung-modal.tsx`) war nötig, nachdem die eigentliche Ursache behoben war -- gegengeprüft, indem
+ein zuerst versuchsweise ergänzter `requestAnimationFrame`-Umweg wieder entfernt wurde und die Suite
+weiterhin unter allen drei Browsern grün blieb.
+
 ### Startseite -- Kontrast
 
 Die Eyebrow-Beschriftung im Hero (`app/[locale]/(marketing)/page.tsx`) nutzte
@@ -147,8 +184,8 @@ korrekte Hintergrund-/Vordergrund-Paar), demselben Muster wie an anderer Stelle 
 ```powershell
 npm run test:data-migration   # setzt lokale DB zurück und seedet u.a. "Kurs B" mit 1 freiem Platz
 npm run build:test
-npm exec -- playwright install chromium   # falls noch nicht geschehen
-npm run test:a11y             # VOR test:routes ausführen, siehe unten
+npm exec -- playwright install chromium firefox webkit   # falls noch nicht geschehen
+npm run test:a11y             # VOR test:routes ausführen, siehe unten -- jetzt Chromium+Firefox+WebKit
 npm run test:performance
 npm run test:routes
 npm run test:links

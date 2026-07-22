@@ -28,10 +28,17 @@ export default defineConfig({
     // flag-rollback) nicht versehentlich ein zweites Mal unter einem Mobile-Viewport laufen und
     // sich die Laufzeit des Haupt-Gates verdoppelt. `npm run test:performance` (kein
     // Projekt-Filter) fuehrt performance.spec.ts dadurch automatisch unter "chromium" (Desktop,
-    // matcht per Default alles) UND "mobile-chrome" aus -- die tatsaechliche, wenn auch bewusst
-    // kleine Matrix; Firefox/WebKit sind (noch) nicht installiert, siehe
-    // accessibility-performance-runbook.md.
+    // matcht per Default alles) UND "mobile-chrome" aus.
     { name: 'mobile-chrome', use: { ...devices['Pixel 5'] }, testMatch: /performance\.spec\.ts/ },
+    // Firefox/WebKit ergaenzen die Browser-Matrix ueber Chrome hinaus (zuvor als offene Luecke in
+    // accessibility-performance-runbook.md dokumentiert). Analog zu "mobile-chrome" bewusst per
+    // testMatch auf tests/accessibility.spec.ts beschraenkt statt auf alle Suiten: axe-core-
+    // Ergebnisse und insbesondere Fokus-/Dialog-/Escape-Verhalten (Radix Dialog) unterscheiden
+    // sich real zwischen Browser-Engines, waehrend Route-/Link-/Cache-Verhalten
+    // Next.js-/Server-seitig ist und keine dritte/vierte Wiederholung braucht. `npm run test:a11y`
+    // (kein Projekt-Filter mehr) deckt dadurch automatisch Chromium + Firefox + WebKit ab.
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /accessibility\.spec\.ts/ },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: /accessibility\.spec\.ts/ },
   ],
   // Der Produktionsserver muss ueber scripts/with-local-supabase.mjs laufen (siehe
   // package.json "start:test") -- Route-/Cache-Tests pruefen echtes Produktionsverhalten

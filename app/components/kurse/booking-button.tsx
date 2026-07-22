@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import { Link } from '@/i18n/navigation'
 import type { BookingAction } from '@/types/marketing'
 import { Button } from '@/app/components/ui/button'
@@ -45,8 +46,20 @@ function BookingButton({ action, onBook, block = false }: BookingButtonProps) {
     )
   }
 
+  // WebKit/Safari fokussiert Buttons bei einem Maus-Klick anders als Chromium/Firefox nicht
+  // automatisch (bekannter Engine-Unterschied). AnmeldungModal liest beim Öffnen
+  // `document.activeElement`, um den Fokus nach dem Schliessen dorthin zurückzugeben (Abschnitt
+  // 10.4, Tastatur/Fokus) -- ohne den expliziten Aufruf hier bliebe document.activeElement in
+  // Safari beim Öffnen bereits `<body>`, und die Fokus-Rückgabe liefe ins Leere. Der explizite
+  // Aufruf macht das Verhalten browserunabhängig, statt sich auf native Klick-Fokussierung zu
+  // verlassen.
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.focus()
+    onBook?.()
+  }
+
   return (
-    <Button onClick={onBook} className={className}>
+    <Button onClick={handleClick} className={className}>
       {action.label}
     </Button>
   )
