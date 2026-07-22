@@ -12,7 +12,7 @@
 
 import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import {
   offerEditionFormSchema,
   courseSessionFormSchema,
@@ -48,11 +48,30 @@ async function writeAuditLog(
   before: unknown,
   after: unknown
 ) {
+  // Gefunden beim Hinzufügen des ersten End-to-End-Tests für diesen Pfad (zuvor rief keinerlei
+  // automatisierter Test saveEditionAction auf einer bestehenden Edition auf): audit_log hat
+  // ausschliesslich eine einzelne diff-jsonb-Spalte (20260720170000_offer_editions_schema.sql),
+  // keine getrennten before-/after-Spalten -- jeder INSERT-Versuch schlug mit "Could not find the
+  // 'after' column" fehl. Der RLS-/Grant-Teil war bereits korrekt: audit_log_admin_insert
+  // (20260721074500_offer_editions_admin_writes.sql) erlaubt authenticated gezielt INSERT, aber
+  // ausdrücklich nur mit actor_user_id = auth.uid() (kein Spoofen fremder Akteure) -- deshalb
+  // bewusst weiterhin der authentifizierte Client des Admins selbst, kein service_role, das diese
+  // WITH-CHECK-Schranke umgehen würde.
+  //
   // Fehler beim Audit-Log dürfen die eigentliche Mutation nicht rückgängig machen -- best effort,
   // aber niemals die Fach-Aktion selbst blockieren.
+  // JSON.parse(JSON.stringify(...)) statt eines Type-Casts: erzwingt echte, jsonb-taugliche Werte
+  // (z.B. Date/undefined würden sonst den Json-Typ nur vorgetäuscht erfüllen) -- entspricht ohnehin
+  // der Serialisierung, die beim HTTP-Request an PostgREST passieren würde.
   const { error } = await supabase
     .from('audit_log')
-    .insert({ actor_user_id: actorUserId, entity_type: entityType, entity_id: entityId, action, before, after })
+    .insert({
+      actor_user_id: actorUserId,
+      entity_type: entityType,
+      entity_id: entityId,
+      action,
+      diff: JSON.parse(JSON.stringify({ before, after })),
+    })
   if (error) {
     console.error('audit_log insert failed', error)
   }
@@ -290,6 +309,11 @@ export async function saveEditionAction(
 
   await writeAuditLog(supabase, authCheck.userId, 'offer_edition', editionId, 'update', null, updated)
   revalidatePath(`/dashboard/kurse/angebote/${offerId}/durchfuehrungen/${editionId}`)
+  // Abschnitt 7: falls diese Durchführung bereits published ist, muss eine Preisänderung sofort
+  // auf den öffentlichen Kursseiten sichtbar sein (getOfferCatalogForAudience/getOfferBySlug in
+  // lib/kurse/catalog.ts lesen unter demselben "offers"-Tag). Für einen noch nicht
+  // veröffentlichten Entwurf ist das Invalidieren unnötig, aber ungefährlich.
+  updateTag('offers')
   return { success: true, data: updated as OfferEditionDB, message: 'Entwurf gespeichert.' }
 }
 
@@ -363,6 +387,9 @@ export async function publishEditionAction(
   await writeAuditLog(supabase, authCheck.userId, 'offer_edition', editionId, 'publish', typedEdition, updated)
   revalidatePath(`/dashboard/kurse/angebote/${offerId}/durchfuehrungen/${editionId}`)
   revalidatePath('/kurse')
+  // Abschnitt 7: macht das Angebot sofort auf den neuen, lokalisierten Marketing-Kursseiten
+  // sichtbar (nicht nur auf der alten /kurse-Route via revalidatePath oben).
+  updateTag('offers')
   return { success: true, data: updated as OfferEditionDB, message: 'Durchführung veröffentlicht.' }
 }
 
@@ -389,6 +416,9 @@ export async function archiveEditionAction(
 
   await writeAuditLog(supabase, authCheck.userId, 'offer_edition', editionId, 'archive', null, updated)
   revalidatePath(`/dashboard/kurse/angebote/${offerId}/durchfuehrungen/${editionId}`)
+  // Abschnitt 7: eine archivierte, vorher published Edition darf nicht bis zum Ablauf von
+  // cacheLife('hours') weiter mit ihrem alten Preis auf den öffentlichen Seiten sichtbar bleiben.
+  updateTag('offers')
   return { success: true, data: updated as OfferEditionDB, message: 'Durchführung archiviert.' }
 }
 

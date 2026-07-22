@@ -398,6 +398,36 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     await expect(page.getByText(/CHF\s*780/)).toBeVisible()
     await expect(page.getByText(/CHF\s*888/)).toHaveCount(0)
   })
+
+  test('offer_editions-Preisänderung über die neue Admin-Maske ist sofort auf der Kursdetailseite sichtbar', async ({ page }) => {
+    // Deckt einen zweiten, unabhängigen Preis-/Cache-Pfad ab: lib/kurse/catalog.ts überschreibt seit
+    // 20260722130621_seed_published_offer_editions.sql den statischen Fixture-Preis mit dem
+    // zugehörigen offer_editions-Datensatz; app/(dashboard)/dashboard/kurse/durchfuehrungen/actions.ts
+    // ruft dafür jetzt updateTag('offers') auf (vorher: gar keine Invalidierung, siehe Kommentar dort).
+    await page.goto('/de/kurse/6-klasse/halbjahreskurs')
+    await expect(page.getByText(/CHF\s*3['’]?490/)).toBeVisible()
+
+    await loginAs(page, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD)
+    await page.goto('/dashboard/kurse/angebote')
+
+    // "6. Klasse"-Gruppe finden, darin die "Halbjahreskurs"-Karte -- Gruppen sind nach Zielgruppe
+    // geordnete Geschwister-<div>s, kein direktes Eltern-Kind-Verhältnis zur Überschrift.
+    const sechsKlasseHeading = page.getByRole('heading', { name: '6. Klasse', exact: true })
+    await expect(sechsKlasseHeading).toBeVisible()
+    const sechsKlasseGroup = sechsKlasseHeading.locator('xpath=following-sibling::div[1]')
+    await sechsKlasseGroup.getByRole('link', { name: /Halbjahreskurs/ }).click()
+
+    await expect(page.locator('input[name="regularPriceChf"]')).toHaveValue('3490')
+    await page.locator('input[name="regularPriceChf"]').fill('4001')
+    await page.getByRole('button', { name: 'Entwurf speichern' }).click()
+    await expect(page.getByText(/gespeichert/i)).toBeVisible({ timeout: 15_000 })
+
+    // Frische Navigation, kein Reload/Wartezeit -- prüft updateTag('offers') statt cacheLife('hours')
+    // abzuwarten. Der Preis wird als CHF 4'001.00 formatiert (formatChfRappen, lib/pricing.ts).
+    await page.goto('/de/kurse/6-klasse/halbjahreskurs')
+    await expect(page.getByText(/CHF\s*4['’]?001/)).toBeVisible()
+    await expect(page.getByText(/CHF\s*3['’]?490/)).toHaveCount(0)
+  })
 })
 
 // ---------------------------------------------------------------------------
