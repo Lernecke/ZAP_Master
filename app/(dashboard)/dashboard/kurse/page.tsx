@@ -30,6 +30,11 @@ export default async function KurseAdminPage() {
               Kursangebote verwalten
             </Button>
           </Link>
+          <Link href="/dashboard/kurse/auffrischungskurse">
+            <Button variant="outline" className="rounded-xl">
+              Auffrischungs-/Intensivkurse verwalten
+            </Button>
+          </Link>
           <Link href="/dashboard/kurse/neu">
             <Button className="rounded-xl">
               <Plus className="mr-2 h-4 w-4" />
