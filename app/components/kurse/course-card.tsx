@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import type { CourseOffer } from '@/types/marketing'
 import {
@@ -18,7 +19,8 @@ interface CourseCardProps {
   offer: CourseOffer
 }
 
-function CourseCard({ offer }: CourseCardProps) {
+async function CourseCard({ offer }: CourseCardProps) {
+  const t = await getTranslations('kurse.courseCard')
   const price = formatOfferPrice(offer)
 
   return (
@@ -61,7 +63,7 @@ function CourseCard({ offer }: CourseCardProps) {
           {price.note ? <p className="text-xs text-muted-foreground">{price.note}</p> : null}
         </div>
         <Button asChild>
-          <Link href={offer.href}>Termine ansehen</Link>
+          <Link href={offer.href}>{t('termineAnsehen')}</Link>
         </Button>
       </CardFooter>
     </Card>

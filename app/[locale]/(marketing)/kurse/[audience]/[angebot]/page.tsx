@@ -39,11 +39,15 @@ export function generateStaticParams() {
 /** CourseOffer (halbjahreskurs/intensivkurs) und ExamSimulationOffer (pruefungssimulation) teilen
  *  denselben Buchungs-Rendering-Pfad (Hero/Flow/Content/Booking). SelfStudyOffer hat keine
  *  Sessions/booking und wird separat in resolveSelfStudyOffer/renderSelfStudyOffer behandelt. */
-async function resolveBookableOffer(audienceSlug: string, offerSlug: string): Promise<BookableOffer | null> {
+async function resolveBookableOffer(
+  audienceSlug: string,
+  offerSlug: string,
+  locale: string
+): Promise<BookableOffer | null> {
   const audience = audiences.find((a) => a.slug === audienceSlug)
   if (!audience) return null
 
-  const offer = await getOfferBySlug(audience.id, offerSlug)
+  const offer = await getOfferBySlug(audience.id, offerSlug, locale)
   if (
     offer == null ||
     (offer.kurstyp !== 'halbjahreskurs' &&
@@ -55,11 +59,15 @@ async function resolveBookableOffer(audienceSlug: string, offerSlug: string): Pr
   return offer
 }
 
-async function resolveSelfStudyOffer(audienceSlug: string, offerSlug: string): Promise<SelfStudyOffer | null> {
+async function resolveSelfStudyOffer(
+  audienceSlug: string,
+  offerSlug: string,
+  locale: string
+): Promise<SelfStudyOffer | null> {
   const audience = audiences.find((a) => a.slug === audienceSlug)
   if (!audience) return null
 
-  const offer = await getOfferBySlug(audience.id, offerSlug)
+  const offer = await getOfferBySlug(audience.id, offerSlug, locale)
   if (offer == null || offer.kurstyp !== 'selbststudium') return null
   return offer
 }
@@ -72,12 +80,12 @@ export async function generateMetadata({
   const { locale, audience, angebot } = await params
   const path = `/kurse/${audience}/${angebot}`
 
-  const bookableOffer = await resolveBookableOffer(audience, angebot)
+  const bookableOffer = await resolveBookableOffer(audience, angebot, locale)
   if (bookableOffer) {
     return buildPageMetadata({ title: bookableOffer.displayName, description: bookableOffer.tagline, path, locale })
   }
 
-  const selfStudyOffer = await resolveSelfStudyOffer(audience, angebot)
+  const selfStudyOffer = await resolveSelfStudyOffer(audience, angebot, locale)
   if (selfStudyOffer) {
     return buildPageMetadata({ title: selfStudyOffer.displayName, description: selfStudyOffer.tagline, path, locale })
   }
@@ -138,13 +146,13 @@ export default async function CourseOfferDetailPage({
   const { locale, audience: audienceSlug, angebot } = await params
   setRequestLocale(locale)
 
-  const selfStudyOffer = await resolveSelfStudyOffer(audienceSlug, angebot)
+  const selfStudyOffer = await resolveSelfStudyOffer(audienceSlug, angebot, locale)
   if (selfStudyOffer) return <SelfStudyOfferPage offer={selfStudyOffer} />
 
-  const offer = await resolveBookableOffer(audienceSlug, angebot)
+  const offer = await resolveBookableOffer(audienceSlug, angebot, locale)
   if (!offer) notFound()
 
-  const sessions = await getSessionsForOffer(offer.id)
+  const sessions = await getSessionsForOffer(offer.id, locale)
   const isExamSimulation = offer.kurstyp === 'pruefungssimulation'
 
   return (

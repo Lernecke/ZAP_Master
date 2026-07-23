@@ -54,6 +54,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // HINWEIS zur spaeteren Englisch-Aktivierung (Abschnitt 8.2): `lang` request-aware zu machen
+  // (z.B. via next-intl getLocale()) wurde geprueft und wieder verworfen -- dieses Root-Layout
+  // wraps ausnahmslos jede Route (auch /dashboard/*, /login etc.), und ein dynamischer Read hier
+  // liegt zwangslaeufig ausserhalb jeder <Suspense>-Grenze (das <html>-Element selbst kann nicht
+  // in Suspense stehen). Unter `cacheComponents: true` (next.config.ts) bricht das den Build fuer
+  // die GESAMTE App, nicht nur die Marketingseiten (getestet: "/dashboard/mail-outbox" etc.
+  // schlugen mit "Uncached data was accessed outside of <Suspense>" fehl). Der von Abschnitt 8.2
+  // selbst genannte Alternativweg "getrennte Root-Layouts" (separate <html> pro Next.js
+  // Root-Layout-Gruppe, je mit statisch bekanntem Locale aus generateStaticParams) ist die
+  // tatsaechlich cacheComponents-kompatible Loesung, erfordert aber eine Route-Group-Umstrukturierung
+  // (eigene Root-Layouts fuer den lokalisierten Marketing-Baum vs. Dashboard/Auth/API) -- das ist
+  // ein eigener, groesserer Architekturschritt und bewusst NICHT Teil dieser Grundlagen-Runde.
+  // `lang="de"` bleibt bis dahin hartkodiert; korrekt fuer den aktuellen Deutsch-only-Betrieb.
   return (
     <html lang="de" suppressHydrationWarning>
       <Suspense fallback={null}>

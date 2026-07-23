@@ -49,7 +49,7 @@ export async function generateMetadata({
     title: audience.displayLabel,
     description: audience.zielPruefung,
   }
-  const hero = await getAudienceHero(audience.id, fallbackHero)
+  const hero = await getAudienceHero(audience.id, fallbackHero, locale)
 
   return buildPageMetadata({
     title: hero.title,
@@ -76,8 +76,8 @@ export default async function AudienceOverviewPage({
   }
 
   const [hero, { offers, addOnOffers }, existingCourses] = await Promise.all([
-    getAudienceHero(audience.id, fallbackHero),
-    getOfferCatalogForAudience(audience.id),
+    getAudienceHero(audience.id, fallbackHero, locale),
+    getOfferCatalogForAudience(audience.id, locale),
     getExistingCoursesForAudience(audience.id),
   ])
 

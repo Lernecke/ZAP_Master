@@ -1,0 +1,18 @@
+{
+  "_comment": "Vorlage fuer die spaetere Englisch-Aktivierung (siehe lib/i18n/localize-content.ts). TODO-Werte sind Platzhalter, keine echte Uebersetzung -- bleiben folgenlos, solange 'en' nicht in i18n/routing.ts geroutet wird. Schluesselstruktur muss mit messages/de.json identisch bleiben.",
+  "kurse": {
+    "columns": {
+      "kurs": "TODO: Kurs",
+      "datum": "TODO: Datum",
+      "zeit": "TODO: Zeit",
+      "tagesplan": "TODO: Tagesplan",
+      "ablauf": "TODO: Ablauf",
+      "tagUndZeit": "TODO: Tag & Zeit",
+      "standort": "TODO: Standort",
+      "status": "TODO: Status"
+    },
+    "courseCard": {
+      "termineAnsehen": "TODO: Termine ansehen"
+    }
+  }
+}

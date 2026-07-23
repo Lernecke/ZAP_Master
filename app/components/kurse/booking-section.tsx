@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { CourseOffer, ExamSimulationOffer, SessionColumn, SessionRow } from '@/types/marketing'
 import { SectionHeading } from '@/app/components/layout/section-heading'
 import { SessionTable } from '@/app/components/kurse/session-table'
@@ -15,44 +16,47 @@ interface BookingSectionProps {
 }
 
 // Spalten sind stabile Konfiguration, nicht redaktionell frei wählbar (Abschnitt 2.4) -- die
-// Zuordnung passiert hier anhand offer.kurstyp, kein caller-seitiger columns-Prop nötig.
-const intensivkursColumns: SessionColumn[] = [
-  { key: 'kurs', label: 'Kurs' },
-  { key: 'date', label: 'Datum' },
-  { key: 'time', label: 'Zeit' },
-  { key: 'details', label: 'Tagesplan' },
-  { key: 'location', label: 'Standort' },
-  { key: 'status', label: 'Status' },
-]
-
-const halbjahreskursColumns: SessionColumn[] = [
-  { key: 'kurs', label: 'Kurs' },
-  { key: 'time', label: 'Tag & Zeit' },
-  { key: 'details', label: 'Ablauf' },
-  { key: 'location', label: 'Standort' },
-  { key: 'status', label: 'Status' },
-]
-
-// Reduzierte Spalten für Prüfungssimulationen (Abschnitt 4): kein Tagesplan-Popover, die
-// Fixture-Sessions haben ohnehin ein leeres ablauf-Feld.
-const pruefungssimulationColumns: SessionColumn[] = [
-  { key: 'kurs', label: 'Kurs' },
-  { key: 'date', label: 'Datum' },
-  { key: 'time', label: 'Zeit' },
-  { key: 'location', label: 'Standort' },
-  { key: 'status', label: 'Status' },
-]
-
-function columnsForKurstyp(kurstyp: (CourseOffer | ExamSimulationOffer)['kurstyp']): SessionColumn[] {
-  if (kurstyp === 'halbjahreskurs') return halbjahreskursColumns
-  if (kurstyp === 'pruefungssimulation') return pruefungssimulationColumns
-  return intensivkursColumns
+// Zuordnung passiert hier anhand offer.kurstyp, kein caller-seitiger columns-Prop nötig. Innerhalb
+// der Komponente (nicht mehr modul-scope) gebaut, da useTranslations() ein Hook ist.
+function columnsForKurstyp(
+  kurstyp: (CourseOffer | ExamSimulationOffer)['kurstyp'],
+  t: ReturnType<typeof useTranslations<'kurse.columns'>>
+): SessionColumn[] {
+  if (kurstyp === 'halbjahreskurs') {
+    return [
+      { key: 'kurs', label: t('kurs') },
+      { key: 'time', label: t('tagUndZeit') },
+      { key: 'details', label: t('ablauf') },
+      { key: 'location', label: t('standort') },
+      { key: 'status', label: t('status') },
+    ]
+  }
+  // Reduzierte Spalten für Prüfungssimulationen (Abschnitt 4): kein Tagesplan-Popover, die
+  // Fixture-Sessions haben ohnehin ein leeres ablauf-Feld.
+  if (kurstyp === 'pruefungssimulation') {
+    return [
+      { key: 'kurs', label: t('kurs') },
+      { key: 'date', label: t('datum') },
+      { key: 'time', label: t('zeit') },
+      { key: 'location', label: t('standort') },
+      { key: 'status', label: t('status') },
+    ]
+  }
+  return [
+    { key: 'kurs', label: t('kurs') },
+    { key: 'date', label: t('datum') },
+    { key: 'time', label: t('zeit') },
+    { key: 'details', label: t('tagesplan') },
+    { key: 'location', label: t('standort') },
+    { key: 'status', label: t('status') },
+  ]
 }
 
 function BookingSection({ offer, sessions, onBook }: BookingSectionProps) {
   const [activeWeekId, setActiveWeekId] = useState(ALL_WEEKS_ID)
+  const t = useTranslations('kurse.columns')
 
-  const columns = columnsForKurstyp(offer.kurstyp)
+  const columns = columnsForKurstyp(offer.kurstyp, t)
 
   const visibleSessions = useMemo(() => {
     if (!offer.weekOptions || activeWeekId === ALL_WEEKS_ID) return sessions

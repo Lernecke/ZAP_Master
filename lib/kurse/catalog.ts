@@ -23,6 +23,8 @@ import {
   getOfferCatalogEntry,
   getSessionsForOfferId,
 } from './offer-catalog'
+import { localizeContent, type LocaleOverlay } from '@/lib/i18n/localize-content'
+import { AUDIENCE_HERO_TRANSLATIONS, OFFER_TRANSLATIONS, SESSION_TRANSLATIONS } from '@/types/marketing.translations'
 
 // Cookie-freier anon-Client -- innerhalb von 'use cache' ist cookies()/headers() nicht erlaubt.
 // Identisches, bereits etabliertes Muster wie getPublicKurse() in app/(public)/kurse/actions.ts.
@@ -118,7 +120,21 @@ async function applyLivePriceOverrides<T extends CourseOffer | ExamSimulationOff
   })
 }
 
-export async function getOfferCatalogForAudience(audienceId: AudienceId): Promise<{
+// Wendet das englische Uebersetzungs-Overlay (falls vorhanden) auf ein einzelnes Angebot an --
+// keyed auf die stabile Fixture-id. Bei locale === "de" oder fehlendem Overlay ein reiner
+// Passthrough, siehe lib/i18n/localize-content.ts.
+function localizeOffer<T extends CourseOffer | ExamSimulationOffer | SelfStudyOffer>(
+  offer: T,
+  locale: string
+): T {
+  const overlay = OFFER_TRANSLATIONS[offer.id] as LocaleOverlay<T> | undefined
+  return localizeContent(offer, overlay, locale)
+}
+
+export async function getOfferCatalogForAudience(
+  audienceId: AudienceId,
+  locale: string
+): Promise<{
   offers: CourseOffer[]
   addOnOffers: (ExamSimulationOffer | SelfStudyOffer)[]
 }> {
@@ -131,23 +147,29 @@ export async function getOfferCatalogForAudience(audienceId: AudienceId): Promis
     applyLivePriceOverrides(entry.offers),
     applyLivePriceOverrides(entry.addOnOffers),
   ])
-  return { offers, addOnOffers }
+  return {
+    offers: offers.map((offer) => localizeOffer(offer, locale)),
+    addOnOffers: addOnOffers.map((offer) => localizeOffer(offer, locale)),
+  }
 }
 
 export async function getAudienceHero(
   audienceId: AudienceId,
-  fallback: AudienceHeroContent
+  fallback: AudienceHeroContent,
+  locale: string
 ): Promise<AudienceHeroContent> {
   'use cache'
   cacheLife('hours')
   cacheTag('offers', `offers:${audienceId}`)
 
-  return getAudienceHeroOverride(audienceId) ?? fallback
+  const hero = getAudienceHeroOverride(audienceId) ?? fallback
+  return localizeContent(hero, AUDIENCE_HERO_TRANSLATIONS[audienceId], locale)
 }
 
 export async function getOfferBySlug(
   audienceId: AudienceId,
-  offerSlug: string
+  offerSlug: string,
+  locale: string
 ): Promise<CourseOffer | ExamSimulationOffer | SelfStudyOffer | null> {
   'use cache'
   cacheLife('hours')
@@ -156,13 +178,15 @@ export async function getOfferBySlug(
   const offer = findOfferBySlug(audienceId, offerSlug)
   if (!offer) return null
   const [withLivePrice] = await applyLivePriceOverrides([offer])
-  return withLivePrice
+  return localizeOffer(withLivePrice, locale)
 }
 
-export async function getSessionsForOffer(offerId: string): Promise<SessionDefinition[]> {
+export async function getSessionsForOffer(offerId: string, locale: string): Promise<SessionDefinition[]> {
   'use cache'
   cacheLife('hours')
   cacheTag('courses', `course:${offerId}`)
 
-  return getSessionsForOfferId(offerId)
+  return getSessionsForOfferId(offerId).map((session) =>
+    localizeContent(session, SESSION_TRANSLATIONS[session.id], locale)
+  )
 }

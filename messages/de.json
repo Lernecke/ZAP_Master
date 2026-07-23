@@ -1,1 +1,17 @@
-{}
+{
+  "kurse": {
+    "columns": {
+      "kurs": "Kurs",
+      "datum": "Datum",
+      "zeit": "Zeit",
+      "tagesplan": "Tagesplan",
+      "ablauf": "Ablauf",
+      "tagUndZeit": "Tag & Zeit",
+      "standort": "Standort",
+      "status": "Status"
+    },
+    "courseCard": {
+      "termineAnsehen": "Termine ansehen"
+    }
+  }
+}
