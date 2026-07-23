@@ -13,6 +13,7 @@
 import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { revalidatePath, updateTag } from 'next/cache'
+import { zurichLocalToUtcIso } from '@/lib/utils/zurich-time'
 import {
   offerEditionFormSchema,
   courseSessionFormSchema,
@@ -267,8 +268,10 @@ export async function saveEditionAction(
     early_bird_enabled: data.earlyBirdEnabled,
     early_bird_price_rappen: data.earlyBirdEnabled && data.earlyBirdPriceChf != null ? Math.round(data.earlyBirdPriceChf * 100) : null,
     early_bird_deadline: data.earlyBirdEnabled ? data.earlyBirdDeadline || null : null,
-    registration_opens_at: data.registrationOpensAt || null,
-    registration_closes_at: data.registrationClosesAt || null,
+    // datetime-local trägt keine Zeitzone -- roh gespeichert würde Postgres den String in der
+    // Session-timezone (UTC) statt in Europe/Zurich interpretieren, siehe zurich-time.ts.
+    registration_opens_at: data.registrationOpensAt ? zurichLocalToUtcIso(data.registrationOpensAt) : null,
+    registration_closes_at: data.registrationClosesAt ? zurichLocalToUtcIso(data.registrationClosesAt) : null,
   }
 
   if (editionId === null) {

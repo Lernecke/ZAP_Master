@@ -17,6 +17,7 @@ import {
   type OfferEditionDB,
 } from '@/types/kurs-edition'
 import { saveEditionAction, publishEditionAction, archiveEditionAction } from '@/app/(dashboard)/dashboard/kurse/durchfuehrungen/actions'
+import { utcIsoToZurichLocal } from '@/lib/utils/zurich-time'
 
 const inputClass =
   'w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
@@ -50,8 +51,10 @@ function defaultValuesFor(edition: OfferEditionDB | null): OfferEditionFormInput
     earlyBirdEnabled: edition.early_bird_enabled,
     earlyBirdPriceChf: edition.early_bird_price_rappen != null ? edition.early_bird_price_rappen / 100 : null,
     earlyBirdDeadline: edition.early_bird_deadline,
-    registrationOpensAt: edition.registration_opens_at?.slice(0, 16) ?? null,
-    registrationClosesAt: edition.registration_closes_at?.slice(0, 16) ?? null,
+    // Gespeicherter Wert ist UTC -- ein reines .slice(0, 16) würde die UTC-Ziffern unverändert
+    // als Zürcher Ortszeit anzeigen und damit um 1-2 Stunden danebenliegen, siehe zurich-time.ts.
+    registrationOpensAt: edition.registration_opens_at ? utcIsoToZurichLocal(edition.registration_opens_at) : null,
+    registrationClosesAt: edition.registration_closes_at ? utcIsoToZurichLocal(edition.registration_closes_at) : null,
     status: edition.status === 'archived' ? 'draft' : edition.status,
   }
 }

@@ -20,6 +20,7 @@ import {
   emergencyLockSessionAction,
   type SessionOption,
 } from '@/app/(dashboard)/dashboard/kurse/durchfuehrungen/tagesfreigaben-actions'
+import { utcIsoToZurichLocal } from '@/lib/utils/zurich-time'
 
 const WEEKDAY_LABELS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
 
@@ -109,8 +110,10 @@ export function DailyReleaseManager({
       setSelectedByKey(byKey)
       setCurrentStatus(release?.status ?? 'empty')
       setMode(release?.status === 'scheduled' ? 'scheduled' : 'now')
-      setOpensAt(release?.opens_at?.slice(0, 16) ?? '')
-      setClosesAt(release?.closes_at?.slice(0, 16) ?? '')
+      // Gespeicherter Wert ist UTC -- ein reines .slice(0, 16) würde die UTC-Ziffern unverändert
+      // als Zürcher Ortszeit anzeigen und damit um 1-2 Stunden danebenliegen, siehe zurich-time.ts.
+      setOpensAt(release?.opens_at ? utcIsoToZurichLocal(release.opens_at) : '')
+      setClosesAt(release?.closes_at ? utcIsoToZurichLocal(release.closes_at) : '')
     })
   }, [activeDayId])
 

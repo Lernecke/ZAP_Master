@@ -11,6 +11,7 @@
 import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
+import { zurichLocalToUtcIso } from '@/lib/utils/zurich-time'
 import {
   courseFormSchema,
   occurrenceFormSchema,
@@ -204,8 +205,10 @@ export async function saveOccurrenceAction(
   const data = parsed.data
   const supabase = createAuthenticatedSupabaseClient(authCheck.supabaseAccessToken)
   const payload = {
-    starts_at_utc: new Date(data.startsAt).toISOString(),
-    ends_at_utc: new Date(data.endsAt).toISOString(),
+    // datetime-local trägt keine Zeitzone -- new Date(...).toISOString() würde in der
+    // Server-Zeitzone (i.d.R. UTC) statt in Europe/Zurich interpretieren, siehe zurich-time.ts.
+    starts_at_utc: zurichLocalToUtcIso(data.startsAt),
+    ends_at_utc: zurichLocalToUtcIso(data.endsAt),
     course_id: courseId,
   }
 

@@ -13,6 +13,7 @@
 import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
+import { zurichLocalToUtcIso } from '@/lib/utils/zurich-time'
 import {
   releaseFormSchema,
   type ReleaseFormInput,
@@ -325,8 +326,10 @@ export async function saveReleaseAction(
   const { data: releaseId, error } = await supabase.rpc('admin_save_daily_release', {
     p_course_day_id: courseDayId,
     p_status: status,
-    p_opens_at: data.mode === 'scheduled' ? (data.opensAt ?? undefined) : undefined,
-    p_closes_at: data.mode === 'scheduled' ? (data.closesAt ?? undefined) : undefined,
+    // datetime-local trägt keine Zeitzone -- roh übergeben würde die RPC den String beim Cast auf
+    // timestamptz in der Session-timezone (UTC) statt in Europe/Zurich interpretieren.
+    p_opens_at: data.mode === 'scheduled' && data.opensAt ? zurichLocalToUtcIso(data.opensAt) : undefined,
+    p_closes_at: data.mode === 'scheduled' && data.closesAt ? zurichLocalToUtcIso(data.closesAt) : undefined,
     p_items: data.selectedItems.map((item) => ({
       kind: item.kind,
       exercise_id: item.kind === 'exercise' ? Number(item.sourceId) : undefined,
