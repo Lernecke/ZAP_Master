@@ -12,6 +12,7 @@ import { Button } from '@/app/components/ui/button'
 import { StatusBadge } from '@/app/components/kurse/status-badge'
 import { CategoryBadge } from '@/app/components/kurse/category-badge'
 import { formatOfferPrice } from '@/lib/pricing'
+import { SHOW_PRICE_PREVIEW_BADGE } from '@/lib/kurse/pricing-status'
 
 interface CourseCardProps {
   offer: CourseOffer
@@ -25,6 +26,7 @@ function CourseCard({ offer }: CourseCardProps) {
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
           {offer.recommended ? <StatusBadge status="empfohlen" /> : null}
+          {SHOW_PRICE_PREVIEW_BADGE ? <StatusBadge status="vorschau" /> : null}
           {offer.categoryLabel ? (
             <CategoryBadge label={offer.categoryLabel} subject={offer.subject} />
           ) : null}

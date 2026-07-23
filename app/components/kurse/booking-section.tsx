@@ -5,6 +5,7 @@ import type { CourseOffer, ExamSimulationOffer, SessionColumn, SessionRow } from
 import { SectionHeading } from '@/app/components/layout/section-heading'
 import { SessionTable } from '@/app/components/kurse/session-table'
 import { WeekFilter, ALL_WEEKS_ID } from '@/app/components/kurse/week-filter'
+import { SHOW_PRICE_PREVIEW_BADGE, PREVIEW_BOOKING_NOTE } from '@/lib/kurse/pricing-status'
 
 interface BookingSectionProps {
   // ExamSimulationOffer teilt booking/weekOptions(=never/undefined) mit CourseOffer (Schritt 11).
@@ -70,6 +71,9 @@ function BookingSection({ offer, sessions, onBook }: BookingSectionProps) {
         <p className="text-sm text-muted-foreground">{offer.booking.emptyState}</p>
       )}
       {offer.booking.note ? <p className="text-xs text-muted-foreground">{offer.booking.note}</p> : null}
+      {SHOW_PRICE_PREVIEW_BADGE ? (
+        <p className="text-xs text-muted-foreground">{PREVIEW_BOOKING_NOTE}</p>
+      ) : null}
     </div>
   )
 }

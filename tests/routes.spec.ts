@@ -96,6 +96,7 @@ const courseDetailRoutes = [
   '/de/kurse/4-klasse/halbjahreskurs',
   '/de/kurse/4-klasse/lerncamp-sportferien',
   '/de/kurse/5-klasse/halbjahreskurs',
+  '/de/kurse/5-klasse/lerncamp-sportferien',
   '/de/kurse/6-klasse/halbjahreskurs',
   '/de/kurse/6-klasse/intensivkurs-sportferien',
   '/de/kurse/6-klasse/pruefungssimulation',

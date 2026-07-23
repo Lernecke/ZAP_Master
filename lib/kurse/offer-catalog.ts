@@ -26,6 +26,8 @@ import {
   fuenfKlasseAudiencePageModel,
   fuenfKlasseHalbjahreskurs,
   fuenfKlasseHalbjahreskursSessions,
+  fuenfKlasseLerncampSportferien,
+  fuenfKlasseLerncampSessions,
   sechsKlasseAudiencePageModel,
   sechsKlasseHalbjahreskurs,
   sechsKlasseIntensivkurs,
@@ -75,12 +77,10 @@ const OFFER_CATALOG: Partial<Record<AudienceId, OfferCatalogEntry>> = {
     offers: [einsSekVorkurs, einsSekLerncampSportferien],
     addOnOffers: [],
   },
-  // '5': nur Halbjahreskurs -- das Lerncamp-Angebot hat einen ungelösten Preiskonflikt zwischen
-  // Haupt- und Unterseite (CHF 950 vs. CHF 890, kein "regulär"-Anker) und bleibt bis zur
-  // fachlichen Preisfreigabe ausserhalb des Katalogs, siehe Kommentar bei
+  // Lerncamp-Preiskonflikt (CHF 950 vs. CHF 890) am 23.07.2026 aufgelöst -- siehe Kommentar bei
   // fuenfKlasseHalbjahreskurs in types/marketing.fixtures.ts.
   '5': {
-    offers: [fuenfKlasseHalbjahreskurs],
+    offers: [fuenfKlasseHalbjahreskurs, fuenfKlasseLerncampSportferien],
     addOnOffers: [],
   },
   '6': {
@@ -134,6 +134,7 @@ const OFFER_SESSIONS: Record<string, SessionDefinition[]> = {
   [vierKlasseHalbjahreskurs.id]: vierKlasseHalbjahreskursSessions,
   [vierKlasseLerncampSportferien.id]: vierKlasseLerncampSessions,
   [fuenfKlasseHalbjahreskurs.id]: fuenfKlasseHalbjahreskursSessions,
+  [fuenfKlasseLerncampSportferien.id]: fuenfKlasseLerncampSessions,
   [einsSekVorkurs.id]: einsSekVorkursSessions,
   [einsSekLerncampSportferien.id]: einsSekLerncampSessions,
   [zweiDreiSekHalbjahreskurs.id]: zweiDreiSekHalbjahreskursSessions,

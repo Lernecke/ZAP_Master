@@ -11,35 +11,11 @@
 -- ============================================================================
 -- offers / offer_editions -- 5. Klasse Lerncamp (Layout_5_Klasse_Intensivkurs_Unterseite.html)
 -- ============================================================================
--- Hauptseite und Unterseite zeigen fuer dasselbe Angebot widerspruechliche Preise (CHF 950 vs.
--- CHF 890, kein "regulaer"-Anker wie beim Halbjahreskurs) -- Abschnitt 2.3 des
--- Architektur-Briefings. Abschnitt 9.1 verbietet das stille Auswaehlen eines der beiden
--- Mockup-Werte, deshalb bleibt das Angebot in types/marketing.fixtures.ts/offer-catalog.ts
--- weiterhin ausserhalb des Katalogs (siehe Kommentar bei fuenfKlasseHalbjahreskurs).
---
--- Statt gar keinen DB-Datensatz zu haben, legt dieser Seed den Preis dort ab, wo er laut
--- Abschnitt 2.12 kuenftig hingehoert: offer_editions.regular_price_rappen. Der Wert hier ist ein
--- bewusst unverwechselbarer Platzhalter (0 Rappen) statt einer der beiden erfundenen Zahlen; die
--- Edition bleibt status='draft' und ist per RLS (offer_editions_read_published_or_content_manager)
--- nur fuer is_content_manager() sichtbar, nie oeffentlich lesbar. Die echte Zahl folgt als
--- fachlich freigegebene Bearbeitung ueber die Admin-Maske (Schritt 10a); die Verdrahtung des
--- oeffentlichen Katalogs auf diese Tabelle bleibt ein spaeterer Schritt.
---
--- Die zugehoerige offers-Zeile (audience_id='5', kurstyp='intensivkurs',
--- slug='lerncamp-sportferien') wird seit Migration 20260721074103_seed_offer_catalog.sql zusammen
--- mit allen anderen 19 stabilen Angeboten dort angelegt, nicht mehr hier.
-insert into public.offer_editions (
-  offer_id, school_year, public_title, tagline, description,
-  regular_price_rappen, early_bird_enabled, status
-)
-select
-  o.id,
-  '2026/27',
-  'Lerncamp – Sportferien',
-  'Intensives Training in den Sportferien',
-  'Platzhalter -- echter Preis folgt nach fachlicher Freigabe (Preiskonflikt CHF 950 vs. CHF 890).',
-  0,
-  false,
-  'draft'
-from public.offers o
-where o.audience_id = '5' and o.kurstyp = 'intensivkurs' and o.slug = 'lerncamp-sportferien';
+-- Der frühere Platzhalter-Insert hier (0 Rappen, status='draft', wegen des ungelösten
+-- Preiskonflikts CHF 950 vs. CHF 890) wurde am 23.07.2026 entfernt: Das Angebot hat inzwischen ein
+-- vollständiges Fixture (fuenfKlasseLerncampSportferien, types/marketing.fixtures.ts) und eine
+-- reguläre published-Zeile aus der additiven Migration
+-- supabase/migrations/20260723..._seed_published_offer_editions.sql (regular_price_rappen=95000,
+-- per Nutzer-Entscheid CHF 950). Ein zusätzlicher Insert hier für denselben
+-- (offer_id, school_year)-Schlüssel würde jetzt den UNIQUE(offer_id, school_year)-Constraint
+-- verletzen und jeden `db reset --local` brechen.

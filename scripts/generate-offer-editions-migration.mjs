@@ -1,11 +1,18 @@
 #!/usr/bin/env node
-// Einmaliges Generierungsskript: liest die 18 bereits publizierten Angebote direkt aus
+// Wiederholt ausfuehrbares Generierungsskript: liest alle publizierbaren Angebote direkt aus
 // types/marketing.fixtures.ts (importiert das echte TS-Modul, keine manuelle Abschrift -- das
-// waere bei 18 Datensaetzen mit mehrzeiligen Beschreibungstexten fehleranfaellig) und erzeugt
+// waere bei mehreren Datensaetzen mit mehrzeiligen Beschreibungstexten fehleranfaellig) und erzeugt
 // daraus eine additive Migration, die offer_editions mit genau diesen aktuellen Werten befuellt.
 // Erzeugt keine neuen offers-Zeilen (existieren bereits vollstaendig seit
-// 20260721074103_seed_offer_catalog.sql) und laesst 5-Klasse-Lerncamp (Preiskonflikt, echter Preis
-// folgt separat) sowie BMS-Halbjahreskurs (kein Inhalt) unangetastet.
+// 20260721074103_seed_offer_catalog.sql).
+//
+// Punkt 1 aus design-review-todo.md (aufgeloest 2026-07-23): Preiskonflikte werden nicht mehr
+// einzeln fachlich freigegeben, bevor ein Angebot eine offer_editions-Zeile bekommt -- alle Preise
+// gelten bis auf Weiteres als vorlaeufig/fiktiv (siehe lib/kurse/pricing-status.ts) und werden
+// spaeter angepasst. BMS-Halbjahreskurs ist seit jenem Lauf deshalb enthalten (Inhalt existiert
+// seit 22.07.2026). 5. Klasse Lerncamp (Preiskonflikt CHF 950 vs. CHF 890, Nutzer-Entscheid:
+// CHF 950) ist seit dem Lauf vom 23.07.2026 ebenfalls enthalten, nachdem das zuvor fehlende
+// Fixture (fuenfKlasseLerncampSportferien, types/marketing.fixtures.ts) ergaenzt wurde.
 //
 // Nutzung: npx tsx scripts/generate-offer-editions-migration.mjs
 
