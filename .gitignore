@@ -87,3 +87,6 @@ docs/migration-evidence/private/
 
 # Temporäre Prüfdateien der versionierten Designreferenzen
 design-reference/_writetest.tmp
+
+# graphify-generierter Knowledge Graph (lokal, nicht Teil des Repos)
+graphify-out/

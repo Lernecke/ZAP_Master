@@ -4,6 +4,7 @@ import { createAuthenticatedSupabaseClient, createAdminSupabaseClient } from '@/
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
 import { createStructuredRubricSchema } from '@/types/aufsatz'
+import { createBucketSignedUploadUrl } from '@/lib/storage/signed-upload'
 
 export type RubrikResult<T = void> =
   | { success: true; data?: T; message?: string }
@@ -87,21 +88,18 @@ export async function createSignedRubricUploadUrl(
     return { success: false, error: 'Datei zu gross (max. 5 MB).' }
   }
 
-  const sanitizedName = fileName.replace(/[^a-zA-Z0-9äöüÄÖÜß._-]/g, '_').substring(0, 100)
-  const uniqueId = crypto.randomUUID()
-  const filePath = `rubriken/${auth.userId}/${uniqueId}--${sanitizedName}`
+  const result = await createBucketSignedUploadUrl({
+    bucket: 'correction-rubrics',
+    pathPrefix: 'rubriken',
+    userId: auth.userId,
+    fileName,
+    errorLogLabel: 'createSignedRubricUploadUrl error',
+    errorMessage: 'Upload-URL konnte nicht erstellt werden.',
+  })
 
-  const adminSupabase = createAdminSupabaseClient()
-  const { data, error } = await adminSupabase.storage
-    .from('correction-rubrics')
-    .createSignedUploadUrl(filePath)
+  if (!result.success) return result
 
-  if (error) {
-    console.error('createSignedRubricUploadUrl error:', error)
-    return { success: false, error: 'Upload-URL konnte nicht erstellt werden.' }
-  }
-
-  return { success: true, data: { signedUrl: data.signedUrl, path: filePath } }
+  return { success: true, data: { signedUrl: result.data.signedUrl, path: result.data.path } }
 }
 
 // ── ERSTELLEN ──────────────────────────────────────────────────

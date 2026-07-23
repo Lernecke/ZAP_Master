@@ -4,6 +4,7 @@ import { createAuthenticatedSupabaseClient, createAdminSupabaseClient } from '@/
 import { auth } from '@/lib/auth/config'
 import { revalidatePath } from 'next/cache'
 import { createSignedUploadUrlSchema } from '@/types/aufsatz'
+import { createBucketSignedUploadUrl } from '@/lib/storage/signed-upload'
 
 export type EssayResult<T = void> = 
   | { success: true; data?: T; message?: string }
@@ -87,37 +88,13 @@ export async function createSignedUploadUrl(
     }
   }
 
-  // Dateiname sanitieren
-  const sanitizedName = parsed.data.fileName
-    .replace(/[^a-zA-Z0-9äöüÄÖÜß._-]/g, '_')
-    .substring(0, 100)
-
-  // Unique ID für Dateinamen
-  const uniqueId = crypto.randomUUID()
-
   // Pfad: aufsaetze/{user.id}/{uuid}--{originalname}
-  const filePath = `aufsaetze/${authCheck.userId}/${uniqueId}--${sanitizedName}`
-  
-  // Admin-Client für Signed URL (umgeht RLS für Storage-Admin-Operationen)
-  const adminSupabase = createAdminSupabaseClient()
-  
-  const { data, error } = await adminSupabase.storage
-    .from('student-essays')
-    .createSignedUploadUrl(filePath)
-  
-  if (error) {
-    console.error('Signed URL creation error:', error)
-    return { success: false, error: 'Konnte Upload-URL nicht erstellen.' }
-  }
-  
-  return {
-    success: true,
-    data: {
-      signedUrl: data.signedUrl,
-      path: filePath,
-      token: data.token
-    }
-  }
+  return createBucketSignedUploadUrl({
+    bucket: 'student-essays',
+    pathPrefix: 'aufsaetze',
+    userId: authCheck.userId,
+    fileName: parsed.data.fileName,
+  })
 }
 
 /**
