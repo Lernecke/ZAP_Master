@@ -50,6 +50,54 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "user",
       },
+      firstName: {
+        type: "string",
+        required: false,
+        fieldName: "first_name",
+      },
+      lastName: {
+        type: "string",
+        required: false,
+        fieldName: "last_name",
+      },
+      phone: {
+        type: "string",
+        required: false,
+      },
+      avatarUrl: {
+        type: "string",
+        required: false,
+        fieldName: "avatar_url",
+      },
+      gender: {
+        type: "string",
+        required: false,
+      },
+      birthDate: {
+        type: "string",
+        required: false,
+        fieldName: "birth_date",
+      },
+      schoolName: {
+        type: "string",
+        required: false,
+        fieldName: "school_name",
+      },
+      classLevel: {
+        type: "string",
+        required: false,
+        fieldName: "class_level",
+      },
+      bio: {
+        type: "string",
+        required: false,
+      },
+      themePreference: {
+        type: "string",
+        required: false,
+        defaultValue: "light",
+        fieldName: "theme_preference",
+      },
     },
   },
 })

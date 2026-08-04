@@ -57,7 +57,7 @@ export async function getTeacherOverviewForPeriod(
   const { start, end } = monthRange(year, month)
 
   const [teachersResult, entriesResult, ratesResult] = await Promise.all([
-    supabase.from('profiles').select('id, first_name, last_name, email').eq('role', 'lehrperson'),
+    supabase.from('user').select('id, first_name, last_name, email').eq('role', 'lehrperson'),
     supabase.from('work_entries').select('*').gte('work_date', start).lte('work_date', end),
     supabase.from('teacher_rate_agreements').select('*').is('valid_until', null),
   ])

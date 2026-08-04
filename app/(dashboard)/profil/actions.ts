@@ -43,11 +43,11 @@ export async function updateProfile(data: ProfileUpdateData): Promise<ProfileRes
   const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
 
   const { error } = await supabase
-    .from('profiles')
+    .from('user')
     .update({
       ...data,          // includes class_level, birth_date, gender not covered by schema
       ...parsed.data,   // validated fields overwrite their counterparts
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .eq('id', session.user.id)
 
@@ -79,10 +79,10 @@ export async function updateThemePreference(
   const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
 
   const { error } = await supabase
-    .from('profiles')
+    .from('user')
     .update({
       theme_preference: parsed.data.theme,
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .eq('id', session.user.id)
 
@@ -153,10 +153,11 @@ export async function uploadAvatar(formData: FormData): Promise<ProfileResult<st
 
   // Update profile with new avatar URL (mit RLS)
   const { error: updateError } = await supabase
-    .from('profiles')
+    .from('user')
     .update({
       avatar_url: publicUrl,
-      updated_at: new Date().toISOString(),
+      image: publicUrl,
+      updatedAt: new Date().toISOString(),
     })
     .eq('id', userId)
 
@@ -194,10 +195,11 @@ export async function deleteAvatar(): Promise<ProfileResult> {
 
   // Clear avatar URL in profile (mit RLS)
   const { error } = await supabase
-    .from('profiles')
+    .from('user')
     .update({
       avatar_url: null,
-      updated_at: new Date().toISOString(),
+      image: null,
+      updatedAt: new Date().toISOString(),
     })
     .eq('id', userId)
 
@@ -222,7 +224,7 @@ export async function getProfile() {
   const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
   
   const { data, error } = await supabase
-    .from('profiles')
+    .from('user')
     .select('*')
     .eq('id', session.user.id)
     .single()

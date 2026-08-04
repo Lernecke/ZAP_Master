@@ -23,10 +23,10 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
 
-  const profileQuery = isUuid
-    ? supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+  const profileQuery = userId
+    ? supabase.from('user').select('*').eq('id', userId).maybeSingle()
     : email
-    ? supabase.from('profiles').select('*').eq('email', email).maybeSingle()
+    ? supabase.from('user').select('*').eq('email', email).maybeSingle()
     : Promise.resolve({ data: null, error: null })
 
   const progressQuery = isUuid

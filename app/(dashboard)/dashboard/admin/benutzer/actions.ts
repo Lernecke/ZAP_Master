@@ -40,9 +40,9 @@ export async function getUsers(): Promise<{ users: UserWithProfile[], error: str
   const supabase = getAdminClient()
   
   const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, first_name, last_name, role, created_at, avatar_url')
-    .order('created_at', { ascending: false })
+    .from('user')
+    .select('id, email, first_name, last_name, role, createdAt, avatar_url, image')
+    .order('createdAt', { ascending: false })
   
   if (error) {
     return { users: [], error: error.message }
@@ -54,8 +54,8 @@ export async function getUsers(): Promise<{ users: UserWithProfile[], error: str
     first_name: u.first_name,
     last_name: u.last_name,
     role: (u.role as UserRole) || 'user',
-    created_at: u.created_at,
-    avatar_url: u.avatar_url,
+    created_at: u.createdAt || null,
+    avatar_url: u.avatar_url || u.image || null,
   }))
   
   return { users, error: null }
@@ -87,8 +87,8 @@ export async function updateUserRole(
   const supabase = getAdminClient()
 
   const { error } = await supabase
-    .from('profiles')
-    .update({ role: parsed.data.newRole, updated_at: new Date().toISOString() })
+    .from('user')
+    .update({ role: parsed.data.newRole, updatedAt: new Date().toISOString() })
     .eq('id', parsed.data.userId)
   
   if (error) {
@@ -114,14 +114,14 @@ export async function deleteUser(
   
   const supabase = getAdminClient()
   
-  // Lösche zuerst das Profil (FK constraint)
-  const { error: profileError } = await supabase
-    .from('profiles')
+  // Lösche den Benutzer aus der user Tabelle
+  const { error: deleteError } = await supabase
+    .from('user')
     .delete()
     .eq('id', userId)
   
-  if (profileError) {
-    return { success: false, error: profileError.message }
+  if (deleteError) {
+    return { success: false, error: deleteError.message }
   }
   
   // auth.users kann nur via Admin API gelöscht werden

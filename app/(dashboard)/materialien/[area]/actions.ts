@@ -199,11 +199,11 @@ export async function listAreaGrants(areaId: string): Promise<MaterialienActionR
   }
 
   const userIds = Array.from(new Set((grants ?? []).map((g) => g.user_id)))
-  const { data: profiles } = userIds.length
-    ? await supabase.from('profiles').select('id, email, first_name, last_name').in('id', userIds)
+  const { data: users } = userIds.length
+    ? await supabase.from('user').select('id, email, first_name, last_name, name').in('id', userIds)
     : { data: [] }
 
-  const profileById = new Map((profiles ?? []).map((p) => [p.id, p]))
+  const profileById = new Map((users ?? []).map((p) => [p.id, p]))
 
   const enriched: MaterialAccessGrantWithUser[] = (grants ?? []).map((g) => {
     const profile = profileById.get(g.user_id)
@@ -241,7 +241,7 @@ export async function adminGrantAccessAction(areaId: string, input: { email: str
   }
 
   const { data: profile, error: profileError } = await supabase
-    .from('profiles')
+    .from('user')
     .select('id')
     .eq('email', parsed.data.email.toLowerCase())
     .maybeSingle()

@@ -43,7 +43,7 @@ export function ClassFilterProvider({ children }: { children: React.ReactNode })
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user')
           .select('class_level')
           .eq('id', session.user.id)
           .single()

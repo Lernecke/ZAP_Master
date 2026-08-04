@@ -14,8 +14,8 @@ export async function GET() {
     
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.user.id)
     
-    let query = supabase.from('profiles').select('theme_preference')
-    if (isUuid) {
+    let query = supabase.from('user').select('theme_preference')
+    if (session.user.id) {
       query = query.eq('id', session.user.id)
     } else if (session.user.email) {
       query = query.eq('email', session.user.email)

@@ -81,7 +81,7 @@ export async function BadgesSection({ userId, token }: Props) {
       .in('exercise_type', ['mathematik', 'deutsch']),
     supabase.from('user_badges').select('badge_name'),
     supabase
-      .from('profiles')
+      .from('user')
       .select('first_name, last_name, avatar_url')
       .eq('id', userId)
       .single(),
