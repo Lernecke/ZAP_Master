@@ -28,6 +28,21 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
 
+  function translatePasskeyError(msg?: string): string {
+    if (!msg) return 'Passkey-Anmeldung fehlgeschlagen. Bitte versuche es erneut.'
+    const lower = msg.toLowerCase()
+    if (lower.includes('passkey not found') || lower.includes('passkey_not_found') || lower.includes('no passkey')) {
+      return 'Passkey wurde nicht gefunden. Bitte richte zuerst einen Passkey in deinem Profil ein.'
+    }
+    if (lower.includes('canceled') || lower.includes('cancelled') || lower.includes('abort') || lower.includes('notallowederror')) {
+      return 'Anmeldung mit Passkey wurde abgebrochen.'
+    }
+    if (lower.includes('not supported') || lower.includes('unsupported')) {
+      return 'Passkeys werden von diesem Browser oder Gerät leider nicht unterstützt.'
+    }
+    return msg
+  }
+
   const handlePasskeySubmit = async () => {
     setLoading(true)
     setError('')
@@ -36,7 +51,7 @@ export function LoginForm() {
       const res = await authClient.signIn.passkey()
 
       if (res?.error) {
-        setError(res.error.message || 'Passkey-Anmeldung fehlgeschlagen. Bitte versuche es erneut.')
+        setError(translatePasskeyError(res.error.message))
         setLoading(false)
       } else {
         router.push(callbackUrl || '/dashboard')
@@ -44,7 +59,7 @@ export function LoginForm() {
       }
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Passkey-Anmeldung fehlgeschlagen.'
+        err instanceof Error ? translatePasskeyError(err.message) : 'Passkey-Anmeldung fehlgeschlagen.'
       setError(errorMessage)
       setLoading(false)
     }

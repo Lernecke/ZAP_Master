@@ -53,6 +53,21 @@ export function PasskeySection() {
     fetchPasskeys()
   }, [fetchPasskeys])
 
+  const translatePasskeyError = (msg?: string, fallback = 'Fehler beim Verarbeiten des Passkeys.') => {
+    if (!msg) return fallback
+    const lower = msg.toLowerCase()
+    if (lower.includes('passkey not found') || lower.includes('passkey_not_found') || lower.includes('no passkey')) {
+      return 'Passkey wurde nicht gefunden. Bitte erstelle einen neuen Passkey.'
+    }
+    if (lower.includes('canceled') || lower.includes('cancelled') || lower.includes('abort') || lower.includes('notallowederror')) {
+      return 'Vorgang wurde abgebrochen.'
+    }
+    if (lower.includes('not supported') || lower.includes('unsupported')) {
+      return 'Passkeys werden von diesem Browser oder Gerät nicht unterstützt.'
+    }
+    return msg
+  }
+
   const handleAddPasskey = async () => {
     setAdding(true)
     try {
@@ -62,7 +77,7 @@ export function PasskeySection() {
       })
 
       if (res?.error) {
-        toast.error(res.error.message || 'Passkey konnte nicht hinzugefügt werden.')
+        toast.error(translatePasskeyError(res.error.message, 'Passkey konnte nicht hinzugefügt werden.'))
       } else {
         toast.success('Passkey wurde erfolgreich hinzugefügt!')
         setPasskeyName('')
@@ -71,7 +86,7 @@ export function PasskeySection() {
       }
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Passkey konnte nicht hinzugefügt werden.'
+        err instanceof Error ? translatePasskeyError(err.message, 'Passkey konnte nicht hinzugefügt werden.') : 'Passkey konnte nicht hinzugefügt werden.'
       toast.error(errorMessage)
     } finally {
       setAdding(false)
@@ -86,14 +101,14 @@ export function PasskeySection() {
     try {
       const res = await authClient.passkey.deletePasskey({ id })
       if (res?.error) {
-        toast.error(res.error.message || 'Passkey konnte nicht gelöscht werden.')
+        toast.error(translatePasskeyError(res.error.message, 'Passkey konnte nicht gelöscht werden.'))
       } else {
         toast.success('Passkey wurde gelöscht.')
         await fetchPasskeys()
       }
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Passkey konnte nicht gelöscht werden.'
+        err instanceof Error ? translatePasskeyError(err.message, 'Passkey konnte nicht gelöscht werden.') : 'Passkey konnte nicht gelöscht werden.'
       toast.error(errorMessage)
     } finally {
       setDeletingId(null)
