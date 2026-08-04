@@ -8,6 +8,7 @@ export interface AppSession {
     email?: string | null
     name?: string | null
     role: UserRole
+    emailVerified?: boolean
   }
   supabaseAccessToken?: string
 }
@@ -28,6 +29,7 @@ export async function auth(): Promise<AppSession | null> {
 
     const userRecord = session.user as unknown as Record<string, unknown>
     const role: UserRole = (userRecord.role as UserRole) || "user"
+    const emailVerified = Boolean(session.user.emailVerified)
 
     return {
       user: {
@@ -35,6 +37,7 @@ export async function auth(): Promise<AppSession | null> {
         email: session.user.email || null,
         name: session.user.name || null,
         role,
+        emailVerified,
       },
       supabaseAccessToken: session.session.token,
     }

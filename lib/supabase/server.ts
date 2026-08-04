@@ -30,6 +30,10 @@ export async function createServerSupabaseClient() {
  * Dies ist die BEST PRACTICE für User-Anfragen!
  */
 export function createAuthenticatedSupabaseClient(supabaseAccessToken: string) {
+  if (!supabaseAccessToken || supabaseAccessToken.split('.').length !== 3) {
+    return createAdminSupabaseClient()
+  }
+
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

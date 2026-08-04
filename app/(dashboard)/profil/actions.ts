@@ -2,6 +2,7 @@
 
 import { createAuthenticatedSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { auth } from '@/lib/auth/config'
+import { auth as betterAuth } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { updateProfileSchema, updateThemeSchema } from '@/types/profil'
 
@@ -233,3 +234,32 @@ export async function getProfile() {
 
   return data
 }
+
+/**
+ * Trigger sending a verification email via Better Auth
+ */
+export async function sendVerificationEmailAction(): Promise<ProfileResult> {
+  const session = await auth()
+  if (!session?.user?.email) {
+    return { success: false, error: 'Nicht authentifiziert' }
+  }
+
+  try {
+    await betterAuth.api.sendVerificationEmail({
+      body: {
+        email: session.user.email,
+        callbackURL: '/profil',
+      },
+    })
+    return {
+      success: true,
+      message: 'Bestätigungs-E-Mail wurde erfolgreich gesendet!',
+    }
+  } catch (err: unknown) {
+    console.error('[BetterAuth] Send verification email error:', err)
+    const errorMessage =
+      err instanceof Error ? err.message : 'Bestätigungs-E-Mail konnte nicht gesendet werden.'
+    return { success: false, error: errorMessage }
+  }
+}
+

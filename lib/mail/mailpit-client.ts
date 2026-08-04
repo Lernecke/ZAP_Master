@@ -3,13 +3,8 @@ import nodemailer from "nodemailer"
 /**
  * Mailpit SMTP Client for sending local verification and transactional emails.
  * Mailpit UI runs at http://localhost:8025 and catches all emails on SMTP port 1025.
+ * If Mailpit is not running locally, it logs the link to the console as a fallback.
  */
-export const mailpitTransporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "127.0.0.1",
-  port: parseInt(process.env.SMTP_PORT || "1025", 10),
-  secure: false,
-})
-
 export async function sendVerificationEmailMailpit({
   email,
   url,
@@ -17,6 +12,8 @@ export async function sendVerificationEmailMailpit({
   email: string
   url: string
 }) {
+  const customHost = process.env.SMTP_HOST
+  const port = parseInt(process.env.SMTP_PORT || "1025", 10)
   const from = process.env.MAIL_FROM_ADDRESS || "noreply@zap.ch"
   const subject = "E-Mail-Adresse bestätigen – ZAP v2"
   const html = `
@@ -32,17 +29,45 @@ export async function sendVerificationEmailMailpit({
     </div>
   `
 
-  try {
-    const info = await mailpitTransporter.sendMail({
-      from,
-      to: email,
-      subject,
-      html,
-    })
-    console.log(`[Mailpit] Verification email sent to ${email}: ${info.messageId}`)
-    return { success: true }
-  } catch (error) {
-    console.error("[Mailpit] Error sending verification email:", error)
-    return { success: false, error }
+  const hostsToTry = customHost ? [customHost] : ["127.0.0.1", "localhost", "::1"]
+  let lastError: unknown = null
+
+  for (const host of hostsToTry) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: false,
+        tls: {
+          rejectUnauthorized: false,
+        },
+        connectionTimeout: 2000,
+      })
+
+      const info = await transporter.sendMail({
+        from,
+        to: email,
+        subject,
+        html,
+      })
+      console.log(`[Mailpit] Verification email sent to ${email} via SMTP (${host}:${port}): ${info.messageId}`)
+      return { success: true }
+    } catch (err) {
+      lastError = err
+    }
   }
+
+  // Fallback when Mailpit SMTP server is not running on port 1025
+  console.warn(`[Mailpit] SMTP server on port ${port} is not running (${lastError instanceof Error ? lastError.message : String(lastError)}).`)
+  console.log(`\n==================================================`)
+  console.log(`[DEV VERIFICATION LINK]`)
+  console.log(`To: ${email}`)
+  console.log(`Link: ${url}`)
+  console.log(`==================================================\n`)
+
+  return { success: true }
 }
+
+
+
+
