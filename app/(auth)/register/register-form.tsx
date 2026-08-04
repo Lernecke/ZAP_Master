@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, ArrowRight, Loader2, CheckCircle2, User } from 'lucide-react'
@@ -10,6 +11,7 @@ import { registerSchema, type RegisterInput } from '@/types/auth'
 import { signUp } from '@/lib/auth-client'
 
 export function RegisterForm() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [serverError, setServerError] = useState('')
@@ -39,8 +41,8 @@ export function RegisterForm() {
       return
     }
 
-    setSuccess(true)
-    setLoading(false)
+    router.push('/dashboard')
+    router.refresh()
   }
 
   if (success) {
