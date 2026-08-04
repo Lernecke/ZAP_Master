@@ -1,17 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, ArrowRight, Loader2, CheckCircle2, User } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { registerSchema, type RegisterInput } from '@/types/auth'
-import { registerUserWithoutConfirmation } from './actions'
+import { signUp } from '@/lib/auth-client'
 
 export function RegisterForm() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [serverError, setServerError] = useState('')
@@ -28,15 +26,15 @@ export function RegisterForm() {
     setLoading(true)
     setServerError('')
 
-    const result = await registerUserWithoutConfirmation(
-      data.email,
-      data.password,
-      data.firstName,
-      data.lastName
-    )
+    const { error: signUpError } = await signUp.email({
+      email: data.email,
+      password: data.password,
+      name: `${data.firstName} ${data.lastName}`.trim(),
+      callbackURL: '/dashboard',
+    })
 
-    if (result.error) {
-      setServerError(result.error)
+    if (signUpError) {
+      setServerError(signUpError.message || 'Registrierung fehlgeschlagen.')
       setLoading(false)
       return
     }

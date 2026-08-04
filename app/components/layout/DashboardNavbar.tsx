@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/lib/auth-client'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Menu, X, LogOut, User, Zap, ChevronDown, GraduationCap, Check, RotateCcw } from 'lucide-react'
@@ -13,6 +13,16 @@ export default function DashboardNavbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [classMenuOpen, setClassMenuOpen] = useState(false)
   const { selectedClass, setSelectedClass, userDefaultClass, isLoading, resetToUserDefault } = useClassFilter()
+
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/'
+        },
+      },
+    })
+  }
 
   return (
     <nav className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
@@ -151,7 +161,7 @@ export default function DashboardNavbar() {
                       </Link>
                       <hr className="my-1 border-border" />
                       <button
-                        onClick={() => signOut({ callbackUrl: '/' })}
+                        onClick={handleSignOut}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 w-full transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
@@ -224,7 +234,7 @@ export default function DashboardNavbar() {
               Profil
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={handleSignOut}
               className="flex items-center gap-3 px-4 py-3 text-base font-medium text-destructive hover:bg-destructive/10 w-full rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5" />

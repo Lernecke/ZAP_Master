@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { loginSchema } from '@/types/auth'
 import Link from 'next/link'
 import { Mail, Lock, ArrowRight, Loader2, Info } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { getSafeCallbackUrl } from '@/lib/auth/callback-url'
+import { loginSchema } from '@/types/auth'
+import { signIn } from '@/lib/auth-client'
 
 export function LoginForm() {
   const router = useRouter()
@@ -32,17 +32,18 @@ export function LoginForm() {
       return
     }
 
-    const result = await signIn('credentials', {
+    const { error: signInError } = await signIn.email({
       email: parsed.data.email,
       password: parsed.data.password,
-      redirect: false,
+      callbackURL: callbackUrl || '/dashboard',
     })
 
-    if (result?.error) {
-      setError('Login fehlgeschlagen. Prüfe deine Anmeldedaten.')
+    if (signInError) {
+      setError(signInError.message || 'Login fehlgeschlagen. Prüfe deine Anmeldedaten.')
       setLoading(false)
     } else {
       router.push(callbackUrl)
+      router.refresh()
     }
   }
 

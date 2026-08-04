@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import type { Session } from 'next-auth'
-import type { UserRole } from '@/types/next-auth'
+import type { Session, UserRole } from '@/types/next-auth.d'
 
 interface AuthState {
   userId: string | null
