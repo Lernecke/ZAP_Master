@@ -18,7 +18,7 @@ const protectedPrefixes = [
   "/materialien",
   "/arbeitszeiten",
 ]
-const authPageRoutes = ["/login", "/register"]
+const authPageRoutes = ["/login", "/register", "/forgot-password", "/reset-password"]
 const existingUnlocalizedPublicPrefixes = ["/kurse"]
 
 function isUnderPrefix(pathname: string, prefixes: string[]) {
@@ -37,7 +37,9 @@ async function handleAuthRoute(request: NextRequest) {
   const sessionToken = getSessionTokenFromRequest(request)
 
   const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
-                     request.nextUrl.pathname.startsWith("/register")
+                     request.nextUrl.pathname.startsWith("/register") ||
+                     request.nextUrl.pathname.startsWith("/forgot-password") ||
+                     request.nextUrl.pathname.startsWith("/reset-password")
 
   if (isAuthPage) {
     if (sessionToken) {
@@ -91,6 +93,8 @@ export const config = {
     "/arbeitszeiten/:path*",
     "/login",
     "/register",
+    "/forgot-password",
+    "/reset-password",
     "/((?!api|_next|.*\\..*).*)",
   ],
 }

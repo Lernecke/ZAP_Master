@@ -18,6 +18,7 @@ export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isRelogin = searchParams.get('relogin') === 'true'
+  const isResetSuccess = searchParams.get('reset') === 'success'
   const callbackUrl = getSafeCallbackUrl(searchParams.get('callbackUrl'))
 
   const [mode, setMode] = useState<'password' | 'magic-link'>('password')
@@ -92,6 +93,20 @@ export function LoginForm() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+        {isResetSuccess && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl bg-green-500/10 border border-green-500/20 p-4">
+            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                Passwort geändert
+              </p>
+              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                Dein Passwort wurde erfolgreich aktualisiert. Du kannst dich jetzt anmelden.
+              </p>
+            </div>
+          </div>
+        )}
+
         {isRelogin && (
           <div className="mb-6 flex items-start gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
             <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
@@ -161,9 +176,17 @@ export function LoginForm() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                Passwort
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                  Passwort
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Passwort vergessen?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <input

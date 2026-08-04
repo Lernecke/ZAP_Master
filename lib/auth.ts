@@ -4,6 +4,7 @@ import { Pool } from "pg"
 import {
   sendVerificationEmailMailpit,
   sendMagicLinkEmailMailpit,
+  sendResetPasswordEmailMailpit,
 } from "@/lib/mail/mailpit-client"
 
 const databaseUrl =
@@ -29,6 +30,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+      await sendResetPasswordEmailMailpit({ email: user.email, url })
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
