@@ -7,6 +7,8 @@ import {
   sendResetPasswordEmailMailpit,
 } from "@/lib/mail/mailpit-client"
 
+import { passkey } from "@better-auth/passkey"
+
 const databaseUrl =
   process.env.DATABASE_URL ||
   process.env.POSTGRES_URL ||
@@ -46,6 +48,7 @@ export const auth = betterAuth({
         await sendMagicLinkEmailMailpit({ email, url })
       },
     }),
+    passkey(),
   ],
   user: {
     additionalFields: {

@@ -32,6 +32,7 @@ import {
   deleteAvatar,
   sendVerificationEmailAction,
 } from './actions'
+import { PasskeySection } from './passkey-section'
 
 interface Profile {
   id: string
@@ -555,6 +556,9 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
               </button>
             </div>
           </div>
+
+          {/* Passkeys & Security */}
+          <PasskeySection />
 
           {/* Save Button */}
           <div className="flex justify-end">

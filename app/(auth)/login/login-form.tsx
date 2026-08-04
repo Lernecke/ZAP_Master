@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, ArrowRight, Loader2, Info, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, ArrowRight, Loader2, Info, Sparkles, CheckCircle2, Fingerprint } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { getSafeCallbackUrl } from '@/lib/auth/callback-url'
 import { loginSchema } from '@/types/auth'
@@ -21,12 +21,34 @@ export function LoginForm() {
   const isResetSuccess = searchParams.get('reset') === 'success'
   const callbackUrl = getSafeCallbackUrl(searchParams.get('callbackUrl'))
 
-  const [mode, setMode] = useState<'password' | 'magic-link'>('password')
+  const [mode, setMode] = useState<'password' | 'magic-link' | 'passkey'>('password')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+
+  const handlePasskeySubmit = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await authClient.signIn.passkey()
+
+      if (res?.error) {
+        setError(res.error.message || 'Passkey-Anmeldung fehlgeschlagen. Bitte versuche es erneut.')
+        setLoading(false)
+      } else {
+        router.push(callbackUrl || '/dashboard')
+        router.refresh()
+      }
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Passkey-Anmeldung fehlgeschlagen.'
+      setError(errorMessage)
+      setLoading(false)
+    }
+  }
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,7 +144,7 @@ export function LoginForm() {
         )}
 
         {/* Tab Switcher */}
-        <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+        <div className="mb-6 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
           <button
             type="button"
             onClick={() => {
@@ -130,7 +152,7 @@ export function LoginForm() {
               setError('')
               setMagicLinkSent(false)
             }}
-            className={`rounded-lg py-2 text-sm font-medium transition-all ${
+            className={`rounded-lg py-2 text-xs sm:text-sm font-medium transition-all ${
               mode === 'password'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -144,14 +166,29 @@ export function LoginForm() {
               setMode('magic-link')
               setError('')
             }}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 rounded-lg py-2 text-xs sm:text-sm font-medium transition-all ${
               mode === 'magic-link'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Sparkles className="h-4 w-4 text-primary" />
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
             Magic Link
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('passkey')
+              setError('')
+            }}
+            className={`flex items-center justify-center gap-1 rounded-lg py-2 text-xs sm:text-sm font-medium transition-all ${
+              mode === 'passkey'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Fingerprint className="h-3.5 w-3.5 text-primary" />
+            Passkey
           </button>
         </div>
 
@@ -225,7 +262,7 @@ export function LoginForm() {
               )}
             </Button>
           </form>
-        ) : (
+        ) : mode === 'magic-link' ? (
           <form onSubmit={handleMagicLinkSubmit} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="magic-email" className="block text-sm font-medium text-foreground">
@@ -281,6 +318,43 @@ export function LoginForm() {
               )}
             </Button>
           </form>
+        ) : (
+          <div className="space-y-6 text-center py-2">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Fingerprint className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground text-lg">Passkey-Anmeldung</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Melde dich schnell und sicher mit Touch ID, Face ID, Windows Hello oder deinem Sicherheitsschlüssel an.
+              </p>
+            </div>
+
+            {error && (
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive text-left">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="button"
+              onClick={handlePasskeySubmit}
+              disabled={loading}
+              className="w-full rounded-xl py-3 text-base font-semibold"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Passkey wird geprüft...
+                </>
+              ) : (
+                <>
+                  <Fingerprint className="mr-2 h-5 w-5" />
+                  Mit Passkey anmelden
+                </>
+              )}
+            </Button>
+          </div>
         )}
       </div>
 
