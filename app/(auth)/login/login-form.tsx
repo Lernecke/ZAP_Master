@@ -3,11 +3,16 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, ArrowRight, Loader2, Info } from 'lucide-react'
+import { Mail, Lock, ArrowRight, Loader2, Info, Sparkles, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { getSafeCallbackUrl } from '@/lib/auth/callback-url'
 import { loginSchema } from '@/types/auth'
-import { signIn } from '@/lib/auth-client'
+import { authClient, signIn } from '@/lib/auth-client'
+import { z } from 'zod'
+
+const magicLinkSchema = z.object({
+  email: z.string().email('Ungültige E-Mail-Adresse'),
+})
 
 export function LoginForm() {
   const router = useRouter()
@@ -15,12 +20,14 @@ export function LoginForm() {
   const isRelogin = searchParams.get('relogin') === 'true'
   const callbackUrl = getSafeCallbackUrl(searchParams.get('callbackUrl'))
 
+  const [mode, setMode] = useState<'password' | 'magic-link'>('password')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -44,6 +51,32 @@ export function LoginForm() {
     } else {
       router.push(callbackUrl)
       router.refresh()
+    }
+  }
+
+  const handleMagicLinkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setMagicLinkSent(false)
+
+    const parsed = magicLinkSchema.safeParse({ email })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Ungültige E-Mail-Adresse')
+      setLoading(false)
+      return
+    }
+
+    const { error: magicError } = await authClient.signIn.magicLink({
+      email: parsed.data.email,
+      callbackURL: callbackUrl || '/dashboard',
+    })
+
+    setLoading(false)
+    if (magicError) {
+      setError(magicError.message || 'Magic Link konnte nicht gesendet werden. Bitte versuche es erneut.')
+    } else {
+      setMagicLinkSent(true)
     }
   }
 
@@ -73,67 +106,159 @@ export function LoginForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-foreground">
-              Email
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                placeholder="deine@email.ch"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-foreground">
-              Passwort
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl py-3 text-base font-semibold"
+        {/* Tab Switcher */}
+        <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('password')
+              setError('')
+              setMagicLinkSent(false)
+            }}
+            className={`rounded-lg py-2 text-sm font-medium transition-all ${
+              mode === 'password'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Wird angemeldet...
-              </>
-            ) : (
-              <>
-                Anmelden
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </>
+            Passwort
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('magic-link')
+              setError('')
+            }}
+            className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all ${
+              mode === 'magic-link'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+            Magic Link
+          </button>
+        </div>
+
+        {mode === 'password' ? (
+          <form onSubmit={handlePasswordSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  placeholder="deine@email.ch"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                Passwort
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+                {error}
+              </div>
             )}
-          </Button>
-        </form>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl py-3 text-base font-semibold"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Wird angemeldet...
+                </>
+              ) : (
+                <>
+                  Anmelden
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleMagicLinkSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="magic-email" className="block text-sm font-medium text-foreground">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="magic-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  placeholder="deine@email.ch"
+                  required
+                />
+              </div>
+            </div>
+
+            {magicLinkSent && (
+              <div className="flex items-start gap-3 rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-sm text-green-700 dark:text-green-300">
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Magic Link gesendet!</p>
+                  <p className="mt-1 text-xs opacity-90">
+                    Wir haben einen Anmeldelink an <strong>{email}</strong> gesendet. Bitte prüfe deinen Posteingang und klicke auf den Link.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl py-3 text-base font-semibold"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Wird gesendet...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Magic Link senden
+                </>
+              )}
+            </Button>
+          </form>
+        )}
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
@@ -148,3 +273,4 @@ export function LoginForm() {
     </div>
   )
 }
+

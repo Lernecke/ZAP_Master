@@ -1,6 +1,10 @@
 import { betterAuth } from "better-auth"
+import { magicLink } from "better-auth/plugins"
 import { Pool } from "pg"
-import { sendVerificationEmailMailpit } from "@/lib/mail/mailpit-client"
+import {
+  sendVerificationEmailMailpit,
+  sendMagicLinkEmailMailpit,
+} from "@/lib/mail/mailpit-client"
 
 const databaseUrl =
   process.env.DATABASE_URL ||
@@ -21,7 +25,7 @@ export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   advanced: {
     generateId: () => crypto.randomUUID(),
-  } as any,
+  } as unknown as Record<string, unknown>,
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -32,6 +36,13 @@ export const auth = betterAuth({
       await sendVerificationEmailMailpit({ email: user.email, url })
     },
   },
+  plugins: [
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        await sendMagicLinkEmailMailpit({ email, url })
+      },
+    }),
+  ],
   user: {
     additionalFields: {
       role: {
@@ -42,3 +53,4 @@ export const auth = betterAuth({
     },
   },
 })
+
