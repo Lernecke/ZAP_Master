@@ -33,6 +33,7 @@ import {
   sendVerificationEmailAction,
 } from './actions'
 import { PasskeySection } from './passkey-section'
+import { SocialSection } from './social-section'
 
 interface Profile {
   id: string
@@ -556,6 +557,9 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
               </button>
             </div>
           </div>
+
+          {/* Social Accounts & Linking */}
+          <SocialSection />
 
           {/* Passkeys & Security */}
           <PasskeySection />

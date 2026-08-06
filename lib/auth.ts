@@ -26,6 +26,18 @@ export const auth = betterAuth({
     process.env.NEXTAUTH_SECRET ||
     "zap-v2-better-auth-secret-key-32chars-minimum",
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || "",
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
+    },
+  },
   advanced: {
     generateId: () => crypto.randomUUID(),
   } as unknown as Record<string, unknown>,
