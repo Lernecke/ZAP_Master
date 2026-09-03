@@ -19,18 +19,26 @@ import {
   Calendar,
   GraduationCap,
   FileText,
+  Mail,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { Badge } from '@/app/components/ui/badge'
 import {
   updateProfile,
   updateThemePreference,
   uploadAvatar,
   deleteAvatar,
+  sendVerificationEmailAction,
 } from './actions'
+import { PasskeySection } from './passkey-section'
+import { SocialSection } from './social-section'
 
 interface Profile {
   id: string
   email: string | null
+  email_verified?: boolean
   first_name: string | null
   last_name: string | null
   avatar_url: string | null
@@ -93,6 +101,23 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
   // UI state
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [sendingVerification, setSendingVerification] = useState(false)
+
+  const handleSendVerificationEmail = async () => {
+    setSendingVerification(true)
+    try {
+      const res = await sendVerificationEmailAction()
+      if (res.success) {
+        toast.success(res.message)
+      } else {
+        toast.error(res.error)
+      }
+    } catch {
+      toast.error('Bestätigungs-E-Mail konnte nicht gesendet werden.')
+    } finally {
+      setSendingVerification(false)
+    }
+  }
 
   const handleSaveProfile = async () => {
     setSaving(true)
@@ -291,11 +316,60 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
           {/* Account Info */}
           <div className="bg-card rounded-2xl border border-border p-6">
             <h3 className="font-semibold text-foreground mb-4">Kontoinformationen</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <FileText className="w-4 h-4" />
-                <span>{profile.email}</span>
+            <div className="space-y-4 text-sm">
+              <div>
+                <div className="flex items-center justify-between gap-2 text-muted-foreground mb-1">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{profile.email}</span>
+                  </div>
+                  {profile.email_verified ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-medium shrink-0"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                      Verifiziert
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-medium shrink-0"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      Nicht verifiziert
+                    </Badge>
+                  )}
+                </div>
+
+                {!profile.email_verified && (
+                  <div className="mt-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 space-y-2">
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Deine E-Mail-Adresse ist noch nicht verifiziert.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendVerificationEmail}
+                      disabled={sendingVerification}
+                      className="w-full text-xs rounded-lg border-amber-500/30 hover:bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                    >
+                      {sendingVerification ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          Wird gesendet...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-3.5 h-3.5 mr-1.5" />
+                          Verifizierungs-E-Mail senden
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
+
               <div className="flex items-center gap-3 text-muted-foreground">
                 <GraduationCap className="w-4 h-4" />
                 <span>{getRoleName(profile.role)}</span>
@@ -483,6 +557,12 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
               </button>
             </div>
           </div>
+
+          {/* Social Accounts & Linking */}
+          <SocialSection />
+
+          {/* Passkeys & Security */}
+          <PasskeySection />
 
           {/* Save Button */}
           <div className="flex justify-end">

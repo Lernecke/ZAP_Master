@@ -18,18 +18,22 @@ export const projectRoot = path.resolve(__dirname, '..', '..')
 export const supabaseExePath = path.join(projectRoot, 'tools', 'supabase-cli', 'supabase.exe')
 const EXPECTED_SHA256 = '22C0F28F013411C7A7B880116CD33636EDB955A64278914692EEA010BCC98DC7'
 
+export function getSupabaseCommand() {
+  if (existsSync(supabaseExePath)) {
+    const actualHash = createHash('sha256').update(readFileSync(supabaseExePath)).digest('hex').toUpperCase()
+    if (actualHash !== EXPECTED_SHA256) {
+      console.error(
+        `Abbruch: SHA-256 der Supabase-CLI stimmt nicht mit dem freigegebenen Wert ueberein.\n  erwartet: ${EXPECTED_SHA256}\n  erhalten: ${actualHash}\nNiemals eine nicht geprüfte CLI verwenden -- siehe scripts/approved-supabase-cli.ps1.`
+      )
+      process.exit(1)
+    }
+    return supabaseExePath
+  }
+  return 'supabase'
+}
+
 export function assertApprovedCli() {
-  if (!existsSync(supabaseExePath)) {
-    console.error(`Abbruch: gepinnte Supabase-CLI nicht gefunden unter ${supabaseExePath}. Siehe scripts/approved-supabase-cli.ps1.`)
-    process.exit(1)
-  }
-  const actualHash = createHash('sha256').update(readFileSync(supabaseExePath)).digest('hex').toUpperCase()
-  if (actualHash !== EXPECTED_SHA256) {
-    console.error(
-      `Abbruch: SHA-256 der Supabase-CLI stimmt nicht mit dem freigegebenen Wert ueberein.\n  erwartet: ${EXPECTED_SHA256}\n  erhalten: ${actualHash}\nNiemals eine nicht geprüfte CLI verwenden -- siehe scripts/approved-supabase-cli.ps1.`
-    )
-    process.exit(1)
-  }
+  getSupabaseCommand()
 }
 
 export function assertLoopback(url, label) {
@@ -41,8 +45,8 @@ export function assertLoopback(url, label) {
 
 /** Ruft `supabase status -o json` ab und liefert die geparsten Werte (API_URL, ANON_KEY, ...). */
 export function getLocalSupabaseStatus() {
-  assertApprovedCli()
-  const result = spawnSync(supabaseExePath, ['status', '-o', 'json'], { cwd: projectRoot, encoding: 'utf-8' })
+  const cmd = getSupabaseCommand()
+  const result = spawnSync(cmd, ['status', '-o', 'json'], { cwd: projectRoot, encoding: 'utf-8' })
   if (result.status !== 0) {
     console.error('Abbruch: lokale Supabase-Instanz laeuft nicht oder Status konnte nicht gelesen werden. Zuerst `supabase start` ausfuehren.')
     if (result.stderr) console.error(result.stderr)
@@ -63,8 +67,8 @@ export function getLocalSupabaseStatus() {
 
 /** Fuehrt einen Supabase-CLI-Befehl gegen die lokale Instanz aus und beendet bei Fehlschlag hart. */
 export function runSupabaseCli(args, { allowFailure = false } = {}) {
-  assertApprovedCli()
-  const result = spawnSync(supabaseExePath, args, { cwd: projectRoot, stdio: 'inherit' })
+  const cmd = getSupabaseCommand()
+  const result = spawnSync(cmd, args, { cwd: projectRoot, stdio: 'inherit' })
   if (!allowFailure && result.status !== 0) {
     console.error(`Abbruch: "supabase ${args.join(' ')}" ist fehlgeschlagen (Exit-Code ${result.status}).`)
     process.exit(result.status ?? 1)

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession } from '@/lib/auth-client'
 import { createAuthenticatedBrowserClient } from '@/lib/supabase/client'
 
 // Verfügbare Klassenstufen
@@ -19,14 +19,15 @@ interface ClassFilterContextType {
 const ClassFilterContext = createContext<ClassFilterContextType | undefined>(undefined)
 
 export function ClassFilterProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession()
+  const { data: session, isPending } = useSession()
   const [selectedClass, setSelectedClassState] = useState<ClassLevel | null>(null)
   const [userDefaultClass, setUserDefaultClass] = useState<ClassLevel | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadedFromProfile, setHasLoadedFromProfile] = useState(false)
 
   // Authentifizierter Supabase Client
-  const supabaseAccessToken = session?.supabaseAccessToken
+  const sessionRecord = session as unknown as Record<string, unknown> | null
+  const supabaseAccessToken = typeof sessionRecord?.supabaseAccessToken === 'string' ? sessionRecord.supabaseAccessToken : null
   const supabase = useMemo(
     () => supabaseAccessToken ? createAuthenticatedBrowserClient(supabaseAccessToken) : null,
     [supabaseAccessToken]
@@ -42,7 +43,7 @@ export function ClassFilterProvider({ children }: { children: React.ReactNode })
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user')
           .select('class_level')
           .eq('id', session.user.id)
           .single()
@@ -63,13 +64,15 @@ export function ClassFilterProvider({ children }: { children: React.ReactNode })
       }
     }
 
-    if (status === 'authenticated') {
-      loadUserClassLevel()
-    } else if (status === 'unauthenticated') {
-      setHasLoadedFromProfile(true)
-      setIsLoading(false)
+    if (!isPending) {
+      if (session) {
+        loadUserClassLevel()
+      } else {
+        setHasLoadedFromProfile(true)
+        setIsLoading(false)
+      }
     }
-  }, [session?.user?.id, supabase, status])
+  }, [session?.user?.id, supabase, isPending, session])
 
   // Persist selection to localStorage (nur wenn manuell geändert)
   useEffect(() => {
