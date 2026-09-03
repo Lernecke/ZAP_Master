@@ -31,7 +31,7 @@ export async function createServerSupabaseClient() {
  */
 export function createAuthenticatedSupabaseClient(supabaseAccessToken: string) {
   if (!supabaseAccessToken || supabaseAccessToken.split('.').length !== 3) {
-    return createAdminSupabaseClient()
+    throw new Error('Invalid Supabase access token provided to createAuthenticatedSupabaseClient()')
   }
 
   return createClient<Database>(
