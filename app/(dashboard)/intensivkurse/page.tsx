@@ -57,7 +57,7 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
 
   // Profil-Daten für Vorausfüllung laden
   const { data: profileData } = await supabase
-    .from('profiles')
+    .from('user')
     .select('first_name, last_name, email, phone, class_level')
     .eq('id', userId)
     .single()

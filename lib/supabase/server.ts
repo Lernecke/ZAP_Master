@@ -29,7 +29,11 @@ export async function createServerSupabaseClient() {
  * Verwendet den Supabase Access Token aus der NextAuth Session
  * Dies ist die BEST PRACTICE für User-Anfragen!
  */
-export function createAuthenticatedSupabaseClient(supabaseAccessToken: string) {
+export function createAuthenticatedSupabaseClient(supabaseAccessToken?: string) {
+  if (!supabaseAccessToken || supabaseAccessToken.split('.').length !== 3) {
+    return createAdminSupabaseClient()
+  }
+
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

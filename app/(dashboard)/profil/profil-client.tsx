@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/store/useAuthStore'
 import { updateProfileSchema } from '@/types/profil'
 import {
   User,
@@ -19,18 +20,35 @@ import {
   Calendar,
   GraduationCap,
   FileText,
+  Mail,
+  CheckCircle2,
+  AlertCircle,
+  Heart,
+  Receipt,
+  CreditCard,
+  Smartphone,
+  Clock,
+  XCircle,
+  RotateCcw,
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { Badge } from '@/app/components/ui/badge'
+import { CheckoutButton } from '@/app/components/payment/checkout-button'
+import type { PaymentRecord } from '@/types/payment'
 import {
   updateProfile,
   updateThemePreference,
   uploadAvatar,
   deleteAvatar,
+  sendVerificationEmailAction,
 } from './actions'
+import { PasskeySection } from './passkey-section'
+import { SocialSection } from './social-section'
 
 interface Profile {
   id: string
   email: string | null
+  email_verified?: boolean
   first_name: string | null
   last_name: string | null
   avatar_url: string | null
@@ -52,6 +70,7 @@ interface ProfileStats {
 interface ProfilClientProps {
   profile: Profile
   stats: ProfileStats
+  payments?: PaymentRecord[]
 }
 
 const GENDER_OPTIONS = [
@@ -72,7 +91,7 @@ const CLASS_LEVELS = [
   { value: 'other', label: 'Andere' },
 ]
 
-export function ProfilClient({ profile, stats }: ProfilClientProps) {
+export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
   const { setTheme } = useTheme()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -93,6 +112,72 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
   // UI state
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [sendingVerification, setSendingVerification] = useState(false)
+  const [retryingPaymentId, setRetryingPaymentId] = useState<string | null>(null)
+
+  const handleRetryPayment = async (payment: PaymentRecord) => {
+    setRetryingPaymentId(payment.id)
+    try {
+      const description =
+        typeof payment.metadata?.description === 'string'
+          ? payment.metadata.description
+          : payment.anmeldung_id
+          ? 'Kursbuchung Erneut versuchen'
+          : 'Stripe Zahlung Wiederholen'
+
+      const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
+      const successUrl = `${window.location.origin}/kurse/erfolg?session_id={CHECKOUT_SESSION_ID}`
+
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          anmeldung_id: payment.anmeldung_id || undefined,
+          user_id: profile.id,
+          amount_rappen: payment.amount_rappen,
+          description,
+          customer_email: profile.email || undefined,
+          payment_methods: ['card', 'twint'],
+          success_url: successUrl,
+          cancel_url: currentUrl,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Fehler beim Erstellen der neuen Zahlungssession')
+      }
+
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('Keine Weiterleitungs-URL von Stripe erhalten')
+      }
+    } catch (err) {
+      console.error('Retry checkout error:', err)
+      toast.error(err instanceof Error ? err.message : 'Zahlungsfehler aufgetreten')
+      setRetryingPaymentId(null)
+    }
+  }
+
+  const handleSendVerificationEmail = async () => {
+    setSendingVerification(true)
+    try {
+      const res = await sendVerificationEmailAction()
+      if (res.success) {
+        toast.success(res.message)
+      } else {
+        toast.error(res.error)
+      }
+    } catch {
+      toast.error('Bestätigungs-E-Mail konnte nicht gesendet werden.')
+    } finally {
+      setSendingVerification(false)
+    }
+  }
 
   const handleSaveProfile = async () => {
     setSaving(true)
@@ -121,6 +206,10 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
     })
 
     if (result.success) {
+      const newFullName = [parsed.data.first_name, parsed.data.last_name].filter(Boolean).join(' ').trim()
+      if (newFullName) {
+        useAuthStore.setState({ name: newFullName })
+      }
       toast.success(result.message)
       router.refresh()
     } else {
@@ -291,11 +380,60 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
           {/* Account Info */}
           <div className="bg-card rounded-2xl border border-border p-6">
             <h3 className="font-semibold text-foreground mb-4">Kontoinformationen</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <FileText className="w-4 h-4" />
-                <span>{profile.email}</span>
+            <div className="space-y-4 text-sm">
+              <div>
+                <div className="flex items-center justify-between gap-2 text-muted-foreground mb-1">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{profile.email}</span>
+                  </div>
+                  {profile.email_verified ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-medium shrink-0"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                      Verifiziert
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-medium shrink-0"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      Nicht verifiziert
+                    </Badge>
+                  )}
+                </div>
+
+                {!profile.email_verified && (
+                  <div className="mt-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 space-y-2">
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Deine E-Mail-Adresse ist noch nicht verifiziert.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendVerificationEmail}
+                      disabled={sendingVerification}
+                      className="w-full text-xs rounded-lg border-amber-500/30 hover:bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                    >
+                      {sendingVerification ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          Wird gesendet...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-3.5 h-3.5 mr-1.5" />
+                          Verifizierungs-E-Mail senden
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
+
               <div className="flex items-center gap-3 text-muted-foreground">
                 <GraduationCap className="w-4 h-4" />
                 <span>{getRoleName(profile.role)}</span>
@@ -482,6 +620,140 @@ export function ProfilClient({ profile, stats }: ProfilClientProps) {
                 <span className="text-sm font-medium text-foreground">System</span>
               </button>
             </div>
+          </div>
+
+          {/* Social Accounts & Linking */}
+          <SocialSection />
+
+          {/* Passkeys & Security */}
+          <PasskeySection />
+
+          {/* Test Donation Section */}
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <Heart className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">10 CHF Test-Spende</h3>
+                <p className="text-sm text-muted-foreground">
+                  Teste die Stripe Zahlungsabwicklung für TWINT und Kreditkarte.
+                </p>
+              </div>
+            </div>
+
+            <CheckoutButton
+              userId={profile.id}
+              customerEmail={profile.email || undefined}
+              amountRappen={1000}
+              description="10 CHF Test-Spende"
+              buttonText="10 CHF Test-Spende bezahlen"
+            />
+          </div>
+
+          {/* Payment History / Zahlungshistorie */}
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Zahlungshistorie</h3>
+                <p className="text-sm text-muted-foreground">
+                  Übersicht deiner getätigten Zahlungen und Kurstransaktionen.
+                </p>
+              </div>
+            </div>
+
+            {payments && payments.length > 0 ? (
+              <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                {payments.map((payment) => {
+                  const amount = (payment.amount_rappen / 100).toFixed(2)
+                  const date = new Date(payment.created_at).toLocaleDateString('de-CH', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                  const description =
+                    typeof payment.metadata?.description === 'string'
+                      ? payment.metadata.description
+                      : payment.anmeldung_id
+                      ? 'Kursbuchung'
+                      : 'Stripe Zahlung'
+
+                  return (
+                    <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 bg-background hover:bg-accent/30 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 p-2 rounded-lg bg-muted text-muted-foreground">
+                          {payment.payment_method_types?.includes('twint') ? (
+                            <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-foreground text-sm">{description}</div>
+                          <div className="text-xs text-muted-foreground">{date}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                        <div className="font-semibold text-foreground text-sm">
+                          {payment.currency.toUpperCase()} {amount}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {payment.status === 'succeeded' ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Bezahlt
+                            </span>
+                          ) : payment.status === 'pending' || payment.status === 'processing' ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                              <Clock className="w-3.5 h-3.5" /> Ausstehend
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                              <XCircle className="w-3.5 h-3.5" /> {payment.status}
+                            </span>
+                          )}
+
+                          {payment.status !== 'succeeded' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={retryingPaymentId === payment.id}
+                              onClick={() => handleRetryPayment(payment)}
+                              className="rounded-lg h-8 px-2.5 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                            >
+                              {retryingPaymentId === payment.id ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  Lädt...
+                                </>
+                              ) : (
+                                <>
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  Erneut versuchen
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 rounded-xl border border-dashed border-border bg-muted/20">
+                <Receipt className="w-8 h-8 mx-auto text-muted-foreground/60 mb-2" />
+                <p className="text-sm font-medium text-foreground">Keine bisherigen Zahlungen</p>
+                <p className="text-xs text-muted-foreground">
+                  Deine getätigten Kursbuchungen und Spenden erscheinen hier.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Save Button */}

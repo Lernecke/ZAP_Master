@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/lib/auth-client'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Menu, X, LogOut, User, Settings } from 'lucide-react'
@@ -16,6 +16,16 @@ export default function Navbar() {
   const { name, email, isAuthenticated } = useAuthStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/login'
+        },
+      },
+    })
+  }
 
   return (
     <nav className="bg-white border-b sticky top-0 z-50">
@@ -87,7 +97,7 @@ export default function Navbar() {
                       </Link>
                       <hr className="my-1" />
                       <button
-                        onClick={() => signOut({ callbackUrl: '/login' })}
+                        onClick={handleSignOut}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         <LogOut className="w-4 h-4" />
@@ -139,7 +149,7 @@ export default function Navbar() {
               Profil
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
+              onClick={handleSignOut}
               className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md"
             >
               Abmelden

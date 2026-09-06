@@ -83,8 +83,8 @@ for (const u of users) {
   }
 
   const { error: profileError } = await admin
-    .from('profiles')
-    .upsert({ id: userId, email: u.email, first_name: u.firstName, last_name: u.lastName, role: u.role })
+    .from('user')
+    .upsert({ id: userId, email: u.email, first_name: u.firstName, last_name: u.lastName, role: u.role, name: `${u.firstName} ${u.lastName}`.trim() })
 
   if (profileError) {
     console.error(`Fehler beim Aktualisieren des Profils fuer ${u.email}:`, profileError.message)

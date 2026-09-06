@@ -149,7 +149,7 @@ export type Database = {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -202,7 +202,7 @@ export type Database = {
             foreignKeyName: "correction_rubrics_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -488,7 +488,7 @@ export type Database = {
             foreignKeyName: "essay_ai_corrections_released_by_fkey"
             columns: ["released_by"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
@@ -1176,7 +1176,7 @@ export type Database = {
             foreignKeyName: "mentor_skills_mentor_id_fkey"
             columns: ["mentor_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
@@ -1245,7 +1245,7 @@ export type Database = {
             foreignKeyName: "mentorship_listings_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -1313,7 +1313,7 @@ export type Database = {
             foreignKeyName: "mentorship_materials_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
@@ -1327,7 +1327,7 @@ export type Database = {
             foreignKeyName: "mentorship_materials_uploader_id_fkey"
             columns: ["uploader_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -1377,14 +1377,14 @@ export type Database = {
             foreignKeyName: "mentorship_relations_mentee_id_fkey"
             columns: ["mentee_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "mentorship_relations_mentor_id_fkey"
             columns: ["mentor_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
@@ -1452,14 +1452,14 @@ export type Database = {
             foreignKeyName: "mentorship_requests_requester_id_fkey"
             columns: ["requester_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "mentorship_requests_target_id_fkey"
             columns: ["target_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -1558,6 +1558,66 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_rappen: number
+          anmeldung_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          payment_method_types: string[]
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_rappen: number
+          anmeldung_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          payment_method_types?: string[]
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_rappen?: number
+          anmeldung_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          payment_method_types?: string[]
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_anmeldung_id_fkey"
+            columns: ["anmeldung_id"]
+            isOneToOne: false
+            referencedRelation: "intensivwoche_anmeldungen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payroll_periods: {
         Row: {
@@ -1685,54 +1745,69 @@ export type Database = {
           },
         ]
       }
-      profiles: {
+      user: {
         Row: {
+          id: string
+          name: string
+          email: string
+          emailVerified: boolean
+          image: string | null
+          createdAt: string
+          updatedAt: string
+          role: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
           class_level: string | null
           created_at: string | null
-          email: string | null
           first_name: string | null
           gender: string | null
-          id: string
           last_name: string | null
           phone: string | null
-          role: string | null
           school_name: string | null
           theme_preference: string | null
           updated_at: string | null
         }
         Insert: {
+          id?: string
+          name?: string
+          email: string
+          emailVerified?: boolean
+          image?: string | null
+          createdAt?: string
+          updatedAt?: string
+          role?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
           class_level?: string | null
           created_at?: string | null
-          email?: string | null
           first_name?: string | null
           gender?: string | null
-          id: string
           last_name?: string | null
           phone?: string | null
-          role?: string | null
           school_name?: string | null
           theme_preference?: string | null
           updated_at?: string | null
         }
         Update: {
+          id?: string
+          name?: string
+          email?: string
+          emailVerified?: boolean
+          image?: string | null
+          createdAt?: string
+          updatedAt?: string
+          role?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
           class_level?: string | null
           created_at?: string | null
-          email?: string | null
           first_name?: string | null
           gender?: string | null
-          id?: string
           last_name?: string | null
           phone?: string | null
-          role?: string | null
           school_name?: string | null
           theme_preference?: string | null
           updated_at?: string | null
@@ -1900,14 +1975,14 @@ export type Database = {
             foreignKeyName: "student_essays_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "student_essays_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -2350,6 +2425,19 @@ export type Database = {
         }
         Returns: string
       }
+      process_stripe_payment_update: {
+        Args: {
+          p_checkout_session_id?: string | null
+          p_payment_intent_id?: string | null
+          p_status: string
+          p_metadata?: Json
+        }
+        Returns: {
+          payment_id: string
+          anmeldung_id: string
+          new_status: string
+        }[]
+      }
       count_active_anmeldungen: { Args: { p_kurs_id: number }; Returns: number }
       get_upcoming_courses: { Args: never; Returns: Json[] }
       increment_material_view_count: {
@@ -2498,9 +2586,13 @@ export const Constants = {
 // Convenience Types fuer die App
 // ============================================================
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
-export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"]
-export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"]
+export type UserTable = Database["public"]["Tables"]["user"]["Row"]
+export type UserTableInsert = Database["public"]["Tables"]["user"]["Insert"]
+export type UserTableUpdate = Database["public"]["Tables"]["user"]["Update"]
+
+export type Profile = UserTable
+export type ProfileInsert = UserTableInsert
+export type ProfileUpdate = UserTableUpdate
 
 export type UserRole = "user" | "lehrperson" | "admin"
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say"

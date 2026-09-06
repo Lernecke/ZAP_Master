@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/lib/auth-client'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Zap, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react'
@@ -10,6 +10,16 @@ import { Button } from '@/app/components/ui/button'
 export function KurseHeader() {
   const { isAuthenticated, name, email, status } = useAuthStore()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = '/'
+        },
+      },
+    })
+  }
 
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -57,7 +67,7 @@ export function KurseHeader() {
                   />
                   <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg z-20 py-1">
                     <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                      onClick={handleSignOut}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 w-full transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
