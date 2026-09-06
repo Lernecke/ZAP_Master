@@ -1559,6 +1559,66 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount_rappen: number
+          anmeldung_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          payment_method_types: string[]
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_rappen: number
+          anmeldung_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          payment_method_types?: string[]
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_rappen?: number
+          anmeldung_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          payment_method_types?: string[]
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_anmeldung_id_fkey"
+            columns: ["anmeldung_id"]
+            isOneToOne: false
+            referencedRelation: "intensivwoche_anmeldungen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_periods: {
         Row: {
           created_at: string
@@ -2364,6 +2424,19 @@ export type Database = {
           p_parent_phone: string
         }
         Returns: string
+      }
+      process_stripe_payment_update: {
+        Args: {
+          p_checkout_session_id?: string | null
+          p_payment_intent_id?: string | null
+          p_status: string
+          p_metadata?: Json
+        }
+        Returns: {
+          payment_id: string
+          anmeldung_id: string
+          new_status: string
+        }[]
       }
       count_active_anmeldungen: { Args: { p_kurs_id: number }; Returns: number }
       get_upcoming_courses: { Args: never; Returns: Json[] }

@@ -1,5 +1,6 @@
 import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
 import { ProfilClient } from './profil-client'
+import type { PaymentRecord } from '@/types/payment'
 
 interface Props {
   userId: string
@@ -33,9 +34,27 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
     ? supabase.from('trainer_progress').select('*').eq('user_id', userId)
     : Promise.resolve({ data: null, error: null })
 
-  const [{ data: profile }, { data: progressData }] = await Promise.all([
-    profileQuery,
+  const { data: profile } = await profileQuery
+
+  const targetEmail = profile?.email || email || null
+
+  // Explicitly filter payments by user_id OR customer_email to guarantee scoping
+  const filterConditions = [
+    userId ? `user_id.eq.${userId}` : null,
+    targetEmail ? `metadata->>customer_email.eq.${targetEmail}` : null,
+  ].filter(Boolean)
+
+  const paymentsQuery = filterConditions.length > 0
+    ? supabase
+        .from('payments')
+        .select('*')
+        .or(filterConditions.join(','))
+        .order('created_at', { ascending: false })
+    : Promise.resolve({ data: [], error: null })
+
+  const [{ data: progressData }, { data: paymentsData }] = await Promise.all([
     progressQuery,
+    paymentsQuery,
   ])
 
   const completedExams = progressData?.filter((p) => p.completed_at).length || 0
@@ -65,10 +84,26 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
         created_at: null,
       }
 
+  const payments: PaymentRecord[] = (paymentsData || []).map((p) => ({
+    id: p.id,
+    anmeldung_id: p.anmeldung_id,
+    user_id: p.user_id,
+    stripe_payment_intent_id: p.stripe_payment_intent_id,
+    stripe_checkout_session_id: p.stripe_checkout_session_id,
+    amount_rappen: p.amount_rappen,
+    currency: p.currency,
+    status: p.status as PaymentRecord['status'],
+    payment_method_types: p.payment_method_types,
+    metadata: p.metadata as Record<string, unknown> | null,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+  }))
+
   return (
     <ProfilClient
       profile={profileData}
       stats={{ totalAttempts, completedExams }}
+      payments={payments}
     />
   )
 }
