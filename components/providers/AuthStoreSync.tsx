@@ -20,11 +20,15 @@ export function AuthStoreSync() {
       const userRecord = session.user as unknown as Record<string, unknown>
       const sessionRecord = session as unknown as Record<string, unknown>
 
+      const firstName = (userRecord.firstName || userRecord.first_name) as string | undefined
+      const lastName = (userRecord.lastName || userRecord.last_name) as string | undefined
+      const computedName = [firstName, lastName].filter(Boolean).join(' ').trim() || session.user.name || null
+
       const mappedSession: Session = {
         user: {
           id: session.user.id,
           email: session.user.email,
-          name: session.user.name,
+          name: computedName,
           role: (userRecord.role as UserRole) || 'user',
         },
         supabaseAccessToken: typeof sessionRecord.supabaseAccessToken === 'string' ? sessionRecord.supabaseAccessToken : undefined,

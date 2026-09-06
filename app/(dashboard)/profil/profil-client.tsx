@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/store/useAuthStore'
 import { updateProfileSchema } from '@/types/profil'
 import {
   User,
@@ -205,6 +206,10 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
     })
 
     if (result.success) {
+      const newFullName = [parsed.data.first_name, parsed.data.last_name].filter(Boolean).join(' ').trim()
+      if (newFullName) {
+        useAuthStore.setState({ name: newFullName })
+      }
       toast.success(result.message)
       router.refresh()
     } else {

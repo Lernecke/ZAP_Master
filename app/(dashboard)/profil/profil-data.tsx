@@ -60,9 +60,19 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
   const completedExams = progressData?.filter((p) => p.completed_at).length || 0
   const totalAttempts = progressData?.length || 0
 
+  let firstName = profile?.first_name || null
+  let lastName = profile?.last_name || null
+  if (!firstName && !lastName && profile?.name) {
+    const parts = profile.name.trim().split(/\s+/)
+    firstName = parts[0] || null
+    lastName = parts.slice(1).join(' ') || null
+  }
+
   const profileData = profile
     ? {
         ...profile,
+        first_name: firstName,
+        last_name: lastName,
         email: profile.email || email || null,
         email_verified: emailVerified,
         theme_preference: normalizeThemePreference(profile.theme_preference),

@@ -31,11 +31,15 @@ export async function auth(): Promise<AppSession | null> {
     const role: UserRole = (userRecord.role as UserRole) || "user"
     const emailVerified = Boolean(session.user.emailVerified)
 
+    const firstName = (userRecord.firstName || userRecord.first_name) as string | undefined
+    const lastName = (userRecord.lastName || userRecord.last_name) as string | undefined
+    const computedName = [firstName, lastName].filter(Boolean).join(" ").trim() || session.user.name || null
+
     return {
       user: {
         id: session.user.id,
         email: session.user.email || null,
-        name: session.user.name || null,
+        name: computedName,
         role,
         emailVerified,
       },

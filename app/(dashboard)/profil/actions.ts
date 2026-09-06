@@ -42,11 +42,16 @@ export async function updateProfile(data: ProfileUpdateData): Promise<ProfileRes
   // Best Practice: Authentifizierter Client mit Supabase Token
   const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
 
+  const firstName = data.first_name ?? parsed.data.first_name
+  const lastName = data.last_name ?? parsed.data.last_name
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
+
   const { error } = await supabase
     .from('user')
     .update({
       ...data,          // includes class_level, birth_date, gender not covered by schema
       ...parsed.data,   // validated fields overwrite their counterparts
+      name: fullName || undefined,
       updatedAt: new Date().toISOString(),
     })
     .eq('id', session.user.id)
