@@ -50,7 +50,9 @@ export function LoginForm() {
       ? 'Dieses Google-Konto ist bereits mit einem anderen Benutzerkonto verknüpft.'
       : urlErrorParam === "email_doesn't_match"
       ? 'Die E-Mail-Adresse des Google-Kontos stimmt nicht überein.'
-      : 'Anmeldung mit Google ist fehlgeschlagen. Bitte versuche es erneut.'
+      : urlErrorParam === 'new_user_signup_disabled' || urlErrorParam === 'NEW_USER_SIGNUP_DISABLED'
+      ? 'Es existiert kein Konto mit dieser E-Mail-Adresse. Bitte registriere dich zuerst.'
+      : 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.'
     : null
 
   const [mode, setMode] = useState<'password' | 'magic-link' | 'passkey'>('password')
@@ -389,7 +391,7 @@ export function LoginForm() {
                 <div>
                   <p className="font-semibold">Magic Link gesendet!</p>
                   <p className="mt-1 text-xs opacity-90">
-                    Wir haben einen Anmeldelink an <strong>{email}</strong> gesendet. Bitte prüfe deinen Posteingang und klicke auf den Link.
+                    Falls ein Konto mit dieser E-Mail-Adresse existiert, haben wir einen Anmeldelink an <strong>{email}</strong> gesendet. Bitte prüfe deinen Posteingang.
                   </p>
                 </div>
               </div>

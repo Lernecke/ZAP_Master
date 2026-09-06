@@ -56,7 +56,15 @@ export const auth = betterAuth({
   },
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, url }) => {
+      disableSignUp: true,
+      sendMagicLink: async ({ email, url }, ctx) => {
+        if (ctx) {
+          const existingUser = await ctx.context.internalAdapter.findUserByEmail(email)
+          if (!existingUser?.user) {
+            console.log(`[MagicLink] Skipped sending magic link to ${email} - no account found`)
+            return
+          }
+        }
         await sendMagicLinkEmailMailpit({ email, url })
       },
     }),
