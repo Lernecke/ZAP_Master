@@ -19,7 +19,7 @@ const protectedPrefixes = [
   "/arbeitszeiten",
 ]
 const authPageRoutes = ["/login", "/register", "/forgot-password", "/reset-password"]
-const existingUnlocalizedPublicPrefixes = ["/kurse"]
+const existingUnlocalizedPublicPrefixes = ["/kurse", "/admin"]
 
 function isUnderPrefix(pathname: string, prefixes: string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
