@@ -258,105 +258,164 @@ export async function getAdminUsersDataAction(userSearchQuery = ''): Promise<{
   try {
     const adminSupabase = createAdminSupabaseClient()
 
-    // 1. Fetch Better Auth users
-    const { data: rawBetterUsers } = await adminSupabase
-      .from('user')
-      .select('id, email, name, first_name, last_name, role, created_at')
-      .order('created_at', { ascending: false })
+    const userMap = new Map<string, AdminUserRecord>()
 
-    // 2. Fetch Supabase Auth users
-    const { data: rawAuthUsers } = await adminSupabase.auth.admin.listUsers()
+    const registerUser = (u: {
+      id: string
+      email: string | null
+      name: string | null
+      role: string | null
+      created_at: string | null
+      source: string
+    }) => {
+      const normEmail = u.email ? u.email.toLowerCase().trim() : null
+      
+      let existing = userMap.get(u.id)
+      if (!existing && normEmail) {
+        existing = userMap.get(normEmail)
+      }
 
-    // 3. Fetch Payments
-    const { data: rawPayments } = await adminSupabase
+      if (existing) {
+        if (!existing.email && u.email) existing.email = u.email
+        if ((!existing.name || existing.name === existing.id || existing.name === existing.email) && u.name) {
+          existing.name = u.name
+        }
+        if (!existing.created_at && u.created_at) existing.created_at = u.created_at
+        if ((!existing.role || existing.role === 'user') && u.role && u.role !== 'user') existing.role = u.role
+        
+        userMap.set(u.id, existing)
+        if (normEmail) userMap.set(normEmail, existing)
+      } else {
+        const newUser: AdminUserRecord = {
+          id: u.id,
+          name: u.name || u.email || u.id,
+          email: u.email || null,
+          role: u.role || 'user',
+          created_at: u.created_at || null,
+          total_payments_count: 0,
+          succeeded_amount_rappen: 0,
+          source: u.source,
+        }
+        userMap.set(u.id, newUser)
+        if (normEmail) userMap.set(normEmail, newUser)
+      }
+    }
+
+    // 1. Fetch Better Auth users from table "user"
+    try {
+      const { data: rawBetterUsers, error: betterErr } = await (adminSupabase as any)
+        .from('user')
+        .select('id, email, name, role, createdAt')
+
+      if (betterErr) {
+        console.error('Error fetching table "user":', betterErr)
+      } else if (rawBetterUsers && Array.isArray(rawBetterUsers)) {
+        rawBetterUsers.forEach((u: any) => {
+          registerUser({
+            id: u.id,
+            email: u.email || null,
+            name: u.name || u.email || u.id,
+            role: u.role || 'user',
+            created_at: u.createdAt || null,
+            source: 'Better Auth',
+          })
+        })
+      }
+    } catch (e) {
+      console.error('Failed to query "user" table:', e)
+    }
+
+    // 2. Fetch Profiles from table "profiles"
+    try {
+      const { data: rawProfiles, error: profilesErr } = await (adminSupabase as any)
+        .from('profiles')
+        .select('id, email, first_name, last_name, role, created_at')
+
+      if (profilesErr) {
+        console.error('Error fetching table "profiles":', profilesErr)
+      } else if (rawProfiles && Array.isArray(rawProfiles)) {
+        rawProfiles.forEach((p: any) => {
+          const displayName = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.email || p.id
+          registerUser({
+            id: String(p.id),
+            email: p.email || null,
+            name: displayName,
+            role: p.role || 'user',
+            created_at: p.created_at || null,
+            source: 'Supabase Profile',
+          })
+        })
+      }
+    } catch (e) {
+      console.error('Failed to query "profiles" table:', e)
+    }
+
+    // 3. Fetch Supabase Auth users
+    try {
+      const { data: rawAuthUsers, error: authUsersErr } = await adminSupabase.auth.admin.listUsers()
+
+      if (authUsersErr) {
+        console.error('Error fetching auth.users:', authUsersErr)
+      } else if (rawAuthUsers && rawAuthUsers.users) {
+        rawAuthUsers.users.forEach((u) => {
+          const displayName = u.user_metadata?.full_name || u.user_metadata?.name || u.email || u.id
+          registerUser({
+            id: u.id,
+            email: u.email || null,
+            name: displayName,
+            role: (u.user_metadata?.role as string) || 'user',
+            created_at: u.created_at || null,
+            source: 'Supabase Auth',
+          })
+        })
+      }
+    } catch (e) {
+      console.error('Failed to query auth.users:', e)
+    }
+
+    // 4. Fetch all payments to aggregate totals for registered users
+    const { data: rawPayments, error: paymentsErr } = await adminSupabase
       .from('payments')
       .select('id, user_id, amount_rappen, status, metadata')
 
-    // 4. Fetch Anmeldungen
-    const { data: rawAnmeldungen } = await adminSupabase
-      .from('intensivwoche_anmeldungen')
-      .select('id, parent_email, child_firstname, child_lastname, created_at')
-
-    const userMap = new Map<string, AdminUserRecord>()
-
-    const getOrCreateUser = (id: string, email: string | null, name: string | null, role: string | null, createdAt?: string | null, source = 'User') => {
-      const key = (email ? email.toLowerCase() : id).trim()
-      if (!key) return null
-
-      let user = userMap.get(key) || userMap.get(id)
-      if (!user) {
-        user = {
-          id,
-          name: name || email || id,
-          email: email || null,
-          role: role || 'user',
-          created_at: createdAt || null,
-          total_payments_count: 0,
-          succeeded_amount_rappen: 0,
-          source,
-        }
-        userMap.set(key, user)
-        userMap.set(id, user)
-      } else {
-        if (!user.email && email) user.email = email
-        if ((!user.name || user.name === user.id) && name) user.name = name
-        if (!user.created_at && createdAt) user.created_at = createdAt
-      }
-      return user
+    if (paymentsErr) {
+      console.error('Error fetching payments in admin users tab:', paymentsErr)
     }
 
-    // Process Better Auth Users
-    if (rawBetterUsers) {
-      rawBetterUsers.forEach((u) => {
-        const displayName = u.name || [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email || u.id
-        getOrCreateUser(u.id, u.email || null, displayName, u.role || 'user', u.created_at || null, 'Better Auth')
-      })
-    }
-
-    // Process Supabase Auth Users
-    if (rawAuthUsers && rawAuthUsers.users) {
-      rawAuthUsers.users.forEach((u) => {
-        const displayName = u.user_metadata?.full_name || u.user_metadata?.name || u.email || u.id
-        getOrCreateUser(u.id, u.email || null, displayName, (u.user_metadata?.role as string) || 'user', u.created_at || null, 'Supabase Auth')
-      })
-    }
-
-    // Process Anmeldungen
-    if (rawAnmeldungen) {
-      rawAnmeldungen.forEach((a) => {
-        const childName = [a.child_firstname, a.child_lastname].filter(Boolean).join(' ')
-        getOrCreateUser(a.id, a.parent_email, `Elternteil (${childName || 'Kind'})`, 'anmeldung', a.created_at || null, 'Kursanmeldung')
-      })
-    }
-
-    // Process Payments & Aggregate Totals
+    // Process Payments & Aggregate Totals ONLY for Registered Users
     if (rawPayments) {
       rawPayments.forEach((p) => {
-        const customerEmail = p.metadata && typeof p.metadata === 'object' && 'customer_email' in p.metadata && p.metadata.customer_email
-          ? String(p.metadata.customer_email).toLowerCase()
-          : null
+        let matchedUser: AdminUserRecord | null = null
 
-        let userRecord = p.user_id ? (userMap.get(p.user_id) || (customerEmail ? userMap.get(customerEmail) : null)) : null
-
-        if (!userRecord && customerEmail) {
-          userRecord = getOrCreateUser(p.user_id || 'gast', customerEmail, customerEmail.split('@')[0], 'gast', null, 'Gastzahlung')
+        if (p.user_id) {
+          matchedUser = userMap.get(p.user_id) || null
         }
 
-        if (!userRecord && p.user_id) {
-          userRecord = getOrCreateUser(p.user_id, null, `User (${p.user_id.slice(0, 8)})`, 'user', null, 'Zahlungs-ID')
+        if (!matchedUser && p.metadata && typeof p.metadata === 'object' && 'customer_email' in p.metadata && p.metadata.customer_email) {
+          const customerEmail = String(p.metadata.customer_email).toLowerCase().trim()
+          if (customerEmail) {
+            matchedUser = userMap.get(customerEmail) || null
+          }
         }
 
-        if (userRecord) {
-          userRecord.total_payments_count += 1
+        if (matchedUser) {
+          matchedUser.total_payments_count += 1
           if (p.status === 'succeeded') {
-            userRecord.succeeded_amount_rappen += p.amount_rappen
+            matchedUser.succeeded_amount_rappen += p.amount_rappen
           }
         }
       })
     }
 
-    // Deduplicate user map list
+    // Deduplicate user list
     const uniqueUsersList = Array.from(new Set(userMap.values()))
+
+    // Sort by registration date descending
+    uniqueUsersList.sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+      return dateB - dateA
+    })
 
     const query = userSearchQuery.trim().toLowerCase()
     if (!query) {
