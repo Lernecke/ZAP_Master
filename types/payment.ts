@@ -23,6 +23,7 @@ export interface PaymentRecord {
 
 export interface CreateCheckoutSessionParams {
   anmeldung_id?: string
+  retry_payment_id?: string
   user_id?: string
   amount_rappen: number
   currency?: string

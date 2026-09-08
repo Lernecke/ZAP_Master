@@ -94,7 +94,31 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
         created_at: null,
       }
 
-  const payments: PaymentRecord[] = (paymentsData || []).map((p) => ({
+  const rawPaymentsList = paymentsData || []
+
+  // Group payments by anmeldung_id so each course registration only shows 1 status (succeeded if any, else latest)
+  const paymentsByAnmeldung = new Map<string, (typeof rawPaymentsList)[number]>()
+  const standalonePayments: (typeof rawPaymentsList)[number][] = []
+
+  for (const p of rawPaymentsList) {
+    if (!p.anmeldung_id) {
+      standalonePayments.push(p)
+    } else {
+      const existing = paymentsByAnmeldung.get(p.anmeldung_id)
+      if (!existing) {
+        paymentsByAnmeldung.set(p.anmeldung_id, p)
+      } else if (existing.status !== 'succeeded' && p.status === 'succeeded') {
+        paymentsByAnmeldung.set(p.anmeldung_id, p)
+      }
+    }
+  }
+
+  const sortedPayments = [
+    ...Array.from(paymentsByAnmeldung.values()),
+    ...standalonePayments,
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  const payments: PaymentRecord[] = sortedPayments.map((p) => ({
     id: p.id,
     anmeldung_id: p.anmeldung_id,
     user_id: p.user_id,

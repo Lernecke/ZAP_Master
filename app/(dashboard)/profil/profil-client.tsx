@@ -135,6 +135,7 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
         },
         body: JSON.stringify({
           anmeldung_id: payment.anmeldung_id || undefined,
+          retry_payment_id: payment.id,
           user_id: profile.id,
           amount_rappen: payment.amount_rappen,
           description,
