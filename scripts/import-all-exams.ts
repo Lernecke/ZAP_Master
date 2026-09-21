@@ -7,30 +7,27 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { createClient } from '@supabase/supabase-js'
 
-// Load environment variables from .env.local
-const envPath = path.join(process.cwd(), '.env.local')
-const envContent = fs.readFileSync(envPath, 'utf-8')
-const envVars: Record<string, string> = {}
-envContent.split('\n').forEach((line) => {
-  const [key, ...valueParts] = line.split('=')
-  if (key && valueParts.length > 0) {
-    envVars[key.trim()] = valueParts.join('=').trim()
-  }
-})
+import { getLocalSupabaseStatus } from './lib/local-supabase.mjs'
 
-const supabaseUrl = envVars['NEXT_PUBLIC_SUPABASE_URL']
-const supabaseServiceKey = envVars['SUPABASE_SERVICE_ROLE_KEY']
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+let supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey || !/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(supabaseUrl)) {
+  try {
+    const status = getLocalSupabaseStatus()
+    supabaseUrl = status.API_URL
+    supabaseServiceKey = status.SERVICE_ROLE_KEY
+  } catch {
+    console.error('Missing environment variables or local Supabase instance is not running.')
+    process.exit(1)
+  }
+}
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local')
+  console.error('Missing Supabase URL or Service Role Key.')
   process.exit(1)
 }
 
-// Sicherheitsnetz nachgetragen (Env-Separation-Audit, Abschnitt 10.4): .env.local zeigt laut
-// CLAUDE.md bewusst auf das LIVE-Projekt. Dieses Skript schrieb bisher ungeprueft mit
-// service_role (RLS-Bypass) dorthin -- ein versehentlicher Lauf haette Pruefungsdaten direkt in
-// Produktion geschrieben. Wie scripts/concurrency-test-booking.ts: nur gegen eine lokale
-// Loopback-Instanz zulassen.
 if (!/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(supabaseUrl)) {
   console.error(
     `Refusing to run: NEXT_PUBLIC_SUPABASE_URL ("${supabaseUrl}") sieht nicht nach einer lokalen Supabase-Instanz aus. Dieses Skript darf nur gegen "supabase start" laufen.`
