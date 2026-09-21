@@ -162,12 +162,12 @@ export function AnmeldungModal({ kurs, onClose }: AnmeldungModalProps) {
   return (
     <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-2xl max-h-[85vh] gap-0 overflow-y-auto rounded-2xl p-0"
+        className="flex flex-col max-w-2xl max-h-[90vh] gap-0 overflow-hidden rounded-2xl p-0"
         showCloseButton={false}
         onCloseAutoFocus={handleCloseAutoFocus}
       >
         {/* Header */}
-        <div className={`${farben.bg} px-6 py-4 rounded-t-2xl flex items-start justify-between`}>
+        <div className={`${farben.bg} shrink-0 px-6 py-4 rounded-t-2xl flex items-start justify-between`}>
           <div>
             <span className={`text-xs font-medium ${farben.text} uppercase tracking-wider`}>
               {FACH_LABELS[kurs.fach]}
@@ -189,8 +189,8 @@ export function AnmeldungModal({ kurs, onClose }: AnmeldungModalProps) {
         </div>
 
         {/* Kurs-Info */}
-        <div className="px-6 py-4 border-b border-border bg-muted/30">
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div className="shrink-0 px-6 py-3 border-b border-border bg-muted/30">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
               {formatDatum(kurs.startDatum)} – {formatDatum(kurs.endDatum)}
@@ -204,245 +204,248 @@ export function AnmeldungModal({ kurs, onClose }: AnmeldungModalProps) {
               {kurs.ort}
             </span>
           </div>
-          <div className="mt-2 text-lg font-semibold text-foreground">
+          <div className="mt-1 text-base sm:text-lg font-semibold text-foreground">
             CHF {kurs.preis}
           </div>
         </div>
 
         {/* Formular */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
-          {/* Hidden: kurs_id */}
-          <input type="hidden" {...register('kurs_id')} />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          {/* Scrollbarer Eingabebereich */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* Hidden: kurs_id */}
+            <input type="hidden" {...register('kurs_id')} />
 
-          {/* Kind-Daten */}
-          <div>
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Angaben zum Kind
-            </h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Vorname */}
-              <div>
-                <label htmlFor="child_firstname" className="block text-sm font-medium text-foreground mb-2">
-                  Vorname *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="child_firstname"
-                    type="text"
-                    {...register('child_firstname')}
-                    placeholder="Max"
-                    aria-invalid={!!errors.child_firstname}
-                    aria-describedby={errors.child_firstname ? 'child_firstname-error' : undefined}
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
-                  />
+            {/* Kind-Daten */}
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Angaben zum Kind
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Vorname */}
+                <div>
+                  <label htmlFor="child_firstname" className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Vorname *
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      id="child_firstname"
+                      type="text"
+                      {...register('child_firstname')}
+                      placeholder="Max"
+                      aria-invalid={!!errors.child_firstname}
+                      aria-describedby={errors.child_firstname ? 'child_firstname-error' : undefined}
+                      className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-sm"
+                    />
+                  </div>
+                  {errors.child_firstname && (
+                    <p id="child_firstname-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.child_firstname.message}</p>
+                  )}
                 </div>
-                {errors.child_firstname && (
-                  <p id="child_firstname-error" className="mt-1.5 text-sm text-destructive">{errors.child_firstname.message}</p>
-                )}
-              </div>
 
-              {/* Nachname */}
-              <div>
-                <label htmlFor="child_lastname" className="block text-sm font-medium text-foreground mb-2">
-                  Nachname *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="child_lastname"
-                    type="text"
-                    {...register('child_lastname')}
-                    placeholder="Muster"
-                    aria-invalid={!!errors.child_lastname}
-                    aria-describedby={errors.child_lastname ? 'child_lastname-error' : undefined}
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
-                  />
+                {/* Nachname */}
+                <div>
+                  <label htmlFor="child_lastname" className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Nachname *
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      id="child_lastname"
+                      type="text"
+                      {...register('child_lastname')}
+                      placeholder="Muster"
+                      aria-invalid={!!errors.child_lastname}
+                      aria-describedby={errors.child_lastname ? 'child_lastname-error' : undefined}
+                      className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-sm"
+                    />
+                  </div>
+                  {errors.child_lastname && (
+                    <p id="child_lastname-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.child_lastname.message}</p>
+                  )}
                 </div>
-                {errors.child_lastname && (
-                  <p id="child_lastname-error" className="mt-1.5 text-sm text-destructive">{errors.child_lastname.message}</p>
-                )}
-              </div>
 
-              {/* Klassenstufe */}
-              <div>
-                <label htmlFor="child_class_level" className="block text-sm font-medium text-foreground mb-2">
-                  Klassenstufe *
-                </label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <select
-                    id="child_class_level"
-                    {...register('child_class_level')}
-                    aria-invalid={!!errors.child_class_level}
-                    aria-describedby={errors.child_class_level ? 'child_class_level-error' : undefined}
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="">— Bitte wählen —</option>
-                    {kurs.klassenstufen.map((stufe) => (
-                      <option key={stufe} value={stufe}>
-                        {stufe}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.child_class_level && (
-                  <p id="child_class_level-error" className="mt-1.5 text-sm text-destructive">{errors.child_class_level.message}</p>
-                )}
-              </div>
-
-              {/* Geschlecht -- fieldset/legend statt <label>, weil ein <label> nur EIN Control
-                  beschreiben darf, nicht eine Gruppe von drei Radios (WCAG 1.3.1/4.1.2). Die drei
-                  Radios selbst waren bereits korrekt je einzeln in ein eigenes <label> gewrappt. */}
-              <fieldset
-                className="min-w-0 border-0 p-0 m-0"
-                aria-describedby={errors.child_gender ? 'child_gender-error' : undefined}
-              >
-                <legend className="block text-sm font-medium text-foreground mb-2">
-                  Geschlecht *
-                </legend>
-                <div className="flex gap-4 h-11 items-center">
-                  {[
-                    { value: 'm', label: 'Männlich' },
-                    { value: 'w', label: 'Weiblich' },
-                    { value: 'd', label: 'Divers' },
-                  ].map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-center gap-2 cursor-pointer"
+                {/* Klassenstufe */}
+                <div>
+                  <label htmlFor="child_class_level" className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Klassenstufe *
+                  </label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <select
+                      id="child_class_level"
+                      {...register('child_class_level')}
+                      aria-invalid={!!errors.child_class_level}
+                      aria-describedby={errors.child_class_level ? 'child_class_level-error' : undefined}
+                      className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors appearance-none cursor-pointer text-sm"
                     >
-                      <input
-                        type="radio"
-                        value={option.value}
-                        {...register('child_gender')}
-                        className="w-4 h-4 text-primary border-border focus:ring-primary"
-                      />
-                      <span className="text-sm text-foreground">{option.label}</span>
-                    </label>
-                  ))}
+                      <option value="">— Bitte wählen —</option>
+                      {kurs.klassenstufen.map((stufe) => (
+                        <option key={stufe} value={stufe}>
+                          {stufe}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.child_class_level && (
+                    <p id="child_class_level-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.child_class_level.message}</p>
+                  )}
                 </div>
-                {errors.child_gender && (
-                  <p id="child_gender-error" className="mt-1.5 text-sm text-destructive">{errors.child_gender.message}</p>
-                )}
-              </fieldset>
-            </div>
-          </div>
 
-          {/* Eltern-Kontakt */}
-          <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Kontaktdaten der Eltern
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* E-Mail */}
-              <div>
-                <label htmlFor="parent_email" className="block text-sm font-medium text-foreground mb-2">
-                  E-Mail *
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="parent_email"
-                    type="email"
-                    {...register('parent_email')}
-                    placeholder="eltern@beispiel.ch"
-                    aria-invalid={!!errors.parent_email}
-                    aria-describedby={errors.parent_email ? 'parent_email-error' : undefined}
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
-                  />
-                </div>
-                {errors.parent_email && (
-                  <p id="parent_email-error" className="mt-1.5 text-sm text-destructive">{errors.parent_email.message}</p>
-                )}
-              </div>
-
-              {/* Telefon */}
-              <div>
-                <label htmlFor="parent_phone" className="block text-sm font-medium text-foreground mb-2">
-                  Telefon *
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    id="parent_phone"
-                    type="tel"
-                    {...register('parent_phone')}
-                    placeholder="+41 79 123 45 67"
-                    aria-invalid={!!errors.parent_phone}
-                    aria-describedby={errors.parent_phone ? 'parent_phone-error' : undefined}
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
-                  />
-                </div>
-                {errors.parent_phone && (
-                  <p id="parent_phone-error" className="mt-1.5 text-sm text-destructive">{errors.parent_phone.message}</p>
-                )}
+                {/* Geschlecht */}
+                <fieldset
+                  className="min-w-0 border-0 p-0 m-0"
+                  aria-describedby={errors.child_gender ? 'child_gender-error' : undefined}
+                >
+                  <legend className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Geschlecht *
+                  </legend>
+                  <div className="flex flex-wrap gap-4 min-h-[40px] sm:min-h-[44px] items-center">
+                    {[
+                      { value: 'm', label: 'Männlich' },
+                      { value: 'w', label: 'Weiblich' },
+                      { value: 'd', label: 'Divers' },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          value={option.value}
+                          {...register('child_gender')}
+                          className="w-4 h-4 text-primary border-border focus:ring-primary"
+                        />
+                        <span className="text-xs sm:text-sm text-foreground">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.child_gender && (
+                    <p id="child_gender-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.child_gender.message}</p>
+                  )}
+                </fieldset>
               </div>
             </div>
-          </div>
 
-          {/* Bemerkungen */}
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-foreground mb-2">
-              Bemerkungen (optional)
-            </label>
-            <div className="relative">
-              <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <textarea
-                id="notes"
-                {...register('notes')}
-                rows={2}
-                placeholder="Allergien, besondere Bedürfnisse, etc."
-                aria-invalid={!!errors.notes}
-                aria-describedby={errors.notes ? 'notes-error' : undefined}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-none"
-              />
+            {/* Eltern-Kontakt */}
+            <div className="pt-3 border-t border-border">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Kontaktdaten der Eltern
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* E-Mail */}
+                <div>
+                  <label htmlFor="parent_email" className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    E-Mail *
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      id="parent_email"
+                      type="email"
+                      {...register('parent_email')}
+                      placeholder="eltern@beispiel.ch"
+                      aria-invalid={!!errors.parent_email}
+                      aria-describedby={errors.parent_email ? 'parent_email-error' : undefined}
+                      className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-sm"
+                    />
+                  </div>
+                  {errors.parent_email && (
+                    <p id="parent_email-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.parent_email.message}</p>
+                  )}
+                </div>
+
+                {/* Telefon */}
+                <div>
+                  <label htmlFor="parent_phone" className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Telefon *
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      id="parent_phone"
+                      type="tel"
+                      {...register('parent_phone')}
+                      placeholder="+41 79 123 45 67"
+                      aria-invalid={!!errors.parent_phone}
+                      aria-describedby={errors.parent_phone ? 'parent_phone-error' : undefined}
+                      className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-sm"
+                    />
+                  </div>
+                  {errors.parent_phone && (
+                    <p id="parent_phone-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.parent_phone.message}</p>
+                  )}
+                </div>
+              </div>
             </div>
-            {errors.notes && (
-              <p id="notes-error" className="mt-1.5 text-sm text-destructive">{errors.notes.message}</p>
+
+            {/* Bemerkungen */}
+            <div className="pt-1">
+              <label htmlFor="notes" className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                Bemerkungen (optional)
+              </label>
+              <div className="relative">
+                <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <textarea
+                  id="notes"
+                  {...register('notes')}
+                  rows={2}
+                  placeholder="Allergien, besondere Bedürfnisse, etc."
+                  aria-invalid={!!errors.notes}
+                  aria-describedby={errors.notes ? 'notes-error' : undefined}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-none text-sm"
+                />
+              </div>
+              {errors.notes && (
+                <p id="notes-error" className="mt-1 text-xs sm:text-sm text-destructive">{errors.notes.message}</p>
+              )}
+            </div>
+
+            {/* Server Error */}
+            {submitState === 'error' && serverMessage && (
+              <div className="flex items-center gap-3 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+                <p className="text-sm text-destructive">{serverMessage}</p>
+              </div>
             )}
           </div>
 
-          {/* Server Error */}
-          {submitState === 'error' && serverMessage && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
-              <p className="text-sm text-destructive">{serverMessage}</p>
+          {/* Fixed Footer Buttons */}
+          <div className="shrink-0 p-4 sm:px-6 sm:py-4 border-t border-border bg-background space-y-2 rounded-b-2xl">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 h-11 sm:h-12 px-6 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Abbrechen
+              </button>
+              <Button 
+                type="submit" 
+                className="flex-1 h-11 sm:h-12 rounded-xl text-sm font-semibold"
+                disabled={submitState === 'loading'}
+              >
+                {submitState === 'loading' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                    Wird gesendet...
+                  </>
+                ) : (
+                  <>
+                    <GraduationCap className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Verbindlich anmelden
+                  </>
+                )}
+              </Button>
             </div>
-          )}
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 h-12 px-6 rounded-xl border border-border font-medium hover:bg-muted transition-colors"
-            >
-              Abbrechen
-            </button>
-            <Button 
-              type="submit" 
-              className="flex-1 h-12 rounded-xl font-semibold"
-              disabled={submitState === 'loading'}
-            >
-              {submitState === 'loading' ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Wird gesendet...
-                </>
-              ) : (
-                <>
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  Verbindlich anmelden
-                </>
-              )}
-            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Mit der Anmeldung akzeptierst du unsere Datenschutzbestimmungen und AGB.
+            </p>
           </div>
-
-          <p className="text-center text-xs text-muted-foreground">
-            Mit der Anmeldung akzeptierst du unsere Datenschutzbestimmungen und AGB.
-          </p>
         </form>
       </DialogContent>
     </Dialog>
