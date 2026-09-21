@@ -27,3 +27,16 @@ function runSeedScript(name) {
 
 runSeedScript('seed-e2e-users.mjs')
 runSeedScript('seed-e2e-course-fixtures.mjs')
+
+function runTsxScript(name) {
+  const result = spawnSync('npx', ['--yes', 'tsx', path.join(projectRoot, 'scripts', name)], {
+    cwd: projectRoot,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1)
+  }
+}
+
+runTsxScript('import-exams.ts')

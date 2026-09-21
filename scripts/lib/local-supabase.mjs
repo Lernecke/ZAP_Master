@@ -68,7 +68,7 @@ export function getLocalSupabaseStatus() {
 /** Fuehrt einen Supabase-CLI-Befehl gegen die lokale Instanz aus und beendet bei Fehlschlag hart. */
 export function runSupabaseCli(args, { allowFailure = false } = {}) {
   const cmd = getSupabaseCommand()
-  const result = spawnSync(cmd, args, { cwd: projectRoot, stdio: 'inherit' })
+  const result = spawnSync(cmd, args, { cwd: projectRoot, stdio: 'inherit', env: { ...process.env, SUPABASE_TELEMETRY: 'false' } })
   if (!allowFailure && result.status !== 0) {
     console.error(`Abbruch: "supabase ${args.join(' ')}" ist fehlgeschlagen (Exit-Code ${result.status}).`)
     process.exit(result.status ?? 1)

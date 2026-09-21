@@ -55,6 +55,23 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.link_anmeldung_beneficiary()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $$
+BEGIN
+  IF NEW.beneficiary_user_id IS NULL THEN
+    SELECT id INTO NEW.beneficiary_user_id
+      FROM public."user"
+     WHERE lower(email) = lower(NEW.parent_email)
+     LIMIT 1;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
 -- 3. Remove trigger sync to profiles
 DROP TRIGGER IF EXISTS trg_sync_better_auth_user_to_profile ON public."user";
 DROP FUNCTION IF EXISTS sync_better_auth_user_to_profile();
