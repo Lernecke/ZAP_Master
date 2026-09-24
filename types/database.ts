@@ -1755,6 +1755,8 @@ export type Database = {
           createdAt: string
           updatedAt: string
           role: string | null
+          account_type: string | null
+          parent_id: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
@@ -1777,6 +1779,8 @@ export type Database = {
           createdAt?: string
           updatedAt?: string
           role?: string | null
+          account_type?: string | null
+          parent_id?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -1799,6 +1803,8 @@ export type Database = {
           createdAt?: string
           updatedAt?: string
           role?: string | null
+          account_type?: string | null
+          parent_id?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -1811,6 +1817,33 @@ export type Database = {
           school_name?: string | null
           theme_preference?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      verification: {
+        Row: {
+          id: string
+          identifier: string
+          value: string
+          expiresAt: string
+          createdAt: string
+          updatedAt: string
+        }
+        Insert: {
+          id?: string
+          identifier: string
+          value: string
+          expiresAt: string
+          createdAt?: string
+          updatedAt?: string
+        }
+        Update: {
+          id?: string
+          identifier?: string
+          value?: string
+          expiresAt?: string
+          createdAt?: string
+          updatedAt?: string
         }
         Relationships: []
       }

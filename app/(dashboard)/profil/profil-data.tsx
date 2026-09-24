@@ -75,7 +75,10 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
         last_name: lastName,
         email: profile.email || email || null,
         email_verified: emailVerified,
+        account_type: profile.account_type || 'parent_solo',
+        parent_id: profile.parent_id || null,
         theme_preference: normalizeThemePreference(profile.theme_preference),
+        created_at: profile.createdAt || profile.created_at || null,
       }
     : {
         id: userId,
@@ -90,6 +93,8 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
         birth_date: null,
         gender: null,
         role: 'user',
+        account_type: 'parent_solo',
+        parent_id: null,
         theme_preference: 'light' as const,
         created_at: null,
       }

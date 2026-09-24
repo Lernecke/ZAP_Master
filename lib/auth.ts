@@ -125,6 +125,17 @@ export const auth = betterAuth({
         defaultValue: "light",
         fieldName: "theme_preference",
       },
+      accountType: {
+        type: "string",
+        required: false,
+        defaultValue: "parent_solo",
+        fieldName: "account_type",
+      },
+      parentId: {
+        type: "string",
+        required: false,
+        fieldName: "parent_id",
+      },
     },
   },
 })

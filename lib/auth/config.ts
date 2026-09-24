@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 import { auth as betterAuthInstance } from "@/lib/auth"
-import type { UserRole } from "@/types/next-auth"
+import type { UserRole, AccountType } from "@/types/next-auth"
 
 export interface AppSession {
   user: {
@@ -8,6 +8,8 @@ export interface AppSession {
     email?: string | null
     name?: string | null
     role: UserRole
+    accountType?: AccountType
+    parentId?: string | null
     emailVerified?: boolean
   }
   supabaseAccessToken?: string
@@ -35,12 +37,17 @@ export async function auth(): Promise<AppSession | null> {
     const lastName = (userRecord.lastName || userRecord.last_name) as string | undefined
     const computedName = [firstName, lastName].filter(Boolean).join(" ").trim() || session.user.name || null
 
+    const accountType = ((userRecord.accountType || userRecord.account_type) as "parent_solo" | "child") || "parent_solo"
+    const parentId = ((userRecord.parentId || userRecord.parent_id) as string | undefined) || null
+
     return {
       user: {
         id: session.user.id,
         email: session.user.email || null,
         name: computedName,
         role,
+        accountType,
+        parentId,
         emailVerified,
       },
       supabaseAccessToken: session.session.token,
