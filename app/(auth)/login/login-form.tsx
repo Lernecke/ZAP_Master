@@ -464,7 +464,7 @@ export function LoginForm() {
       <p className="text-center text-sm text-muted-foreground">
         Noch kein Konto?{' '}
         <Link
-          href="/register"
+          href={callbackUrl ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/register'}
           className="font-medium text-primary hover:text-primary/80 transition-colors"
         >
           Jetzt registrieren

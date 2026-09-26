@@ -321,20 +321,28 @@ test('SiteNav erscheint nicht auf /login', async ({ page }) => {
 // ---------------------------------------------------------------------------
 
 test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
-  test('Buchung reduziert die sichtbare Verfügbarkeit sofort, ohne Wartezeit oder manuellen Reload', async ({ page }) => {
+  test('Buchung leitet unauthentifizierten Nutzer zum Login und danach zur Anmeldeseite im Dashboard', async ({ page }) => {
     await page.goto('/de/kurse/6-klasse/intensivkurs-sportferien')
 
-    // "table" grenzt auf den Desktop-Renderpfad ein -- SessionTable rendert Tabelle und
-    // Mobile-Kartenliste gleichzeitig ins DOM (hidden/md:hidden statt display:none), ohne diese
-    // Eingrenzung träfe der Locator auf zwei Elemente (Strict-Mode-Fehler).
-    // max_teilnehmer=1 in der Fixture unten: 0 Buchungen -> remainingPlaces=1 -> "wenige Plätze"
-    // (Abschnitt 2.10: "wenige" bei 1-2 Restplätzen), nicht "freie Plätze" -- erst >2 Restplätze
-    // wären "frei". Der Punkt des Tests ist der Sprung auf "keine Plätze" nach der Buchung.
     const row = page.locator('table tbody tr', { hasText: 'Kurs B' })
     await expect(row.getByText('wenige Plätze')).toBeVisible()
     await expect(row.getByRole('button', { name: 'Anmelden' })).toBeEnabled()
 
     await row.getByRole('button', { name: 'Anmelden' }).click()
+
+    // Leitet nach /login weiter mit callbackUrl=/intensivkurse?kurs=...
+    await page.waitForURL((url) => url.pathname === '/login', { timeout: 15_000 })
+    expect(page.url()).toContain('/login?callbackUrl=')
+    expect(page.url()).toContain(encodeURIComponent('/intensivkurse?kurs='))
+
+    // Anmeldung durchführen
+    await page.getByLabel('Email').fill(E2E_USER_EMAIL)
+    await page.getByLabel('Passwort').fill(E2E_USER_PASSWORD)
+    await page.getByRole('button', { name: /Anmelden/i }).click()
+
+    // Nach dem Login Weiterleitung zur Dashboard-Anmeldeseite /intensivkurse
+    await page.waitForURL((url) => url.pathname === '/intensivkurse', { timeout: 15_000 })
+    await expect(page.getByText('Anmeldung: Kurs B')).toBeVisible({ timeout: 10_000 })
 
     await page.locator('input[name="child_firstname"]').fill('Test')
     await page.locator('input[name="child_lastname"]').fill('Kind')
@@ -345,29 +353,10 @@ test.describe('Cache-Regression: Buchung und Verfügbarkeit', () => {
     await page.getByRole('button', { name: 'Verbindlich anmelden' }).click()
 
     await expect(page.getByText('Anmeldung erfolgreich!')).toBeVisible({ timeout: 10_000 })
+    await page.getByRole('button', { name: 'Schliessen' }).click()
 
-    // onClose ruft router.refresh() auf (Abschnitt 7, Punkt 3) -- kein revalidateTag/Timeout nötig.
-    // Der Response-Listener muss VOR dem Klick registriert werden (Promise.all), sonst kann die
-    // RSC-Antwort unter guten Bedingungen schneller zurückkommen, als waitForResponse zu lauschen
-    // beginnt, und der Test würde sie verpassen (race).
-    // router.refresh() muss den ungecachten Suspense-Abschnitt (BookingSectionLoader) neu vom
-    // Server laden und streamen -- kein manueller Reload/Timer, aber echte Netzwerk-/Renderzeit
-    // (vgl. die ähnliche, dokumentierte Verzögerung bei Redirects unter PPR weiter oben). Der
-    // RSC-Refetch ist explizit abwartbar (eigene Netzwerk-Response auf denselben Pfad) -- das
-    // trennt "Netzwerk-Rundreise war langsam" von "DOM hat trotz frischer Daten nicht
-    // aktualisiert" und macht Fehlschläge unter Systemlast diagnostizierbar, statt nur einen
-    // einzigen groben Timeout auf das Endergebnis zu setzen.
-    await Promise.all([
-      page.waitForResponse(
-        (resp) => resp.url().includes('/de/kurse/6-klasse/intensivkurs-sportferien') && resp.ok(),
-        { timeout: 45_000 }
-      ),
-      page.getByRole('button', { name: 'Schliessen' }).click(),
-    ])
-
-    // Die zugrunde liegende DB-Buchung ist zu diesem Zeitpunkt bereits abgeschlossen (mehrfach per
-    // direktem DB-Query bestätigt); das Rendern der bereits eingetroffenen Antwort ins DOM braucht
-    // nur noch normale Client-Zeit.
+    // Zurück auf die Kursdetailseite navigieren, um reduzierte Plätze zu prüfen
+    await page.goto('/de/kurse/6-klasse/intensivkurs-sportferien')
     await expect(row.getByText('keine Plätze')).toBeVisible({ timeout: 10_000 })
     await expect(row.getByRole('button', { name: 'Anmelden' })).toBeDisabled()
   })

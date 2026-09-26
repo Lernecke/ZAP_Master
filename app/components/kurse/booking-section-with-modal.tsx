@@ -4,13 +4,10 @@
 // editorialen CourseOffer-Katalog stammen. Öffnet dieselbe AnmeldungModal, keine zweite
 // Buchungsmodalität (Abschnitt 1b des Architektur-Briefings).
 
-import { useState } from 'react'
-import { useRouter } from '@/i18n/navigation'
+import { useRouter } from 'next/navigation'
 import type { CourseOffer, ExamSimulationOffer, SessionRow } from '@/types/marketing'
-import { AnmeldungModal } from '@/app/(public)/kurse/anmeldung-modal'
 import { BookingSection } from '@/app/components/kurse/booking-section'
-import { SUBJECT_TO_FACH } from '@/lib/kurse/mapper'
-import { audiences } from '@/app/data/marketing-site'
+import { useSession } from '@/lib/auth-client'
 
 interface BookingSectionWithModalProps {
   // ExamSimulationOffer teilt booking/Preisfelder mit CourseOffer (Schritt 11).
@@ -20,40 +17,18 @@ interface BookingSectionWithModalProps {
 
 function BookingSectionWithModal({ offer, sessions }: BookingSectionWithModalProps) {
   const router = useRouter()
-  const [selectedSession, setSelectedSession] = useState<SessionRow | null>(null)
+  const { data: session } = useSession()
 
-  return (
-    <>
-      <BookingSection offer={offer} sessions={sessions} onBook={setSelectedSession} />
-      {selectedSession ? (
-        <AnmeldungModal
-          kurs={{
-            id: selectedSession.source.kursId,
-            name: selectedSession.kurs,
-            // Kombinierte Angebote (offer.subject undefined/'mixed') haben aktuell noch keine
-            // real verknüpfte, fachlich eindeutige Session -- bekannte Einschränkung, siehe
-            // step0Baseline.revision2.md-Notiz zu Schritt 10a (Admin-Maske erzeugt künftig
-            // fachlich eindeutige course_sessions).
-            fach:
-              offer.subject && offer.subject !== 'mixed' ? SUBJECT_TO_FACH[offer.subject] : 'deutsch',
-            startDatum: selectedSession.startAt ?? '',
-            endDatum: selectedSession.endAt ?? '',
-            uhrzeit: selectedSession.timeLabel,
-            ort: selectedSession.standort,
-            preis: offer.regularPriceRappen / 100,
-            klassenstufen: [
-              audiences.find((audience) => audience.id === offer.audienceId)?.displayLabel ??
-                offer.audienceId,
-            ],
-          }}
-          onClose={() => {
-            setSelectedSession(null)
-            router.refresh()
-          }}
-        />
-      ) : null}
-    </>
-  )
+  const handleBook = (selectedSession: SessionRow) => {
+    const targetUrl = `/intensivkurse?kurs=${selectedSession.source.kursId}`
+    if (session?.user) {
+      router.push(targetUrl)
+    } else {
+      router.push(`/login?callbackUrl=${encodeURIComponent(targetUrl)}`)
+    }
+  }
+
+  return <BookingSection offer={offer} sessions={sessions} onBook={handleBook} />
 }
 
 export { BookingSectionWithModal }

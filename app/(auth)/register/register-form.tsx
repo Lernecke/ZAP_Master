@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, ArrowRight, Loader2, CheckCircle2, User } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { getSafeCallbackUrl } from '@/lib/auth/callback-url'
 import { registerSchema, type RegisterInput } from '@/types/auth'
 import { signUp, signIn } from '@/lib/auth-client'
 
@@ -36,6 +37,7 @@ function GoogleIcon({ className }: { className?: string }) {
 export function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const callbackUrl = getSafeCallbackUrl(searchParams.get('callbackUrl'))
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [serverError, setServerError] = useState('')
@@ -55,7 +57,7 @@ export function RegisterForm() {
     try {
       const { error: googleError } = await signIn.social({
         provider: 'google',
-        callbackURL: '/dashboard',
+        callbackURL: callbackUrl || '/dashboard',
         errorCallbackURL: '/register?error=google_error',
       })
       if (googleError) {
@@ -84,7 +86,7 @@ export function RegisterForm() {
       email: data.email,
       password: data.password,
       name: `${data.firstName} ${data.lastName}`.trim(),
-      callbackURL: '/dashboard',
+      callbackURL: callbackUrl || '/dashboard',
     })
 
     if (signUpError) {
@@ -93,7 +95,7 @@ export function RegisterForm() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(callbackUrl || '/dashboard')
     router.refresh()
   }
 
@@ -110,7 +112,7 @@ export function RegisterForm() {
           <p className="text-muted-foreground mb-6">
             Du kannst dich jetzt anmelden.
           </p>
-          <Link href="/login">
+          <Link href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login'}>
             <Button className="rounded-xl">
               Zum Login
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -294,7 +296,7 @@ export function RegisterForm() {
       <p className="text-center text-sm text-muted-foreground">
         Bereits ein Konto?{' '}
         <Link
-          href="/login"
+          href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login'}
           className="font-medium text-primary hover:text-primary/80 transition-colors"
         >
           Anmelden
