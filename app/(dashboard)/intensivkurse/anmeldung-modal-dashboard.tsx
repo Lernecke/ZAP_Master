@@ -655,28 +655,28 @@ export function AnmeldungModalDashboard({
 
           {/* Fixed Footer Buttons */}
           <div className="shrink-0 p-4 sm:px-6 sm:py-4 border-t border-border bg-background space-y-2 rounded-b-2xl">
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 h-11 sm:h-12 px-6 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
+                className="w-full sm:flex-1 h-11 sm:h-12 px-6 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
               >
                 Abbrechen
               </button>
               <Button 
                 type="submit" 
-                className="flex-1 h-11 sm:h-12 rounded-xl text-sm font-semibold"
+                className="w-full sm:flex-1 h-auto min-h-[2.75rem] sm:min-h-[3rem] py-2 sm:py-0 rounded-xl text-sm font-semibold whitespace-normal"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading' ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin shrink-0" />
                     Weiterleitung zu Stripe...
                   </>
                 ) : (
                   <>
-                    <GraduationCap className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                    {kurs.preis > 0 ? `Verbindlich anmelden & bezahlen (CHF ${kurs.preis})` : 'Verbindlich anmelden'}
+                    <GraduationCap className="mr-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                    <span>{kurs.preis > 0 ? `Verbindlich anmelden & bezahlen (CHF ${kurs.preis})` : 'Verbindlich anmelden'}</span>
                   </>
                 )}
               </Button>
