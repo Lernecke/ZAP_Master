@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
+import { CheckoutButton } from '@/app/components/payment/checkout-button'
 import { FACH_LABELS, FACH_FARBEN } from '@/types/kurs'
 import {
   intensivwocheAnmeldungSchema,
@@ -61,8 +62,9 @@ export function AnmeldungModalDashboard({
   childrenAccounts = [],
   onClose
 }: AnmeldungModalDashboardProps) {
-  const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'payment' | 'success' | 'error'>('idle')
   const [serverMessage, setServerMessage] = useState('')
+  const [createdAnmeldungId, setCreatedAnmeldungId] = useState<string | null>(null)
   const [idempotencyKey] = useState(() => crypto.randomUUID())
   const [triggerElement] = useState<HTMLElement | null>(() =>
     typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null
@@ -175,58 +177,11 @@ export function AnmeldungModalDashboard({
         console.error('Fehler beim Speichern der fehlenden Profildaten:', err)
       }
 
-      // 3. Initiate Stripe checkout if course has a fee
+      // 3. Zeige Payment-UI an, falls Kurs kostenpflichtig ist
       if (kurs.preis > 0 && result.anmeldungId) {
-        try {
-          const origin = typeof window !== 'undefined' ? window.location.origin : ''
-          const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              anmeldung_id: result.anmeldungId,
-              user_id: userProfile.id,
-              amount_rappen: Math.round(kurs.preis * 100),
-              currency: 'chf',
-              description: `Kursanmeldung: ${kurs.name}`,
-              customer_email: data.parent_email,
-              payment_methods: ['card', 'twint'],
-              success_url: `${origin}/kurse/erfolg?session_id={CHECKOUT_SESSION_ID}`,
-              cancel_url: `${origin}/profil?payment=canceled`,
-              metadata: {
-                beneficiary_user_id: beneficiaryUserId || '',
-                beneficiary_name: beneficiaryName,
-                payer_user_id: userProfile.id,
-                payer_email: userProfile.email || data.parent_email,
-                kurs_id: String(kurs.id),
-                kurs_name: kurs.name,
-                booking_mode: bookingMode,
-              },
-            }),
-          })
-
-          const checkoutData = await checkoutRes.json()
-
-          if (!checkoutRes.ok || !checkoutData.url) {
-            setSubmitState('error')
-            setServerMessage(
-              checkoutData.error ||
-                'Kursanmeldung erfolgreich angelegt, aber Weiterleitung zu Stripe fehlgeschlagen. Du kannst die Zahlung in deinem Profil abschliessen.'
-            )
-            return
-          }
-
-          window.location.assign(checkoutData.url)
-          return
-        } catch (checkoutErr) {
-          console.error('Error initiating Stripe checkout session:', checkoutErr)
-          setSubmitState('error')
-          setServerMessage(
-            'Kursanmeldung angelegt, Fehler bei Weiterleitung zur Zahlung. Du kannst die Zahlung in deinem Profil abschliessen.'
-          )
-          return
-        }
+        setCreatedAnmeldungId(result.anmeldungId)
+        setSubmitState('payment')
+        return
       }
 
       setSubmitState('success')
@@ -268,6 +223,38 @@ export function AnmeldungModalDashboard({
   }
 
   // Erfolgs-Ansicht
+  if (submitState === 'payment' && createdAnmeldungId) {
+    return (
+      <Dialog open onOpenChange={handleOpenChange}>
+        <DialogContent
+          className="max-w-xl gap-0 rounded-2xl p-0 overflow-hidden bg-background"
+          showCloseButton={false}
+          onCloseAutoFocus={handleCloseAutoFocus}
+        >
+          <div className="p-6 pb-4 border-b border-border text-center">
+            <h2 className="text-xl font-bold text-foreground">
+              Fast geschafft!
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Bitte wähle eine Zahlungsmethode für: <span className="font-medium text-foreground">{kurs.name}</span>
+            </p>
+          </div>
+          <div className="p-6">
+            <CheckoutButton
+              anmeldungId={createdAnmeldungId}
+              userId={userProfile.id}
+              amountRappen={Math.round(kurs.preis * 100)}
+              description={`Kursanmeldung: ${kurs.name}`}
+              customerEmail={userProfile.email || undefined}
+              successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/kurse/erfolg?session_id={CHECKOUT_SESSION_ID}`}
+              cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/profil?payment=canceled`}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   if (submitState === 'success') {
     return (
       <Dialog open onOpenChange={handleOpenChange}>
