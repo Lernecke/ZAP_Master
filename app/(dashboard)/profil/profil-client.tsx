@@ -32,6 +32,8 @@ import {
   XCircle,
   RotateCcw,
   Users,
+  Building2,
+  Download,
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
@@ -719,6 +721,8 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
                           <div className="mt-0.5 p-2 rounded-lg bg-muted text-muted-foreground shrink-0">
                             {payment.payment_method_types?.includes('twint') ? (
                               <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            ) : payment.payment_method_types?.includes('bank_transfer') ? (
+                              <Building2 className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                             ) : (
                               <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             )}
@@ -761,7 +765,19 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
                               </span>
                             )}
 
-                            {payment.status !== 'succeeded' && (
+                            {payment.status !== 'succeeded' && payment.payment_method_types?.includes('bank_transfer') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(`/api/payments/bank-transfer/pdf?paymentId=${payment.id}`, '_blank')}
+                                className="rounded-lg h-8 px-2.5 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/5 mr-2"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                Rechnung PDF
+                              </Button>
+                            )}
+                            
+                            {payment.status !== 'succeeded' && !payment.payment_method_types?.includes('bank_transfer') && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -825,7 +841,7 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
     </div>
   )
 
-  const hasFailedPayments = payments?.some(p => p.status === 'failed' || p.status === 'refunded')
+  const hasFailedPayments = payments?.some(p => p.status === 'failed' || p.status === 'pending' || p.status === 'processing')
 
   const paymentWarningBanner = hasFailedPayments ? (
     <div className="p-4 rounded-xl border border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-3">
@@ -833,7 +849,7 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
       <div>
         <h4 className="font-semibold text-sm">Zahlung ausstehend - Aktion erforderlich</h4>
         <p className="text-sm mt-1">
-          Eine oder mehrere Zahlungen konnten nicht erfolgreich abgeschlossen werden. Bitte überprüfe deine Zahlungshistorie unter "Mein Profil", um den Zugang zu deinen Kursen wiederherzustellen.
+          Eine oder mehrere Zahlungen sind noch ausstehend oder konnten nicht erfolgreich abgeschlossen werden. Bitte überprüfe deine Zahlungshistorie unter "Mein Profil", um den Zugang zu deinen Kursen wiederherzustellen.
         </p>
       </div>
     </div>

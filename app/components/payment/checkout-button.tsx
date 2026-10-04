@@ -168,7 +168,7 @@ export function CheckoutButton({
         <Button
           onClick={() => {
             const successUrl = customSuccessUrl || '/kurse/erfolg'
-            router.push(successUrl.replace('?session_id={CHECKOUT_SESSION_ID}', ''))
+            router.push(successUrl.replace('?session_id={CHECKOUT_SESSION_ID}', `?payment_id=${createdPaymentId}`))
           }}
           className="w-full h-11 text-base font-medium"
           size="lg"

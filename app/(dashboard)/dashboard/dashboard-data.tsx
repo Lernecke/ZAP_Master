@@ -36,7 +36,7 @@ export async function DashboardData({ userId, token, firstName }: Props) {
   const { data: failedPayments } = await supabase
     .from('payments')
     .select('id')
-    .in('status', ['failed', 'refunded'])
+    .in('status', ['failed', 'pending', 'processing'])
     .or(filterConditions.join(','))
     .limit(1)
 
@@ -67,7 +67,7 @@ export async function DashboardData({ userId, token, firstName }: Props) {
           <div>
             <h4 className="font-semibold text-sm">Zahlung ausstehend - Aktion erforderlich</h4>
             <p className="text-sm mt-1">
-              Eine oder mehrere Zahlungen konnten nicht erfolgreich abgeschlossen werden. Bitte überprüfe deine Zahlungshistorie unter <Link href="/profil" className="underline font-medium hover:text-destructive/80 transition-colors">Mein Profil</Link>, um den Zugang zu deinen Kursen wiederherzustellen.
+              Eine oder mehrere Zahlungen sind noch ausstehend oder konnten nicht erfolgreich abgeschlossen werden. Bitte überprüfe deine Zahlungshistorie unter <Link href="/profil" className="underline font-medium hover:text-destructive/80 transition-colors">Mein Profil</Link>, um den Zugang zu deinen Kursen wiederherzustellen.
             </p>
           </div>
         </div>

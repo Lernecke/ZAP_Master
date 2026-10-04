@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, ArrowRight, Loader2, AlertCircle, ShoppingBag } from 'lucide-react'
+import { CheckCircle2, ArrowRight, Loader2, AlertCircle, ShoppingBag, Clock } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 
 interface VerificationState {
@@ -13,11 +13,13 @@ interface VerificationState {
   currency?: string
   email?: string
   error?: string
+  isPending?: boolean
 }
 
 function SuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
+  const paymentId = searchParams.get('payment_id')
 
   const [state, setState] = useState<VerificationState>({
     loading: true,
@@ -28,6 +30,18 @@ function SuccessContent() {
     let isMounted = true
 
     async function verify() {
+      if (paymentId) {
+        // Handle Bank Transfer
+        if (isMounted) {
+          setState({
+            loading: false,
+            success: true,
+            isPending: true,
+          })
+        }
+        return
+      }
+
       if (!sessionId) {
         if (isMounted) {
           setState({
@@ -77,7 +91,7 @@ function SuccessContent() {
     return () => {
       isMounted = false
     }
-  }, [sessionId])
+  }, [sessionId, paymentId])
 
   if (state.loading) {
     return (
@@ -85,7 +99,7 @@ function SuccessContent() {
         <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
         <h2 className="text-xl font-semibold text-foreground">Zahlungsstatus wird überprüft...</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Bitte warte einen Moment, während deine Stripe-Zahlung bestätigt wird.
+          Bitte warte einen Moment, während deine Zahlung bestätigt wird.
         </p>
       </div>
     )
@@ -106,6 +120,48 @@ function SuccessContent() {
             Zurück zu den Kursen
           </Link>
         </Button>
+      </div>
+    )
+  }
+
+  if (state.isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[450px] text-center p-6 max-w-lg mx-auto">
+        <div className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-6 animate-in zoom-in-50 duration-300">
+          <Clock className="w-10 h-10" />
+        </div>
+
+        <h1 className="text-3xl font-extrabold text-foreground mb-2">
+          Rechnung erstellt!
+        </h1>
+        <p className="text-muted-foreground text-base mb-6">
+          Deine Anmeldung wurde erfasst. Bitte überweise den Betrag mit der heruntergeladenen QR-Rechnung.
+        </p>
+
+        <div className="w-full bg-card border border-border rounded-xl p-4 mb-6 space-y-2 text-left">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Status:</span>
+            <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              Ausstehend (Banküberweisung)
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground pt-2">
+            Sobald deine Zahlung bei uns eintrifft, wird dein Kurs freigeschaltet (Dauer: i.d.R. 1-3 Arbeitstage).
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <Button asChild className="flex-1 rounded-xl h-11" size="lg">
+            <Link href="/dashboard">
+              Zum Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1 rounded-xl h-11" size="lg">
+            <Link href="/profil">
+              <ShoppingBag className="mr-2 w-4 h-4" /> Zum Profil
+            </Link>
+          </Button>
+        </div>
       </div>
     )
   }
@@ -138,7 +194,7 @@ function SuccessContent() {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Status:</span>
             <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-              Bezahlt (Stripe)
+              Bezahlt
             </span>
           </div>
         </div>
