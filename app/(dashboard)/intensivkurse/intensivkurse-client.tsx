@@ -100,10 +100,12 @@ export function IntensivkurseClient({ initialKurse, userProfile, childrenAccount
       if (!isNaN(targetId)) {
         const found = kurse.find((k) => k.id === targetId)
         if (found) {
-          setExpandedKurs(targetId)
-          if (found.status !== 'ausgebucht') {
-            setAnmeldungKurs(found)
-          }
+          queueMicrotask(() => {
+            setExpandedKurs(targetId)
+            if (found.status !== 'ausgebucht') {
+              setAnmeldungKurs(found)
+            }
+          })
         }
       }
     }

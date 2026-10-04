@@ -60,6 +60,8 @@ export async function GET(req: Request) {
         payment_status: session.payment_status,
         verified_at: new Date().toISOString(),
         verification_source: 'stripe_api_direct',
+        beneficiary_user_id: session.metadata?.beneficiary_user_id || null,
+        ...(session.metadata || {}),
       },
     })
 

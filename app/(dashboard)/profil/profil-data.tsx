@@ -123,20 +123,105 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
     ...standalonePayments,
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-  const payments: PaymentRecord[] = sortedPayments.map((p) => ({
-    id: p.id,
-    anmeldung_id: p.anmeldung_id,
-    user_id: p.user_id,
-    stripe_payment_intent_id: p.stripe_payment_intent_id,
-    stripe_checkout_session_id: p.stripe_checkout_session_id,
-    amount_rappen: p.amount_rappen,
-    currency: p.currency,
-    status: p.status as PaymentRecord['status'],
-    payment_method_types: p.payment_method_types,
-    metadata: p.metadata as Record<string, unknown> | null,
-    created_at: p.created_at,
-    updated_at: p.updated_at,
-  }))
+  // Enrich payments with course and beneficiary information
+  const anmeldungIds = sortedPayments.map((p) => p.anmeldung_id).filter(Boolean) as string[]
+
+  const [{ data: anmeldungenData }, { data: childrenData }] = await Promise.all([
+    anmeldungIds.length > 0
+      ? supabase
+          .from('intensivwoche_anmeldungen')
+          .select(`
+            id,
+            child_firstname,
+            child_lastname,
+            beneficiary_user_id,
+            kurs_id,
+            intensivwoche_kurse ( name, fach )
+          `)
+          .in('id', anmeldungIds)
+      : Promise.resolve({ data: [] }),
+    userId
+      ? supabase
+          .from('user')
+          .select('id, name, first_name, last_name')
+          .eq('parent_id', userId)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  interface EnrichedAnmeldung {
+    id: string
+    child_firstname: string | null
+    child_lastname: string | null
+    beneficiary_user_id: string | null
+    kurs_id: number | null
+    intensivwoche_kurse: { name: string; fach: string } | null
+  }
+
+  const anmeldungMap = new Map<string, EnrichedAnmeldung>()
+  if (anmeldungenData) {
+    for (const a of anmeldungenData) {
+      anmeldungMap.set(a.id, a as unknown as EnrichedAnmeldung)
+    }
+  }
+
+  const childMap = new Map<string, string>()
+  if (childrenData) {
+    for (const c of childrenData) {
+      const name = c.name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Kind'
+      childMap.set(c.id, name)
+    }
+  }
+
+  const payments: PaymentRecord[] = sortedPayments.map((p) => {
+    const meta = (p.metadata as Record<string, unknown> | null) || {}
+    const anmeldung = p.anmeldung_id ? anmeldungMap.get(p.anmeldung_id) : null
+
+    const courseName =
+      (anmeldung?.intensivwoche_kurse as { name?: string } | null)?.name ||
+      (typeof meta.kurs_name === 'string' ? meta.kurs_name : null) ||
+      (typeof meta.description === 'string' ? meta.description : null) ||
+      (p.anmeldung_id ? 'Kursbuchung' : 'Stripe Zahlung')
+
+    const beneficiaryUserId =
+      anmeldung?.beneficiary_user_id ||
+      (typeof meta.beneficiary_user_id === 'string' ? meta.beneficiary_user_id : null)
+
+    let beneficiaryName =
+      (typeof meta.beneficiary_name === 'string' ? meta.beneficiary_name : null) ||
+      (beneficiaryUserId && childMap.has(beneficiaryUserId) ? childMap.get(beneficiaryUserId) : null) ||
+      (anmeldung?.child_firstname || anmeldung?.child_lastname
+        ? [anmeldung.child_firstname, anmeldung.child_lastname].filter(Boolean).join(' ')
+        : null)
+
+    const isForChild = Boolean(
+      (beneficiaryUserId && beneficiaryUserId !== userId) ||
+        meta.booking_mode === 'child' ||
+        (beneficiaryUserId && childMap.has(beneficiaryUserId))
+    )
+
+    if (!beneficiaryName) {
+      beneficiaryName = isForChild ? 'Kind' : 'Mich selbst'
+    }
+
+    return {
+      id: p.id,
+      anmeldung_id: p.anmeldung_id,
+      user_id: p.user_id,
+      stripe_payment_intent_id: p.stripe_payment_intent_id,
+      stripe_checkout_session_id: p.stripe_checkout_session_id,
+      amount_rappen: p.amount_rappen,
+      currency: p.currency,
+      status: p.status as PaymentRecord['status'],
+      payment_method_types: p.payment_method_types,
+      metadata: meta,
+      created_at: p.created_at,
+      updated_at: p.updated_at,
+      course_name: courseName,
+      beneficiary_name: beneficiaryName,
+      beneficiary_user_id: beneficiaryUserId,
+      is_for_child: isForChild,
+    }
+  })
 
   return (
     <ProfilClient

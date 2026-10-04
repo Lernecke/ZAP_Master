@@ -5,7 +5,7 @@ import { after } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { type KursDBMitAnmeldungen } from '@/types/kurs-form'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import {
   intensivwocheAnmeldungSchema,
   type IntensivwocheAnmeldungInput,
@@ -44,12 +44,13 @@ export const getPublicKurse = unstable_cache(
 )
 
 export type AnmeldungResult =
-  | { success: true; message: string }
+  | { success: true; message: string; anmeldungId: string }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> }
 
 export async function submitIntensivwocheAnmeldung(
   data: IntensivwocheAnmeldungInput,
-  idempotencyKey: string
+  idempotencyKey: string,
+  beneficiaryUserId?: string
 ): Promise<AnmeldungResult> {
   const parsed = intensivwocheAnmeldungSchema.safeParse(data)
 
@@ -162,11 +163,24 @@ export async function submitIntensivwocheAnmeldung(
   // Ein Fehler im Dispatch wird dort selbst abgefangen und markiert die Outbox-Zeile als 'failed'
   // mit Backoff -- kein zusätzliches try/catch hier nötig.
   if (anmeldungId) {
+    if (beneficiaryUserId) {
+      try {
+        const adminSupabase = createAdminSupabaseClient()
+        await adminSupabase
+          .from('intensivwoche_anmeldungen')
+          .update({ beneficiary_user_id: beneficiaryUserId })
+          .eq('id', anmeldungId)
+      } catch (linkErr) {
+        console.error('Error updating beneficiary_user_id on anmeldung:', linkErr)
+      }
+    }
+
     after(() => dispatchOutboxForAnmeldung(anmeldungId))
   }
 
   return {
     success: true,
-    message: 'Vielen Dank für deine Anmeldung! Wir werden uns in Kürze bei dir melden.',
+    message: 'Vielen Dank für deine Anmeldung! Wir leiten dich zur sicheren Bezahlung weiter.',
+    anmeldungId: anmeldungId || '',
   }
 }

@@ -56,6 +56,8 @@ export async function POST(req: Request) {
           p_metadata: {
             customer_email: session.customer_details?.email || null,
             payment_status: session.payment_status,
+            beneficiary_user_id: session.metadata?.beneficiary_user_id || null,
+            ...(session.metadata || {}),
           },
         })
 

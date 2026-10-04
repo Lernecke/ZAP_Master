@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import { toast } from 'sonner'
@@ -47,6 +47,7 @@ import {
 import { PasskeySection } from './passkey-section'
 import { SocialSection } from './social-section'
 import { FamilyOverview } from './family-overview'
+import { CoursesAndMaterialsTab } from './courses-materials-tab'
 
 interface Profile {
   id: string
@@ -99,7 +100,19 @@ const CLASS_LEVELS = [
 export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
   const { setTheme } = useTheme()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [activeTab, setActiveTab] = useState<'profil' | 'courses' | 'family'>(
+    tabParam === 'courses' ? 'courses' : tabParam === 'family' ? 'family' : 'profil'
+  )
+
+  useEffect(() => {
+    if (tabParam === 'courses' || tabParam === 'family' || tabParam === 'profil') {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
 
   // Form state
   const [firstName, setFirstName] = useState(profile.first_name || '')
@@ -124,11 +137,10 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
     setRetryingPaymentId(payment.id)
     try {
       const description =
-        typeof payment.metadata?.description === 'string'
-          ? payment.metadata.description
-          : payment.anmeldung_id
-          ? 'Kursbuchung Erneut versuchen'
-          : 'Stripe Zahlung Wiederholen'
+        payment.course_name ||
+        (typeof payment.metadata?.kurs_name === 'string' ? payment.metadata.kurs_name : null) ||
+        (typeof payment.metadata?.description === 'string' ? payment.metadata.description : null) ||
+        (payment.anmeldung_id ? 'Kursbuchung Erneut versuchen' : 'Stripe Zahlung Wiederholen')
 
       const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
       const successUrl = `${window.location.origin}/kurse/erfolg?session_id={CHECKOUT_SESSION_ID}`
@@ -148,6 +160,10 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
           payment_methods: ['card', 'twint'],
           success_url: successUrl,
           cancel_url: currentUrl,
+          metadata: {
+            ...((payment.metadata as Record<string, string>) || {}),
+            retried: 'true',
+          },
         }),
       })
 
@@ -687,16 +703,19 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
                       minute: '2-digit',
                     })
                     const description =
-                      typeof payment.metadata?.description === 'string'
-                        ? payment.metadata.description
-                        : payment.anmeldung_id
-                        ? 'Kursbuchung'
-                        : 'Stripe Zahlung'
+                      payment.course_name ||
+                      (typeof payment.metadata?.kurs_name === 'string' ? payment.metadata.kurs_name : null) ||
+                      (typeof payment.metadata?.description === 'string' ? payment.metadata.description : null) ||
+                      (payment.anmeldung_id ? 'Kursbuchung' : 'Stripe Zahlung')
+
+                    const beneficiaryLabel =
+                      payment.beneficiary_name ||
+                      (payment.is_for_child ? 'Kind' : 'Mich selbst')
 
                     return (
                       <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 bg-background hover:bg-accent/30 transition-colors">
                         <div className="flex items-start gap-3">
-                          <div className="mt-0.5 p-2 rounded-lg bg-muted text-muted-foreground">
+                          <div className="mt-0.5 p-2 rounded-lg bg-muted text-muted-foreground shrink-0">
                             {payment.payment_method_types?.includes('twint') ? (
                               <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                             ) : (
@@ -704,7 +723,20 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
                             )}
                           </div>
                           <div>
-                            <div className="font-medium text-foreground text-sm">{description}</div>
+                            <div className="font-medium text-foreground text-sm flex items-center flex-wrap gap-2">
+                              <span>{description}</span>
+                              {payment.is_for_child ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-normal px-2 py-0.5 rounded-md bg-secondary/15 text-secondary-foreground border border-secondary/20">
+                                  <Users className="w-3 h-3 text-primary shrink-0" />
+                                  {beneficiaryLabel}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-normal px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
+                                  <User className="w-3 h-3 shrink-0" />
+                                  {beneficiaryLabel}
+                                </span>
+                              )}
+                            </div>
                             <div className="text-xs text-muted-foreground">{date}</div>
                           </div>
                         </div>
@@ -793,16 +825,43 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
   )
 
   if (isChild) {
-    return <div className="space-y-6">{profileContent}</div>
+    return (
+      <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'profil' | 'courses' | 'family')} className="w-full">
+          <TabsList className="mb-6 grid w-full grid-cols-2 max-w-md bg-muted/60 p-1 rounded-xl">
+            <TabsTrigger value="profil" className="gap-2 rounded-lg text-sm font-medium">
+              <User className="w-4 h-4" />
+              Mein Profil
+            </TabsTrigger>
+            <TabsTrigger value="courses" className="gap-2 rounded-lg text-sm font-medium">
+              <GraduationCap className="w-4 h-4" />
+              Kurse & Materialien
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profil" className="space-y-6">
+            {profileContent}
+          </TabsContent>
+
+          <TabsContent value="courses">
+            <CoursesAndMaterialsTab userId={profile.id} accountType="child" />
+          </TabsContent>
+        </Tabs>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="profil" className="w-full">
-        <TabsList className="mb-6 grid w-full grid-cols-2 max-w-md bg-muted/60 p-1 rounded-xl">
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'profil' | 'courses' | 'family')} className="w-full">
+        <TabsList className="mb-6 grid w-full grid-cols-3 max-w-xl bg-muted/60 p-1 rounded-xl">
           <TabsTrigger value="profil" className="gap-2 rounded-lg text-sm font-medium">
             <User className="w-4 h-4" />
             Mein Profil
+          </TabsTrigger>
+          <TabsTrigger value="courses" className="gap-2 rounded-lg text-sm font-medium">
+            <GraduationCap className="w-4 h-4" />
+            Kurse & Materialien
           </TabsTrigger>
           <TabsTrigger value="family" className="gap-2 rounded-lg text-sm font-medium">
             <Users className="w-4 h-4" />
@@ -812,6 +871,10 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
 
         <TabsContent value="profil" className="space-y-6">
           {profileContent}
+        </TabsContent>
+
+        <TabsContent value="courses">
+          <CoursesAndMaterialsTab userId={profile.id} accountType={profile.account_type || 'parent_solo'} />
         </TabsContent>
 
         <TabsContent value="family">

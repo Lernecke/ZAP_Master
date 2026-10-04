@@ -28,7 +28,6 @@ import {
   type IntensivwocheAnmeldungInput
 } from '@/types/intensivwoche'
 import { submitIntensivwocheAnmeldung } from '@/app/(public)/kurse/actions'
-import { createChildAccountAction } from '@/app/(dashboard)/profil/family-actions'
 import { updateProfile } from '@/app/(dashboard)/profil/actions'
 import { CreateChildModal } from '@/app/(dashboard)/profil/create-child-modal'
 import type { ChildAccount } from '@/types/family'
@@ -142,8 +141,13 @@ export function AnmeldungModalDashboard({
     setSubmitState('loading')
     setServerMessage('')
 
-    // 1. Kursanmeldung durchführen
-    const result = await submitIntensivwocheAnmeldung(data, idempotencyKey)
+    const beneficiaryUserId = bookingMode === 'self' ? userProfile.id : (selectedChildId || undefined)
+    const beneficiaryName = bookingMode === 'self'
+      ? `${data.child_firstname} ${data.child_lastname}`.trim()
+      : (localChildren.find((c) => c.id === selectedChildId)?.name || `${data.child_firstname} ${data.child_lastname}`.trim())
+
+    // 1. Kursanmeldung durchführen mit Beneficiary User ID
+    const result = await submitIntensivwocheAnmeldung(data, idempotencyKey, beneficiaryUserId)
 
     if (result.success) {
       // 2. Wenn Profildaten eingegeben wurden, die noch nicht im Profil sind -> Profil aktualisieren
@@ -169,6 +173,60 @@ export function AnmeldungModalDashboard({
         }
       } catch (err) {
         console.error('Fehler beim Speichern der fehlenden Profildaten:', err)
+      }
+
+      // 3. Initiate Stripe checkout if course has a fee
+      if (kurs.preis > 0 && result.anmeldungId) {
+        try {
+          const origin = typeof window !== 'undefined' ? window.location.origin : ''
+          const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              anmeldung_id: result.anmeldungId,
+              user_id: userProfile.id,
+              amount_rappen: Math.round(kurs.preis * 100),
+              currency: 'chf',
+              description: `Kursanmeldung: ${kurs.name}`,
+              customer_email: data.parent_email,
+              payment_methods: ['card', 'twint'],
+              success_url: `${origin}/kurse/erfolg?session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `${origin}/profil?payment=canceled`,
+              metadata: {
+                beneficiary_user_id: beneficiaryUserId || '',
+                beneficiary_name: beneficiaryName,
+                payer_user_id: userProfile.id,
+                payer_email: userProfile.email || data.parent_email,
+                kurs_id: String(kurs.id),
+                kurs_name: kurs.name,
+                booking_mode: bookingMode,
+              },
+            }),
+          })
+
+          const checkoutData = await checkoutRes.json()
+
+          if (!checkoutRes.ok || !checkoutData.url) {
+            setSubmitState('error')
+            setServerMessage(
+              checkoutData.error ||
+                'Kursanmeldung erfolgreich angelegt, aber Weiterleitung zu Stripe fehlgeschlagen. Du kannst die Zahlung in deinem Profil abschliessen.'
+            )
+            return
+          }
+
+          window.location.assign(checkoutData.url)
+          return
+        } catch (checkoutErr) {
+          console.error('Error initiating Stripe checkout session:', checkoutErr)
+          setSubmitState('error')
+          setServerMessage(
+            'Kursanmeldung angelegt, Fehler bei Weiterleitung zur Zahlung. Du kannst die Zahlung in deinem Profil abschliessen.'
+          )
+          return
+        }
       }
 
       setSubmitState('success')
@@ -613,12 +671,12 @@ export function AnmeldungModalDashboard({
                 {submitState === 'loading' ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                    Wird gesendet...
+                    Weiterleitung zu Stripe...
                   </>
                 ) : (
                   <>
                     <GraduationCap className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                    Verbindlich anmelden
+                    {kurs.preis > 0 ? `Verbindlich anmelden & bezahlen (CHF ${kurs.preis})` : 'Verbindlich anmelden'}
                   </>
                 )}
               </Button>

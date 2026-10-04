@@ -19,6 +19,10 @@ export interface PaymentRecord {
   metadata: Record<string, unknown> | null
   created_at: string
   updated_at: string
+  course_name?: string | null
+  beneficiary_name?: string | null
+  beneficiary_user_id?: string | null
+  is_for_child?: boolean
 }
 
 export interface CreateCheckoutSessionParams {

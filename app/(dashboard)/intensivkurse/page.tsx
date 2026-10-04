@@ -9,6 +9,7 @@ import type { KursDBMitAnmeldungen } from '@/types/kurs-form'
 
 // Profil-Daten für Vorausfüllung
 export interface UserProfileData {
+  id: string
   first_name: string | null
   last_name: string | null
   email: string | null
@@ -77,6 +78,7 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
   })) as KursDBMitAnmeldungen[]
 
   const userProfile: UserProfileData = {
+    id: userId,
     first_name: profileData?.first_name || null,
     last_name: profileData?.last_name || null,
     email: profileData?.email || null,
