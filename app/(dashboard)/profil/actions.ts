@@ -353,7 +353,7 @@ export async function getCoursesAndMaterialsAction(targetUserId?: string): Promi
       paid_at,
       intensivwoche_kurse ( id, name, fach, start_datum, end_datum, uhrzeit, ort, beschreibung )
     `)
-    .in('status', ['confirmed', 'bezahlt', 'bestaetigt'])
+    .in('status', ['confirmed', 'bezahlt', 'bestaetigt', 'payment_outstanding', 'payment_failed'])
     .eq('beneficiary_user_id', effectiveUserId)
     .order('created_at', { ascending: false })
 

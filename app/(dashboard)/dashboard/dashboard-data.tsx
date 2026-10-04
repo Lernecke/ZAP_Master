@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Calculator,
   BookOpen,
+  AlertTriangle,
 } from 'lucide-react'
 import { BadgesSection } from './badges-section'
 
@@ -20,10 +21,26 @@ interface Props {
 export async function DashboardData({ userId, token, firstName }: Props) {
   const supabase = createAuthenticatedSupabaseClient(token)
 
-  const [{ data: progressData }, { data: examsData }] = await Promise.all([
+  const [{ data: progressData }, { data: examsData }, { data: profile }] = await Promise.all([
     supabase.from('trainer_progress').select('*').eq('user_id', userId),
     supabase.from('trainer_exams').select('id, subject'),
+    supabase.from('user').select('email').eq('id', userId).single(),
   ])
+
+  const targetEmail = profile?.email || null
+  const filterConditions = [
+    `user_id.eq.${userId}`,
+    targetEmail ? `metadata->>customer_email.eq.${targetEmail}` : null,
+  ].filter(Boolean)
+
+  const { data: failedPayments } = await supabase
+    .from('payments')
+    .select('id')
+    .in('status', ['failed', 'refunded'])
+    .or(filterConditions.join(','))
+    .limit(1)
+
+  const hasFailedPayments = failedPayments && failedPayments.length > 0
 
   const completedExams = progressData?.filter((p) => p.completed_at).length || 0
   const inProgressExams = progressData?.filter((p) => !p.completed_at).length || 0
@@ -43,6 +60,18 @@ export async function DashboardData({ userId, token, firstName }: Props) {
           Willkommen zurück zu deinem ZAP-Training.
         </p>
       </div>
+
+      {hasFailedPayments && (
+        <div className="mb-8 p-4 rounded-xl border border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold text-sm">Zahlung ausstehend - Aktion erforderlich</h4>
+            <p className="text-sm mt-1">
+              Eine oder mehrere Zahlungen konnten nicht erfolgreich abgeschlossen werden. Bitte überprüfe deine Zahlungshistorie unter <Link href="/profil" className="underline font-medium hover:text-destructive/80 transition-colors">Mein Profil</Link>, um den Zugang zu deinen Kursen wiederherzustellen.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

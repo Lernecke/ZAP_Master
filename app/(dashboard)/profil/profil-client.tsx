@@ -23,6 +23,7 @@ import {
   Mail,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Heart,
   Receipt,
   CreditCard,
@@ -824,9 +825,24 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
     </div>
   )
 
+  const hasFailedPayments = payments?.some(p => p.status === 'failed' || p.status === 'refunded')
+
+  const paymentWarningBanner = hasFailedPayments ? (
+    <div className="p-4 rounded-xl border border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-3">
+      <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
+      <div>
+        <h4 className="font-semibold text-sm">Zahlung ausstehend - Aktion erforderlich</h4>
+        <p className="text-sm mt-1">
+          Eine oder mehrere Zahlungen konnten nicht erfolgreich abgeschlossen werden. Bitte überprüfe deine Zahlungshistorie unter "Mein Profil", um den Zugang zu deinen Kursen wiederherzustellen.
+        </p>
+      </div>
+    </div>
+  ) : null
+
   if (isChild) {
     return (
       <div className="space-y-6">
+        {paymentWarningBanner}
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'profil' | 'courses' | 'family')} className="w-full">
           <TabsList className="mb-6 grid w-full grid-cols-2 max-w-md bg-muted/60 p-1 rounded-xl">
             <TabsTrigger value="profil" className="gap-2 rounded-lg text-sm font-medium">
@@ -853,6 +869,7 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
 
   return (
     <div className="space-y-6">
+      {paymentWarningBanner}
       <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'profil' | 'courses' | 'family')} className="w-full">
         <TabsList className="mb-6 grid w-full grid-cols-3 max-w-xl bg-muted/60 p-1 rounded-xl">
           <TabsTrigger value="profil" className="gap-2 rounded-lg text-sm font-medium">

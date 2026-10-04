@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkles,
+  AlertTriangle,
+  AlertCircle,
 } from 'lucide-react'
 import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
@@ -177,11 +179,30 @@ export function CoursesAndMaterialsTab({ userId, accountType }: CoursesAndMateri
                         </span>
                       )}
                     </div>
-                    <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600 text-white shrink-0">
-                      <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                      Aktiv
-                    </Badge>
+                    {['payment_outstanding', 'payment_failed'].includes(course.status) ? (
+                      <Badge variant="destructive" className="shrink-0 flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        {course.status === 'payment_outstanding' ? 'Zahlung ausstehend' : 'Zahlung fehlgeschlagen'}
+                      </Badge>
+                    ) : (
+                      <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600 text-white shrink-0">
+                        <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                        Aktiv
+                      </Badge>
+                    )}
                   </div>
+
+                  {['payment_outstanding', 'payment_failed'].includes(course.status) && (
+                    <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-300 flex flex-col gap-2">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <p>
+                          Der Zugang zu diesem Kurs und den Materialien wurde deaktiviert. 
+                          Bitte begleiche die offene Zahlung, um den Zugang wiederherzustellen.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
                     {course.intensivwoche_kurse?.start_datum && course.intensivwoche_kurse?.end_datum && (
