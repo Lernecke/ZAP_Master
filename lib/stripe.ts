@@ -110,9 +110,10 @@ export async function syncSystemPaymentsToStripeInvoices(params: {
   userId: string
   transactions: SystemTransactionForInvoice[]
   onInvoiceSynced?: (paymentId: string, stripeInvoiceId: string) => Promise<void>
+  onInvoicePaidInStripe?: (paymentId: string, invoice: Stripe.Invoice) => Promise<void>
 }): Promise<void> {
   const stripe = getStripeServerClient()
-  const { customerId, userId, transactions, onInvoiceSynced } = params
+  const { customerId, userId, transactions, onInvoiceSynced, onInvoicePaidInStripe } = params
 
   if (transactions.length === 0) return
 
@@ -189,12 +190,19 @@ export async function syncSystemPaymentsToStripeInvoices(params: {
       }
 
       if (matchedInvoice) {
-        // If our system marks the transaction as succeeded, ensure the Stripe invoice is finalized and paid
-        if (tx.status === 'succeeded' && matchedInvoice.status === 'draft') {
-          matchedInvoice = await stripe.invoices.finalizeInvoice(matchedInvoice.id)
-        }
-        if (tx.status === 'succeeded' && matchedInvoice.status === 'open') {
-          await stripe.invoices.pay(matchedInvoice.id, { paid_out_of_band: true })
+        // Case 1: The invoice was paid in the Stripe Customer Portal while still pending in our DB
+        if (tx.status !== 'succeeded' && tx.status !== 'refunded' && matchedInvoice.status === 'paid') {
+          if (onInvoicePaidInStripe) {
+            await onInvoicePaidInStripe(tx.id, matchedInvoice)
+          }
+        } else {
+          // Case 2: Our system marks the transaction as succeeded, ensure the Stripe invoice is finalized and paid
+          if (tx.status === 'succeeded' && matchedInvoice.status === 'draft') {
+            matchedInvoice = await stripe.invoices.finalizeInvoice(matchedInvoice.id)
+          }
+          if (tx.status === 'succeeded' && matchedInvoice.status === 'open') {
+            await stripe.invoices.pay(matchedInvoice.id, { paid_out_of_band: true })
+          }
         }
         if (storedInvoiceId !== matchedInvoice.id && onInvoiceSynced) {
           await onInvoiceSynced(tx.id, matchedInvoice.id)
@@ -259,6 +267,243 @@ export async function syncSystemPaymentsToStripeInvoices(params: {
     }
   }
 }
+
+/**
+ * Marks a payment in our database (public.payments) as succeeded and triggers course/material
+ * fulfillment when its corresponding Stripe Invoice has been paid in the Stripe Customer Portal.
+ */
+export async function fulfillSystemPaymentFromStripeInvoice(params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminSupabase: any
+  invoice: Stripe.Invoice
+  fallbackPaymentId?: string
+}): Promise<boolean> {
+  const { adminSupabase, invoice, fallbackPaymentId } = params
+
+  if (invoice.status !== 'paid') {
+    return false
+  }
+
+  const metaPaymentId = invoice.metadata?.payment_id || fallbackPaymentId || null
+  const metaAnmeldungId = invoice.metadata?.anmeldung_id || null
+
+  // 1. Locate the payment record in public.payments
+  let paymentRow: {
+    id: string
+    anmeldung_id: string | null
+    status: string
+    stripe_checkout_session_id: string | null
+    stripe_payment_intent_id: string | null
+    metadata: Record<string, unknown> | null
+  } | null = null
+
+  if (metaPaymentId) {
+    const { data } = await adminSupabase
+      .from('payments')
+      .select('id, anmeldung_id, status, stripe_checkout_session_id, stripe_payment_intent_id, metadata')
+      .eq('id', metaPaymentId)
+      .maybeSingle()
+    if (data) paymentRow = data
+  }
+
+  if (!paymentRow) {
+    const { data } = await adminSupabase
+      .from('payments')
+      .select('id, anmeldung_id, status, stripe_checkout_session_id, stripe_payment_intent_id, metadata')
+      .eq('metadata->>stripe_invoice_id', invoice.id)
+      .maybeSingle()
+    if (data) paymentRow = data
+  }
+
+  if (!paymentRow && metaAnmeldungId) {
+    const { data } = await adminSupabase
+      .from('payments')
+      .select('id, anmeldung_id, status, stripe_checkout_session_id, stripe_payment_intent_id, metadata')
+      .eq('anmeldung_id', metaAnmeldungId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (data) paymentRow = data
+  }
+
+  if (!paymentRow) {
+    return false
+  }
+
+  if (paymentRow.status === 'succeeded') {
+    return true
+  }
+
+  // Extract payment_intent from invoice if available, or synthesize a unique reference so RPC can match
+  const rawInvoicePi = (invoice as unknown as { payment_intent?: string | { id: string } | null }).payment_intent
+  const invoicePaymentIntentId =
+    typeof rawInvoicePi === 'string'
+      ? rawInvoicePi
+      : rawInvoicePi?.id || null
+
+  const effectivePaymentIntentId =
+    paymentRow.stripe_payment_intent_id ||
+    invoicePaymentIntentId ||
+    `inv_${invoice.id}`
+
+  // Ensure the row has stripe_payment_intent_id set so process_stripe_payment_update can locate it atomically
+  if (!paymentRow.stripe_payment_intent_id) {
+    await adminSupabase
+      .from('payments')
+      .update({
+        stripe_payment_intent_id: effectivePaymentIntentId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', paymentRow.id)
+  }
+
+  const existingMeta = (paymentRow.metadata as Record<string, unknown> | null) || {}
+
+  const { error: rpcError } = await adminSupabase.rpc('process_stripe_payment_update', {
+    p_checkout_session_id: paymentRow.stripe_checkout_session_id,
+    p_payment_intent_id: effectivePaymentIntentId,
+    p_status: 'succeeded',
+    p_metadata: {
+      ...existingMeta,
+      stripe_invoice_id: invoice.id,
+      paid_via: 'stripe_customer_portal',
+      paid_at: new Date().toISOString(),
+    },
+  })
+
+  if (rpcError) {
+    console.error('Error in process_stripe_payment_update for invoice payment:', rpcError)
+    // Fallback direct update
+    await adminSupabase
+      .from('payments')
+      .update({
+        status: 'succeeded',
+        metadata: {
+          ...existingMeta,
+          stripe_invoice_id: invoice.id,
+          paid_via: 'stripe_customer_portal',
+          paid_at: new Date().toISOString(),
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', paymentRow.id)
+
+    if (paymentRow.anmeldung_id) {
+      await adminSupabase
+        .from('intensivwoche_anmeldungen')
+        .update({
+          status: 'confirmed',
+          paid_at: new Date().toISOString(),
+        })
+        .eq('id', paymentRow.anmeldung_id)
+    }
+  }
+
+  // Cancel any other non-succeeded payment rows for the same course registration
+  if (paymentRow.anmeldung_id) {
+    await adminSupabase
+      .from('payments')
+      .update({ status: 'canceled', updated_at: new Date().toISOString() })
+      .eq('anmeldung_id', paymentRow.anmeldung_id)
+      .neq('id', paymentRow.id)
+      .neq('status', 'succeeded')
+  }
+
+  return true
+}
+
+/**
+ * Checks if any non-succeeded payments for a user have a corresponding paid Stripe Invoice
+ * (e.g. when a user pays a bank transfer / open invoice in the Stripe Customer Portal and returns to /profil)
+ * and marks them as succeeded in the database.
+ */
+export async function reconcilePendingPaymentsWithStripeInvoices(params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminSupabase: any
+  email: string | null
+  payments: Array<{
+    id: string
+    anmeldung_id: string | null
+    status: string
+    metadata: unknown
+  }>
+}): Promise<boolean> {
+  const { adminSupabase, email, payments } = params
+  const pendingPayments = payments.filter(
+    (p) => p.status === 'pending' || p.status === 'processing'
+  )
+
+  if (pendingPayments.length === 0) return false
+
+  try {
+    const stripe = getStripeServerClient()
+    let anyUpdated = false
+
+    // 1. Check payments that already have stripe_invoice_id stored in metadata
+    const checkedInvoiceIds = new Set<string>()
+    for (const p of pendingPayments) {
+      const meta = (p.metadata as Record<string, unknown> | null) || {}
+      const invoiceId = typeof meta.stripe_invoice_id === 'string' ? meta.stripe_invoice_id : null
+      if (!invoiceId) continue
+
+      checkedInvoiceIds.add(invoiceId)
+      try {
+        const invoice = await stripe.invoices.retrieve(invoiceId)
+        if (invoice.status === 'paid') {
+          const updated = await fulfillSystemPaymentFromStripeInvoice({
+            adminSupabase,
+            invoice,
+            fallbackPaymentId: p.id,
+          })
+          if (updated) anyUpdated = true
+        }
+      } catch {
+        // Ignore individual lookup errors
+      }
+    }
+
+    // 2. Also check paid invoices on the customer by email in case metadata wasn't linked yet
+    if (email) {
+      const customers = await stripe.customers.list({
+        email: email.trim().toLowerCase(),
+        limit: 1,
+      })
+
+      if (customers.data.length > 0) {
+        const paidInvoices = await stripe.invoices.list({
+          customer: customers.data[0].id,
+          status: 'paid',
+          limit: 50,
+        })
+
+        for (const inv of paidInvoices.data) {
+          if (checkedInvoiceIds.has(inv.id)) continue
+          const metaPaymentId = inv.metadata?.payment_id
+          const metaAnmeldungId = inv.metadata?.anmeldung_id
+          const matchesPending = pendingPayments.some(
+            (p) =>
+              p.id === metaPaymentId ||
+              (p.anmeldung_id && p.anmeldung_id === metaAnmeldungId)
+          )
+          if (matchesPending) {
+            const updated = await fulfillSystemPaymentFromStripeInvoice({
+              adminSupabase,
+              invoice: inv,
+            })
+            if (updated) anyUpdated = true
+          }
+        }
+      }
+    }
+
+    return anyUpdated
+  } catch (err) {
+    console.warn('Could not reconcile pending payments with Stripe invoices:', err)
+    return false
+  }
+}
+
+
 
 /**
  * Creates a Stripe Checkout Session for Swiss Franc (CHF) payments supporting TWINT and Credit/Debit Cards.

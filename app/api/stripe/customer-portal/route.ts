@@ -5,6 +5,7 @@ import {
   getOrCreateStripeCustomer,
   createStripeCustomerPortalSession,
   syncSystemPaymentsToStripeInvoices,
+  fulfillSystemPaymentFromStripeInvoice,
   type SystemTransactionForInvoice,
 } from '@/lib/stripe'
 
@@ -237,6 +238,13 @@ export async function POST(req: Request) {
                 updated_at: new Date().toISOString(),
               })
               .eq('id', paymentId)
+          },
+          onInvoicePaidInStripe: async (paymentId, invoice) => {
+            await fulfillSystemPaymentFromStripeInvoice({
+              adminSupabase,
+              invoice,
+              fallbackPaymentId: paymentId,
+            })
           },
         })
       }

@@ -1,7 +1,10 @@
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { getStripeServerClient } from '@/lib/stripe'
+import {
+  getStripeServerClient,
+  fulfillSystemPaymentFromStripeInvoice,
+} from '@/lib/stripe'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
@@ -69,6 +72,16 @@ export async function POST(req: Request) {
           console.error('Failed to update payment status for checkout.session.completed:', error)
           return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
         }
+        break
+      }
+
+      case 'invoice.paid':
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice
+        await fulfillSystemPaymentFromStripeInvoice({
+          adminSupabase,
+          invoice,
+        })
         break
       }
 

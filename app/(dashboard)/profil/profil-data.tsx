@@ -1,5 +1,6 @@
-import { createAuthenticatedSupabaseClient } from '@/lib/supabase/server'
+import { createAuthenticatedSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { ProfilClient } from './profil-client'
+import { reconcilePendingPaymentsWithStripeInvoices } from '@/lib/stripe'
 import type { PaymentRecord } from '@/types/payment'
 
 interface Props {
@@ -52,10 +53,40 @@ export async function ProfilData({ userId, token, email, emailVerified }: Props)
         .order('created_at', { ascending: false })
     : Promise.resolve({ data: [], error: null })
 
-  const [{ data: progressData }, { data: paymentsData }] = await Promise.all([
+  const [{ data: progressData }, { data: initialPaymentsData }] = await Promise.all([
     progressQuery,
     paymentsQuery,
   ])
+
+  let paymentsData = initialPaymentsData
+
+  // Reconcile any pending/processing payments (e.g., bank transfer paid in Stripe Customer Portal)
+  if (
+    paymentsData &&
+    paymentsData.some((p) => p.status === 'pending' || p.status === 'processing')
+  ) {
+    try {
+      const adminSupabase = createAdminSupabaseClient()
+      const anyReconciled = await reconcilePendingPaymentsWithStripeInvoices({
+        adminSupabase,
+        email: targetEmail,
+        payments: paymentsData,
+      })
+
+      if (anyReconciled && filterConditions.length > 0) {
+        const { data: refreshedPayments } = await supabase
+          .from('payments')
+          .select('*')
+          .or(filterConditions.join(','))
+          .order('created_at', { ascending: false })
+        if (refreshedPayments) {
+          paymentsData = refreshedPayments
+        }
+      }
+    } catch (err) {
+      console.warn('Error reconciling Stripe invoices in ProfilData:', err)
+    }
+  }
 
   const completedExams = progressData?.filter((p) => p.completed_at).length || 0
   const totalAttempts = progressData?.length || 0
