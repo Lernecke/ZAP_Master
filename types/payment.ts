@@ -44,3 +44,19 @@ export interface CreateCheckoutSessionResult {
   url: string | null
   paymentId: string
 }
+
+export interface GetOrCreateStripeCustomerParams {
+  email: string
+  name?: string | null
+  userId?: string
+}
+
+export interface CreateCustomerPortalSessionParams {
+  customerId: string
+  returnUrl: string
+}
+
+export interface CreateCustomerPortalSessionResult {
+  url: string
+}
+

@@ -50,6 +50,9 @@ export async function GET(req: Request) {
     const paymentIntentId = typeof session.payment_intent === 'string'
       ? session.payment_intent
       : session.payment_intent?.id || null
+    const stripeInvoiceId = typeof session.invoice === 'string'
+      ? session.invoice
+      : session.invoice?.id || null
 
     const { error: dbError } = await adminSupabase.rpc('process_stripe_payment_update', {
       p_checkout_session_id: session.id,
@@ -61,6 +64,7 @@ export async function GET(req: Request) {
         verified_at: new Date().toISOString(),
         verification_source: 'stripe_api_direct',
         beneficiary_user_id: session.metadata?.beneficiary_user_id || null,
+        ...(stripeInvoiceId ? { stripe_invoice_id: stripeInvoiceId } : {}),
         ...(session.metadata || {}),
       },
     })

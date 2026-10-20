@@ -46,6 +46,9 @@ export async function POST(req: Request) {
         const paymentIntentId = typeof session.payment_intent === 'string'
           ? session.payment_intent
           : session.payment_intent?.id || null
+        const stripeInvoiceId = typeof session.invoice === 'string'
+          ? session.invoice
+          : session.invoice?.id || null
         const isPaid = session.payment_status === 'paid'
         const status = isPaid ? 'succeeded' : 'processing'
 
@@ -57,6 +60,7 @@ export async function POST(req: Request) {
             customer_email: session.customer_details?.email || null,
             payment_status: session.payment_status,
             beneficiary_user_id: session.metadata?.beneficiary_user_id || null,
+            ...(stripeInvoiceId ? { stripe_invoice_id: stripeInvoiceId } : {}),
             ...(session.metadata || {}),
           },
         })

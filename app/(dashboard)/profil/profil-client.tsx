@@ -34,6 +34,7 @@ import {
   Users,
   Building2,
   Download,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
@@ -135,6 +136,37 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [sendingVerification, setSendingVerification] = useState(false)
   const [retryingPaymentId, setRetryingPaymentId] = useState<string | null>(null)
+  const [openingPortal, setOpeningPortal] = useState(false)
+
+  const handleOpenCustomerPortal = async () => {
+    setOpeningPortal(true)
+    try {
+      const returnUrl = typeof window !== 'undefined' ? window.location.href : '/profil'
+      const response = await fetch('/api/stripe/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ return_url: returnUrl }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Fehler beim Öffnen des Stripe-Kundenportals')
+      }
+
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('Keine Weiterleitungs-URL von Stripe erhalten')
+      }
+    } catch (err) {
+      console.error('Customer portal error:', err)
+      toast.error(err instanceof Error ? err.message : 'Stripe-Kundenportal konnte nicht geöffnet werden')
+      setOpeningPortal(false)
+    }
+  }
 
   const handleRetryPayment = async (payment: PaymentRecord) => {
     setRetryingPaymentId(payment.id)
@@ -682,16 +714,38 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
 
             {/* Payment History / Zahlungshistorie */}
             <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                  <Receipt className="w-5 h-5" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                    <Receipt className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Zahlungshistorie</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Übersicht deiner getätigten Zahlungen und Kurstransaktionen.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Zahlungshistorie</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Übersicht deiner getätigten Zahlungen und Kurstransaktionen.
-                  </p>
-                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenCustomerPortal}
+                  disabled={openingPortal}
+                  className="rounded-xl gap-2 shrink-0 self-start sm:self-auto"
+                >
+                  {openingPortal ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Wird geöffnet...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="w-4 h-4" />
+                      Stripe Kundenportal
+                    </>
+                  )}
+                </Button>
               </div>
 
               {payments && payments.length > 0 ? (
