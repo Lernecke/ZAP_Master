@@ -24,7 +24,6 @@ import {
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
-  Heart,
   Receipt,
   CreditCard,
   Smartphone,
@@ -39,7 +38,6 @@ import {
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/app/components/ui/tabs'
-import { CheckoutButton } from '@/app/components/payment/checkout-button'
 import type { PaymentRecord } from '@/types/payment'
 import {
   updateProfile,
@@ -689,29 +687,6 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
         {/* Payment sections - hidden for child accounts */}
         {!isChild && (
           <>
-            {/* Test Donation Section */}
-            <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                  <Heart className="w-5 h-5 fill-current" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">10 CHF Test-Spende</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Teste die Stripe Zahlungsabwicklung für TWINT und Kreditkarte.
-                  </p>
-                </div>
-              </div>
-
-              <CheckoutButton
-                userId={profile.id}
-                customerEmail={profile.email || undefined}
-                amountRappen={1000}
-                description="10 CHF Test-Spende"
-                buttonText="10 CHF Test-Spende bezahlen"
-              />
-            </div>
-
             {/* Payment History / Zahlungshistorie */}
             <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
