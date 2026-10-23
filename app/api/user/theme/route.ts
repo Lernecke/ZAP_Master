@@ -12,11 +12,18 @@ export async function GET() {
   try {
     const supabase = createAuthenticatedSupabaseClient(session.supabaseAccessToken)
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('theme_preference')
-      .eq('id', session.user.id)
-      .single()
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.user.id)
+    
+    let query = supabase.from('user').select('theme_preference')
+    if (session.user.id) {
+      query = query.eq('id', session.user.id)
+    } else if (session.user.email) {
+      query = query.eq('email', session.user.email)
+    } else {
+      return NextResponse.json({ theme: 'light' })
+    }
+
+    const { data, error } = await query.maybeSingle()
 
     if (error) {
       console.error('Theme fetch error:', error)

@@ -91,7 +91,7 @@ export async function getAllSubmittedEssays(
     .from('student_essays')
     .select(`
       *,
-      student:profiles!student_essays_student_id_fkey (
+      student:user!student_essays_student_id_fkey (
         id,
         first_name,
         last_name,
@@ -137,7 +137,7 @@ export async function getEssayById(essayId: string): Promise<TeacherEssayResult<
     .from('student_essays')
     .select(`
       *,
-      student:profiles!student_essays_student_id_fkey (
+      student:user!student_essays_student_id_fkey (
         id,
         first_name,
         last_name,
@@ -367,7 +367,7 @@ export async function generateAiCorrection(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: essay, error: essayError } = await (supabase as any)
     .from('student_essays')
-    .select('*, student:profiles!student_essays_student_id_fkey(class_level)')
+    .select('*, student:user!student_essays_student_id_fkey(class_level)')
     .eq('id', essayId)
     .neq('status', 'draft')
     .single()
@@ -618,7 +618,7 @@ export async function refineAiCorrection(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing, error: fetchError } = await (supabase as any)
     .from('essay_ai_corrections')
-    .select('*, essay:student_essays(title, subject, student:profiles!student_essays_student_id_fkey(class_level))')
+    .select('*, essay:student_essays(title, subject, student:user!student_essays_student_id_fkey(class_level))')
     .eq('essay_id', essayId)
     .eq('status', 'ready')
     .single()

@@ -27,6 +27,7 @@ export default async function ProfilPage() {
           userId={session.user.id}
           token={session.supabaseAccessToken}
           email={session.user.email}
+          emailVerified={session.user.emailVerified ?? false}
         />
       </Suspense>
     </div>

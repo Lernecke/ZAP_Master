@@ -18,9 +18,6 @@ import {
   Shield,
   BookOpen,
   PenLine,
-  Handshake,
-  Inbox,
-  UserCheck,
   PanelLeft,
   PanelLeftClose,
   Mail,
@@ -44,14 +41,15 @@ const lernenNavigation = [
 // Kurse-Gruppe
 const kurseNavigation = [
   { name: 'Intensivkurse', href: '/intensivkurse', icon: Calendar },
+  { name: 'Kurse & Materialien', href: '/profil?tab=courses', icon: BookOpen },
 ]
 
-// Mentoring-System (Mentorship)
-const mentoringNavigation = [
-  { name: 'Marktplatz', href: '/dashboard/mentorship', icon: Handshake, exact: true },
-  { name: 'Meine Anfragen', href: '/dashboard/mentorship/requests', icon: Inbox },
-  { name: 'Meine Mentoren', href: '/dashboard/mentorship/relations', icon: UserCheck },
-]
+// Mentoring-System (Mentorship) - temporär ausgeblendet
+// const mentoringNavigation = [
+//   { name: 'Marktplatz', href: '/dashboard/mentorship', icon: Handshake, exact: true },
+//   { name: 'Meine Anfragen', href: '/dashboard/mentorship/requests', icon: Inbox },
+//   { name: 'Meine Mentoren', href: '/dashboard/mentorship/relations', icon: UserCheck },
+// ]
 
 // Navigation für Lehrpersonen (Content-Management)
 const lehrpersonNavigation = [

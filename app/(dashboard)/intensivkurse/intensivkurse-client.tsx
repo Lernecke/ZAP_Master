@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { 
   Search, 
   Calendar as CalendarIcon,
@@ -68,12 +69,16 @@ function dbKursToUI(kurs: KursDBMitAnmeldungen): KursUI {
   }
 }
 
+import type { ChildAccount } from '@/types/family'
+
 interface IntensivkurseClientProps {
   initialKurse: KursDBMitAnmeldungen[]
   userProfile: UserProfileData
+  childrenAccounts?: ChildAccount[]
 }
 
-export function IntensivkurseClient({ initialKurse, userProfile }: IntensivkurseClientProps) {
+export function IntensivkurseClient({ initialKurse, userProfile, childrenAccounts = [] }: IntensivkurseClientProps) {
+  const searchParams = useSearchParams()
   const [viewMode, setViewMode] = useState<ViewMode>('liste')
   const [suchbegriff, setSuchbegriff] = useState('')
   const [fachFilter, setFachFilter] = useState<FachFilter>('alle')
@@ -85,7 +90,26 @@ export function IntensivkurseClient({ initialKurse, userProfile }: Intensivkurse
   const { selectedClass } = useClassFilter()
 
   // Konvertiere DB-Kurse zu UI-Kurse
-  const kurse = initialKurse.map(dbKursToUI)
+  const kurse = useMemo(() => initialKurse.map(dbKursToUI), [initialKurse])
+
+  // Parameter ?kurs=ID auswerten, um Kurs zu expandieren und Anmeldemodal zu öffnen
+  useEffect(() => {
+    const kursParam = searchParams.get('kurs') || searchParams.get('kursId')
+    if (kursParam) {
+      const targetId = Number(kursParam)
+      if (!isNaN(targetId)) {
+        const found = kurse.find((k) => k.id === targetId)
+        if (found) {
+          queueMicrotask(() => {
+            setExpandedKurs(targetId)
+            if (found.status !== 'ausgebucht') {
+              setAnmeldungKurs(found)
+            }
+          })
+        }
+      }
+    }
+  }, [searchParams, kurse])
 
   // Kurse filtern und sortieren
   const gefilterteKurse = useMemo(() => {
@@ -242,11 +266,12 @@ export function IntensivkurseClient({ initialKurse, userProfile }: Intensivkurse
         />
       )}
 
-      {/* Anmeldungs-Modal mit Profil-Daten */}
+      {/* Anmeldungs-Modal mit Profil-Daten & Kinderkonto-Auswahl */}
       {anmeldungKurs && (
         <AnmeldungModalDashboard
           kurs={anmeldungKurs}
           userProfile={userProfile}
+          childrenAccounts={childrenAccounts}
           onClose={() => setAnmeldungKurs(null)}
         />
       )}

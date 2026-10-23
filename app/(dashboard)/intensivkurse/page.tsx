@@ -9,6 +9,7 @@ import type { KursDBMitAnmeldungen } from '@/types/kurs-form'
 
 // Profil-Daten für Vorausfüllung
 export interface UserProfileData {
+  id: string
   first_name: string | null
   last_name: string | null
   email: string | null
@@ -57,10 +58,17 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
 
   // Profil-Daten für Vorausfüllung laden
   const { data: profileData } = await supabase
-    .from('profiles')
+    .from('user')
     .select('first_name, last_name, email, phone, class_level')
     .eq('id', userId)
     .single()
+
+  // Kinderkonten des elterlichen Benutzers laden
+  const { data: childrenData } = await supabase
+    .from('user')
+    .select('id, email, first_name, last_name, name, class_level, school_name, createdAt')
+    .eq('parent_id', userId)
+    .order('createdAt', { ascending: false })
 
   const kurse: KursDBMitAnmeldungen[] = (kurseData || []).map((kurs) => ({
     ...kurs,
@@ -70,6 +78,7 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
   })) as KursDBMitAnmeldungen[]
 
   const userProfile: UserProfileData = {
+    id: userId,
     first_name: profileData?.first_name || null,
     last_name: profileData?.last_name || null,
     email: profileData?.email || null,
@@ -77,7 +86,18 @@ async function KurseContent({ userId, supabaseToken }: { userId: string, supabas
     class_level: profileData?.class_level || null,
   }
 
-  return <IntensivkurseClient initialKurse={kurse} userProfile={userProfile} />
+  const children = (childrenData || []).map((c) => ({
+    id: c.id,
+    email: c.email,
+    first_name: c.first_name,
+    last_name: c.last_name,
+    name: c.name,
+    class_level: c.class_level,
+    school_name: c.school_name,
+    created_at: c.createdAt,
+  }))
+
+  return <IntensivkurseClient initialKurse={kurse} userProfile={userProfile} childrenAccounts={children} />
 }
 
 function KurseLoading() {

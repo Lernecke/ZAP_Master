@@ -231,7 +231,7 @@ export async function getIncomingRequests(): Promise<ActionResult<MentorshipRequ
     .from('mentorship_requests')
     .select(`
       *,
-      requester:profiles!mentorship_requests_requester_id_fkey(id, first_name, last_name, avatar_url),
+      requester:user!mentorship_requests_requester_id_fkey(id, first_name, last_name, avatar_url),
       listing:mentorship_listings!mentorship_requests_listing_id_fkey(id, title, type)
     `)
     .eq('target_id', session.user.id)
@@ -261,7 +261,7 @@ export async function getOutgoingRequests(): Promise<ActionResult<MentorshipRequ
     .from('mentorship_requests')
     .select(`
       *,
-      target:profiles!mentorship_requests_target_id_fkey(id, first_name, last_name, avatar_url),
+      target:user!mentorship_requests_target_id_fkey(id, first_name, last_name, avatar_url),
       listing:mentorship_listings!mentorship_requests_listing_id_fkey(id, title, type)
     `)
     .eq('requester_id', session.user.id)
@@ -472,8 +472,8 @@ export async function getMyRelations(): Promise<ActionResult<MentorshipRelation[
     .from('mentorship_relations')
     .select(`
       *,
-      mentor:profiles!mentorship_relations_mentor_id_fkey(id, first_name, last_name, avatar_url, email),
-      mentee:profiles!mentorship_relations_mentee_id_fkey(id, first_name, last_name, avatar_url, email, class_level)
+      mentor:user!mentorship_relations_mentor_id_fkey(id, first_name, last_name, avatar_url, email),
+      mentee:user!mentorship_relations_mentee_id_fkey(id, first_name, last_name, avatar_url, email, class_level)
     `)
     .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
     .eq('status', 'ACTIVE')
@@ -536,8 +536,8 @@ export async function getMaterials(relationId: string): Promise<ActionResult<Men
     .from('mentorship_materials')
     .select(`
       *,
-      uploader:profiles!mentorship_materials_uploader_id_fkey(id, first_name, last_name, avatar_url),
-      assigned_mentor:profiles!mentorship_materials_assigned_to_fkey(id, first_name, last_name, avatar_url)
+      uploader:user!mentorship_materials_uploader_id_fkey(id, first_name, last_name, avatar_url),
+      assigned_mentor:user!mentorship_materials_assigned_to_fkey(id, first_name, last_name, avatar_url)
     `)
     .eq('relation_id', relationId)
     .order('created_at', { ascending: false })

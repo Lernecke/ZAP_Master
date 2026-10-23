@@ -18,8 +18,9 @@ import {
 import { Button } from '@/app/components/ui/button'
 import { FACH_LABELS, FACH_FARBEN } from '@/types/kurs'
 import { type KursDBMitAnmeldungen } from '@/types/kurs-form'
+import { useRouter } from 'next/navigation'
+import { useSession } from '@/lib/auth-client'
 import { KursKalender } from './kalender'
-import { AnmeldungModal } from './anmeldung-modal'
 
 type ViewMode = 'liste' | 'kalender'
 type FachFilter = KursDBMitAnmeldungen['fach'] | 'alle'
@@ -71,12 +72,22 @@ interface KurseClientProps {
 }
 
 export function KurseClient({ initialKurse }: KurseClientProps) {
+  const router = useRouter()
+  const { data: session } = useSession()
   const [viewMode, setViewMode] = useState<ViewMode>('liste')
   const [suchbegriff, setSuchbegriff] = useState('')
   const [fachFilter, setFachFilter] = useState<FachFilter>('alle')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
   const [expandedKurs, setExpandedKurs] = useState<number | null>(null)
-  const [anmeldungKurs, setAnmeldungKurs] = useState<KursUI | null>(null)
+
+  const handleAnmelden = (kursId: number) => {
+    const targetUrl = `/intensivkurse?kurs=${kursId}`
+    if (session?.user) {
+      router.push(targetUrl)
+    } else {
+      router.push(`/login?callbackUrl=${encodeURIComponent(targetUrl)}`)
+    }
+  }
 
   // Konvertiere DB-Kurse zu UI-Kurse
   const kurse = initialKurse.map(dbKursToUI)
@@ -210,7 +221,7 @@ export function KurseClient({ initialKurse }: KurseClientProps) {
                 kurs={kurs}
                 isExpanded={expandedKurs === kurs.id}
                 onToggle={() => setExpandedKurs(expandedKurs === kurs.id ? null : kurs.id)}
-                onAnmelden={() => setAnmeldungKurs(kurs)}
+                onAnmelden={() => handleAnmelden(kurs.id)}
               />
             ))
           )}
@@ -224,20 +235,8 @@ export function KurseClient({ initialKurse }: KurseClientProps) {
             setExpandedKurs(kurs.id)
           }}
           onAnmelden={(kurs) => {
-            // Finde den vollständigen Kurs aus der Liste
-            const vollstaendigerKurs = kurse.find(k => k.id === kurs.id)
-            if (vollstaendigerKurs) {
-              setAnmeldungKurs(vollstaendigerKurs)
-            }
+            handleAnmelden(kurs.id)
           }}
-        />
-      )}
-
-      {/* Anmeldungs-Modal */}
-      {anmeldungKurs && (
-        <AnmeldungModal
-          kurs={anmeldungKurs}
-          onClose={() => setAnmeldungKurs(null)}
         />
       )}
     </>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession } from '@/lib/auth-client'
 import { useTheme } from 'next-themes'
 
 /**
@@ -9,12 +9,12 @@ import { useTheme } from 'next-themes'
  * Only syncs once when the user logs in or the session changes
  */
 export function ThemeSyncProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession()
+  const { data: session, isPending } = useSession()
   const { setTheme } = useTheme()
 
   useEffect(() => {
     // Only sync if we have a session
-    if (status === 'authenticated' && session?.user?.id) {
+    if (!isPending && session?.user?.id) {
       // Fetch user's theme preference from their profile
       fetchThemePreference(session.user.id).then((theme) => {
         if (theme) {
@@ -22,7 +22,7 @@ export function ThemeSyncProvider({ children }: { children: React.ReactNode }) {
         }
       })
     }
-  }, [session?.user?.id, status, setTheme])
+  }, [session?.user?.id, isPending, setTheme])
 
   return <>{children}</>
 }
