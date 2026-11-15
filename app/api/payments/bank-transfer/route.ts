@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { ensureStripeInvoiceForPayment } from '@/lib/stripe'
 import type { CreateCheckoutSessionParams } from '@/types/payment'
 
 export async function POST(req: Request) {
@@ -125,8 +126,20 @@ export async function POST(req: Request) {
       paymentId = paymentRecord.id
     }
 
+    let stripeInvoiceId: string | null = null
+    try {
+      stripeInvoiceId = await ensureStripeInvoiceForPayment({
+        adminSupabase,
+        paymentId,
+        fallbackEmail: body.customer_email || null,
+      })
+    } catch (syncErr) {
+      console.warn('Could not sync bank-transfer payment to Stripe invoice:', syncErr)
+    }
+
     return NextResponse.json({
-      paymentId
+      paymentId,
+      stripeInvoiceId,
     })
   } catch (error) {
     console.error('Bank transfer creation error:', error)

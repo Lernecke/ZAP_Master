@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { ensureStripeInvoiceForPayment } from '@/lib/stripe'
 import { SwissQRBill } from 'swissqrbill/pdf'
 import PDFDocument from 'pdfkit'
 
@@ -22,6 +23,16 @@ export async function GET(req: Request) {
 
     if (error || !payment) {
       return new NextResponse('Payment not found', { status: 404 })
+    }
+
+    // Ensure the bank-transfer invoice is pushed to Stripe so it can be marked paid in the Stripe Dashboard
+    try {
+      await ensureStripeInvoiceForPayment({
+        adminSupabase,
+        paymentId,
+      })
+    } catch (syncErr) {
+      console.warn('Could not sync bank-transfer payment to Stripe invoice during PDF generation:', syncErr)
     }
 
     // Try to get parent's name from user table

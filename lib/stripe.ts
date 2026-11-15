@@ -828,5 +828,146 @@ export async function refundSystemPaymentFromStripe(params: {
   return { updated: true }
 }
 
+/**
+ * Ensures a single payment record (e.g. a bank-transfer / QR invoice) is synced
+ * to a finalized Stripe Invoice so it immediately appears in the Stripe Dashboard
+ * and Customer Portal.
+ */
+export async function ensureStripeInvoiceForPayment(params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminSupabase: any
+  paymentId: string
+  fallbackEmail?: string | null
+  fallbackName?: string | null
+}): Promise<string | null> {
+  const { adminSupabase, paymentId, fallbackEmail, fallbackName } = params
+
+  const { data: payment } = await adminSupabase
+    .from('payments')
+    .select(
+      'id, anmeldung_id, user_id, stripe_checkout_session_id, stripe_payment_intent_id, amount_rappen, currency, status, payment_method_types, metadata, created_at'
+    )
+    .eq('id', paymentId)
+    .maybeSingle()
+
+  if (!payment || !payment.amount_rappen || payment.amount_rappen <= 0) {
+    return null
+  }
+
+  const meta = (payment.metadata as Record<string, unknown> | null) || {}
+  if (typeof meta.stripe_invoice_id === 'string' && meta.stripe_invoice_id) {
+    return meta.stripe_invoice_id
+  }
+
+  let email =
+    (typeof meta.customer_email === 'string' && meta.customer_email) ||
+    (typeof meta.payer_email === 'string' && meta.payer_email) ||
+    fallbackEmail ||
+    null
+
+  let customerName =
+    (typeof meta.payer_name === 'string' && meta.payer_name) ||
+    fallbackName ||
+    null
+
+  if ((!email || !customerName) && payment.user_id) {
+    const { data: userRow } = await adminSupabase
+      .from('user')
+      .select('email, name, first_name, last_name')
+      .eq('id', payment.user_id)
+      .maybeSingle()
+
+    if (userRow) {
+      if (!email && userRow.email) email = userRow.email
+      if (!customerName) {
+        customerName =
+          userRow.name ||
+          [userRow.first_name, userRow.last_name].filter(Boolean).join(' ') ||
+          null
+      }
+    }
+  }
+
+  if (!email) {
+    return null
+  }
+
+  let courseName =
+    (typeof meta.kurs_name === 'string' ? meta.kurs_name : null) ||
+    (typeof meta.description === 'string' ? meta.description : null) ||
+    (payment.anmeldung_id ? 'Kursbuchung' : 'ZAP Rechnung')
+
+  let beneficiaryName =
+    typeof meta.beneficiary_name === 'string' ? meta.beneficiary_name : null
+
+  if (payment.anmeldung_id) {
+    const { data: anm } = await adminSupabase
+      .from('intensivwoche_anmeldungen')
+      .select('child_firstname, child_lastname, intensivwoche_kurse(name)')
+      .eq('id', payment.anmeldung_id)
+      .maybeSingle()
+
+    if (anm) {
+      const kursName = (anm.intensivwoche_kurse as { name?: string } | null)?.name
+      if (kursName) courseName = kursName
+      if (!beneficiaryName && (anm.child_firstname || anm.child_lastname)) {
+        beneficiaryName = [anm.child_firstname, anm.child_lastname].filter(Boolean).join(' ')
+      }
+    }
+  }
+
+  const customerId = await getOrCreateStripeCustomer({
+    email,
+    name: customerName || undefined,
+    userId: payment.user_id || undefined,
+  })
+
+  let syncedInvoiceId: string | null = null
+
+  await syncSystemPaymentsToStripeInvoices({
+    customerId,
+    userId: payment.user_id || '',
+    transactions: [
+      {
+        id: payment.id,
+        anmeldung_id: payment.anmeldung_id,
+        user_id: payment.user_id,
+        stripe_checkout_session_id: payment.stripe_checkout_session_id,
+        stripe_payment_intent_id: payment.stripe_payment_intent_id,
+        amount_rappen: payment.amount_rappen,
+        currency: payment.currency || 'chf',
+        status: payment.status,
+        payment_method_types: payment.payment_method_types,
+        metadata: meta,
+        created_at: payment.created_at,
+        course_name: courseName,
+        beneficiary_name: beneficiaryName || customerName || 'Mich selbst',
+      },
+    ],
+    onInvoiceSynced: async (syncedPaymentId, stripeInvoiceId) => {
+      syncedInvoiceId = stripeInvoiceId
+      await adminSupabase
+        .from('payments')
+        .update({
+          metadata: {
+            ...meta,
+            stripe_invoice_id: stripeInvoiceId,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', syncedPaymentId)
+    },
+    onInvoicePaidInStripe: async (paidPaymentId, invoice) => {
+      await fulfillSystemPaymentFromStripeInvoice({
+        adminSupabase,
+        invoice,
+        fallbackPaymentId: paidPaymentId,
+      })
+    },
+  })
+
+  return syncedInvoiceId
+}
+
 
 
