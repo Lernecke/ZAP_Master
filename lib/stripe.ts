@@ -794,7 +794,7 @@ export async function refundSystemPaymentFromStripe(params: {
   }
 
   // Ensure process_stripe_payment_update can locate the row by stripe_payment_intent_id or stripe_checkout_session_id
-  const effectivePaymentIntentId = paymentIntentId || paymentRow.stripe_payment_intent_id
+  let effectivePaymentIntentId = paymentIntentId || paymentRow.stripe_payment_intent_id
   if (
     paymentIntentId &&
     (!paymentRow.stripe_payment_intent_id || paymentRow.stripe_payment_intent_id.startsWith('inv_'))
@@ -803,6 +803,15 @@ export async function refundSystemPaymentFromStripe(params: {
       .from('payments')
       .update({
         stripe_payment_intent_id: paymentIntentId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', paymentRow.id)
+  } else if (!paymentRow.stripe_checkout_session_id && !effectivePaymentIntentId) {
+    effectivePaymentIntentId = invoiceId ? `inv_${invoiceId}` : `pay_${paymentRow.id}`
+    await adminSupabase
+      .from('payments')
+      .update({
+        stripe_payment_intent_id: effectivePaymentIntentId,
         updated_at: new Date().toISOString(),
       })
       .eq('id', paymentRow.id)

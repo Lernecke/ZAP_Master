@@ -192,6 +192,60 @@ export async function POST(req: Request) {
         break
       }
 
+      case 'credit_note.created':
+      case 'credit_note.updated': {
+        const creditNote = event.data.object as Stripe.CreditNote
+        if (creditNote.status !== 'issued') {
+          break
+        }
+
+        const invoiceId = typeof creditNote.invoice === 'string'
+          ? creditNote.invoice
+          : creditNote.invoice?.id || null
+
+        if (invoiceId) {
+          const result = await refundSystemPaymentFromStripe({
+            adminSupabase,
+            paymentIntentId: null,
+            invoiceId,
+            amountRefunded: creditNote.amount,
+            metadata: {
+              credit_note_id: creditNote.id,
+              ...(creditNote.out_of_band_amount != null
+                ? { out_of_band_amount: creditNote.out_of_band_amount }
+                : {}),
+              ...(creditNote.metadata || {}),
+            },
+          })
+
+          if (result.error) {
+            console.error(`Failed to update payment status for ${event.type}:`, result.error)
+            return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+          }
+        }
+        break
+      }
+
+      case 'invoice.voided':
+      case 'invoice.marked_uncollectible': {
+        const invoice = event.data.object as Stripe.Invoice
+        const result = await refundSystemPaymentFromStripe({
+          adminSupabase,
+          paymentIntentId: null,
+          invoiceId: invoice.id,
+          metadata: {
+            invoice_event: event.type,
+            ...(invoice.metadata || {}),
+          },
+        })
+
+        if (result.error) {
+          console.error(`Failed to update payment status for ${event.type}:`, result.error)
+          return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+        }
+        break
+      }
+
       default:
         // Unhandled event types are acknowledged safely
         break
