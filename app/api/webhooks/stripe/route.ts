@@ -186,7 +186,7 @@ export async function POST(req: Request) {
         })
 
         if (result.error) {
-          console.error(`Failed to update payment status for ${event.type}:`, result.error)
+          console.error('Failed to update payment status for %s:', event.type, result.error)
           return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
         }
         break
@@ -219,7 +219,7 @@ export async function POST(req: Request) {
           })
 
           if (result.error) {
-            console.error(`Failed to update payment status for ${event.type}:`, result.error)
+            console.error('Failed to update payment status for %s:', event.type, result.error)
             return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
           }
         }
@@ -240,7 +240,7 @@ export async function POST(req: Request) {
         })
 
         if (result.error) {
-          console.error(`Failed to update payment status for ${event.type}:`, result.error)
+          console.error('Failed to update payment status for %s:', event.type, result.error)
           return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
         }
         break
@@ -253,7 +253,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error(`Stripe Webhook processing error for event ${event.type}:`, error)
+    console.error('Stripe Webhook processing error for event %s:', event.type, error)
     return NextResponse.json(
       { error: 'Internal server error while processing webhook' },
       { status: 500 }

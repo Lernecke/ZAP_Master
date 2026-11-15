@@ -38,16 +38,24 @@ if (!existsSync(inputPath)) {
 
 const rawSql = readFileSync(inputPath, 'utf-8')
 
+const TABLE_HEADER_REGEXES = new Map([
+  ['subjects', /-- Data for Name: subjects; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+  ['exercises', /-- Data for Name: exercises; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+  ['tasks', /-- Data for Name: tasks; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+  ['math_solution_steps', /-- Data for Name: math_solution_steps; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+  ['learning_materials', /-- Data for Name: learning_materials; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+  ['trainer_exams', /-- Data for Name: trainer_exams; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+  ['badges', /-- Data for Name: badges; Type: TABLE DATA; Schema: public;[^\n]*\n--\s*\n/m],
+])
+
 /**
  * Extrahiert das INSERT-Statement fuer `tableName` anhand des pg_dump-Abschnittsheaders
  * (`-- Data for Name: <table>; Type: TABLE DATA; Schema: public;`), sodass fruehere
  * PII-/Auth-Abschnitte (inkl. evtl. E'...'-Escapes) gar nicht erst geparst werden muessen.
  */
 function extractTableInsert(sql, tableName) {
-  const headerRe = new RegExp(
-    `-- Data for Name: ${tableName}; Type: TABLE DATA; Schema: public;[^\\n]*\\n--\\s*\\n`,
-    'm'
-  )
+  const headerRe = TABLE_HEADER_REGEXES.get(tableName)
+  if (!headerRe) return null
   const headerMatch = headerRe.exec(sql)
   if (!headerMatch) return null
 

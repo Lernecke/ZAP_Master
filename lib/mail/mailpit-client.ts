@@ -1,5 +1,10 @@
 import nodemailer from "nodemailer"
 
+function isLoopbackHost(host: string): boolean {
+  const normalized = host.trim().toLowerCase()
+  return normalized === "127.0.0.1" || normalized === "localhost" || normalized === "::1"
+}
+
 /**
  * Mailpit / Inbucket Client for sending local verification and transactional emails.
  * Supports Mailpit HTTP API (Supabase Docker Mailpit at http://127.0.0.1:54324/api/v1/send or standalone at http://127.0.0.1:8025/api/v1/send)
@@ -69,7 +74,7 @@ export async function sendVerificationEmailMailpit({
       host: smtpHost,
       port: smtpPort,
       secure: false,
-      tls: { rejectUnauthorized: false },
+      ignoreTLS: isLoopbackHost(smtpHost),
       connectionTimeout: 1000,
       greetingTimeout: 1000,
     })
@@ -161,7 +166,7 @@ export async function sendMagicLinkEmailMailpit({
       host: smtpHost,
       port: smtpPort,
       secure: false,
-      tls: { rejectUnauthorized: false },
+      ignoreTLS: isLoopbackHost(smtpHost),
       connectionTimeout: 1000,
       greetingTimeout: 1000,
     })
@@ -254,7 +259,7 @@ export async function sendResetPasswordEmailMailpit({
       host: smtpHost,
       port: smtpPort,
       secure: false,
-      tls: { rejectUnauthorized: false },
+      ignoreTLS: isLoopbackHost(smtpHost),
       connectionTimeout: 1000,
       greetingTimeout: 1000,
     })

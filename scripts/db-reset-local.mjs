@@ -29,10 +29,11 @@ runSeedScript('seed-e2e-users.mjs')
 runSeedScript('seed-e2e-course-fixtures.mjs')
 
 function runTsxScript(name) {
-  const result = spawnSync('npx', ['--yes', 'tsx', path.join(projectRoot, 'scripts', name)], {
+  const scriptPath = path.join(projectRoot, 'scripts', name)
+  const result = spawnSync(process.execPath, ['--experimental-strip-types', scriptPath], {
     cwd: projectRoot,
     stdio: 'inherit',
-    shell: process.platform === 'win32',
+    shell: false,
   })
   if (result.status !== 0) {
     process.exit(result.status ?? 1)

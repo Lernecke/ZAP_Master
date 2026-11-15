@@ -12,6 +12,8 @@
 // Beispiel: node scripts/with-local-supabase.mjs next build
 
 import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { getLocalSupabaseStatus, assertLoopback, projectRoot } from './lib/local-supabase.mjs'
 
 const status = getLocalSupabaseStatus()
@@ -33,11 +35,25 @@ if (!command) {
   process.exit(1)
 }
 
-const child = spawnSync(command, args, {
+const LOCAL_BIN_SCRIPTS = {
+  next: path.join(projectRoot, 'node_modules', 'next', 'dist', 'bin', 'next'),
+  playwright: path.join(projectRoot, 'node_modules', '@playwright', 'test', 'cli.js'),
+}
+
+let execCommand = command
+let execArgs = args
+if (Object.hasOwn(LOCAL_BIN_SCRIPTS, command) && existsSync(LOCAL_BIN_SCRIPTS[command])) {
+  execCommand = process.execPath
+  execArgs = [LOCAL_BIN_SCRIPTS[command], ...args]
+} else if (command === 'node') {
+  execCommand = process.execPath
+}
+
+const child = spawnSync(execCommand, execArgs, {
   cwd: projectRoot,
   env: childEnv,
   stdio: 'inherit',
-  shell: process.platform === 'win32',
+  shell: false,
 })
 
 if (child.error) {

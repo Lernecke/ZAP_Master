@@ -1,0 +1,4 @@
+# Historical decommissioned migrations (001-014) archived as immutable reference only.
+# Their SHA-256 checksums are pinned in docs/migration-evidence/2026-07-18-supabase-baseline-inventory.md
+# and they are never executed against local or remote databases (see CLAUDE.md).
+supabase/legacy-migrations/

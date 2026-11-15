@@ -123,14 +123,14 @@ async function importExams() {
       })
 
       if (error) {
-        console.error(`❌ Error importing ${file}:`, error.message)
+        console.error('❌ Error importing %s:', file, error.message)
         errors++
       } else {
         console.log(`✅ Imported: ${normalizedId} - ${examData.title}`)
         imported++
       }
     } catch (e) {
-      console.error(`❌ Failed to process ${file}:`, e)
+      console.error('❌ Failed to process %s:', file, e)
       errors++
     }
   }

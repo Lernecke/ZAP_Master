@@ -48,7 +48,7 @@ export async function createBucketSignedUploadUrl(
     .createSignedUploadUrl(filePath)
 
   if (error) {
-    console.error(`${errorLogLabel}:`, error)
+    console.error('%s:', errorLogLabel, error)
     return { success: false, error: errorMessage }
   }
 

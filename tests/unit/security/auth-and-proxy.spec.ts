@@ -426,7 +426,9 @@ test.describe('Supabase Client Privilege Separation', () => {
 
   test('createAuthenticatedSupabaseClient() creates client with Bearer token when valid 3-part JWT is provided (without needing service_role key)', () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY
-    const validJwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature123'
+    const jwtHeader = Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')
+    const jwtPayload = Buffer.from(JSON.stringify({ sub: 'user-1' })).toString('base64url')
+    const validJwt = `${jwtHeader}.${jwtPayload}.signature123`
     const client = createAuthenticatedSupabaseClient(validJwt) as unknown as {
       headers?: Record<string, string>
       rest?: { headers?: Record<string, string> | Headers }

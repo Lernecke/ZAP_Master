@@ -64,18 +64,18 @@ for (const u of users) {
     // einem veralteten Passwort scheitern.
     const { data: list, error: listError } = await admin.auth.admin.listUsers()
     if (listError) {
-      console.error(`Fehler beim Anlegen von ${u.email}:`, createError.message)
+      console.error('Fehler beim Anlegen von %s:', u.email, createError.message)
       process.exit(1)
     }
     const existing = list.users.find((entry) => entry.email === u.email)
     if (!existing) {
-      console.error(`Fehler beim Anlegen von ${u.email}:`, createError.message)
+      console.error('Fehler beim Anlegen von %s:', u.email, createError.message)
       process.exit(1)
     }
     userId = existing.id
     const { error: updateError } = await admin.auth.admin.updateUserById(userId, { password: u.password })
     if (updateError) {
-      console.error(`Fehler beim Aktualisieren des Passworts fuer ${u.email}:`, updateError.message)
+      console.error('Fehler beim Aktualisieren des Passworts fuer %s:', u.email, updateError.message)
       process.exit(1)
     }
   } else {
@@ -87,7 +87,7 @@ for (const u of users) {
     .upsert({ id: userId, email: u.email, first_name: u.firstName, last_name: u.lastName, role: u.role, name: `${u.firstName} ${u.lastName}`.trim() })
 
   if (profileError) {
-    console.error(`Fehler beim Aktualisieren des Profils fuer ${u.email}:`, profileError.message)
+    console.error('Fehler beim Aktualisieren des Profils fuer %s:', u.email, profileError.message)
     process.exit(1)
   }
 

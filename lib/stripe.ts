@@ -263,7 +263,7 @@ export async function syncSystemPaymentsToStripeInvoices(params: {
         await onInvoiceSynced(tx.id, finalizedInvoice.id)
       }
     } catch (err) {
-      console.error(`Failed to sync system payment ${tx.id} to Stripe invoice:`, err)
+      console.error('Failed to sync system payment %s to Stripe invoice:', tx.id, err)
     }
   }
 }

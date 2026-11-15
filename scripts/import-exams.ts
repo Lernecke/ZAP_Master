@@ -61,33 +61,34 @@ async function importExams() {
   }
 
   console.log(`Using directory: ${jsonDir}`)
-  return importFromDir(jsonDir)
-}
 
-async function importFromDir(jsonDir: string) {
-  const files = fs.readdirSync(jsonDir).filter(f => f.endsWith('.json'))
-  
+  const files = fs.readdirSync(jsonDir).filter((f) => f.endsWith('.json'))
+
   console.log(`Found ${files.length} JSON files to inspect in ${jsonDir}`)
-  
+
   let successCount = 0
   let errorCount = 0
-  
+
   for (const file of files) {
-    const filePath = path.join(jsonDir, file)
+    const safeFileName = path.basename(file)
+    const filePath = `${jsonDir}${path.sep}${safeFileName}`
     const content = fs.readFileSync(filePath, 'utf-8')
-    
+
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw: any = JSON.parse(content)
 
       // Skip exercise files that are not exams unless they explicitly contain exam structures
-      if (file.includes('exercise') && !raw.exam && !raw.questions) {
-        console.log(`⏭️  Skipping non-exam file: ${file}`)
+      if (safeFileName.includes('exercise') && !raw.exam && !raw.questions) {
+        console.log(`⏭️  Skipping non-exam file: ${safeFileName}`)
         continue
       }
-      
-      const id = raw.id || file.replace(/\.json$/, '').replace(/_/g, '-')
+
+      const id = raw.id || safeFileName.replace(/\.json$/, '').replace(/_/g, '-')
       const title = raw.title || raw.exam?.title || 'Mathematik Prüfung'
-      const subject = raw.subject || (file.includes('math') || file.includes('mathematik') ? 'Math' : 'German')
+      const subject =
+        raw.subject ||
+        (safeFileName.includes('math') || safeFileName.includes('mathematik') ? 'Math' : 'German')
       const year = raw.year || 2024
       const generatedBy = raw.generatedBy || raw.generated_by || null
       const textLines = raw.textLines || raw.text_lines || null
@@ -96,34 +97,37 @@ async function importFromDir(jsonDir: string) {
 
       const { error } = await supabase
         .from('trainer_exams')
-        .upsert({
-          id,
-          title,
-          subject,
-          year,
-          generated_by: generatedBy,
-          data: {
-            meta,
-            questions,
+        .upsert(
+          {
+            id,
+            title,
+            subject,
+            year,
+            generated_by: generatedBy,
+            data: {
+              meta,
+              questions,
+            },
+            text_lines: textLines,
           },
-          text_lines: textLines,
-        }, {
-          onConflict: 'id',
-        })
-      
+          {
+            onConflict: 'id',
+          }
+        )
+
       if (error) {
-        console.error(`❌ Error importing ${file}:`, error.message)
+        console.error('❌ Error importing %s:', safeFileName, error.message)
         errorCount++
       } else {
         console.log(`✅ Imported: ${id} (${title})`)
         successCount++
       }
     } catch (e) {
-      console.error(`❌ Failed to parse ${file}:`, e)
+      console.error('❌ Failed to parse %s:', safeFileName, e)
       errorCount++
     }
   }
-  
+
   console.log(`\n📊 Import complete: ${successCount} successful, ${errorCount} failed`)
 }
 
