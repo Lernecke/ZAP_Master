@@ -334,12 +334,32 @@ export async function fulfillSystemPaymentFromStripeInvoice(params: {
     return true
   }
 
-  // Extract payment_intent from invoice if available, or synthesize a unique reference so RPC can match
+  // Extract payment_intent from invoice if available, or resolve via invoicePayments (Stripe API 2025+)
   const rawInvoicePi = (invoice as unknown as { payment_intent?: string | { id: string } | null }).payment_intent
-  const invoicePaymentIntentId =
+  let invoicePaymentIntentId =
     typeof rawInvoicePi === 'string'
       ? rawInvoicePi
       : rawInvoicePi?.id || null
+
+  if (!invoicePaymentIntentId && !paymentRow.stripe_payment_intent_id) {
+    try {
+      const stripe = getStripeServerClient()
+      const invoicePayments = await stripe.invoicePayments.list({
+        invoice: invoice.id,
+        limit: 5,
+      })
+      for (const ip of invoicePayments.data) {
+        const pi = ip.payment?.payment_intent
+        const piId = typeof pi === 'string' ? pi : pi?.id || null
+        if (piId) {
+          invoicePaymentIntentId = piId
+          break
+        }
+      }
+    } catch {
+      // Fall back to synthesized invoice reference below
+    }
+  }
 
   const effectivePaymentIntentId =
     paymentRow.stripe_payment_intent_id ||
@@ -581,5 +601,232 @@ export async function createStripeCheckoutSession(
     paymentId: session.id,
   }
 }
+
+interface RefundPaymentRow {
+  id: string
+  anmeldung_id: string | null
+  status: string
+  stripe_checkout_session_id: string | null
+  stripe_payment_intent_id: string | null
+  metadata: Record<string, unknown> | null
+}
+
+/**
+ * Resolves a local payment record from a Stripe refund/charge event and marks it as refunded
+ * via process_stripe_payment_update (revoking course access and material grants).
+ */
+export async function refundSystemPaymentFromStripe(params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminSupabase: any
+  paymentIntentId: string | null
+  invoiceId?: string | null
+  amountRefunded?: number | null
+  metadata?: Record<string, unknown>
+}): Promise<{ updated: boolean; error?: unknown }> {
+  const { adminSupabase, paymentIntentId, amountRefunded, metadata } = params
+  let invoiceId = params.invoiceId || null
+
+  const selectColumns =
+    'id, anmeldung_id, status, stripe_checkout_session_id, stripe_payment_intent_id, metadata'
+
+  let paymentRow: RefundPaymentRow | null = null
+
+  const findByInvoiceId = async (invId: string): Promise<RefundPaymentRow | null> => {
+    const { data: byMeta } = await adminSupabase
+      .from('payments')
+      .select(selectColumns)
+      .eq('metadata->>stripe_invoice_id', invId)
+      .maybeSingle()
+    if (byMeta) return byMeta as RefundPaymentRow
+
+    const { data: bySynthPi } = await adminSupabase
+      .from('payments')
+      .select(selectColumns)
+      .eq('stripe_payment_intent_id', `inv_${invId}`)
+      .maybeSingle()
+    return (bySynthPi as RefundPaymentRow | null) || null
+  }
+
+  // 1. Direct match by stripe_payment_intent_id
+  if (paymentIntentId) {
+    const { data } = await adminSupabase
+      .from('payments')
+      .select(selectColumns)
+      .eq('stripe_payment_intent_id', paymentIntentId)
+      .maybeSingle()
+    if (data) paymentRow = data as RefundPaymentRow
+  }
+
+  // 2. Match by invoice ID (covers Customer Portal invoice payments where stripe_payment_intent_id is inv_...)
+  if (!paymentRow && invoiceId) {
+    paymentRow = await findByInvoiceId(invoiceId)
+  }
+
+  // 3. Fallback via Stripe API: resolve Checkout Session or PaymentIntent/Invoice metadata
+  if (!paymentRow && paymentIntentId) {
+    const stripe = getStripeServerClient()
+
+    try {
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: paymentIntentId,
+        limit: 1,
+      })
+      const sessionId = sessions.data[0]?.id
+      if (sessionId) {
+        const { data } = await adminSupabase
+          .from('payments')
+          .select(selectColumns)
+          .eq('stripe_checkout_session_id', sessionId)
+          .maybeSingle()
+        if (data) paymentRow = data as RefundPaymentRow
+      }
+    } catch {
+      // Continue to PaymentIntent lookup
+    }
+
+    if (!paymentRow) {
+      try {
+        const invoicePayments = await stripe.invoicePayments.list({
+          payment: { type: 'payment_intent', payment_intent: paymentIntentId },
+          limit: 5,
+        })
+        for (const ip of invoicePayments.data) {
+          const ipInvoiceId =
+            typeof ip.invoice === 'string' ? ip.invoice : ip.invoice?.id || null
+          if (ipInvoiceId) {
+            if (!invoiceId) invoiceId = ipInvoiceId
+            paymentRow = await findByInvoiceId(ipInvoiceId)
+            if (paymentRow) break
+          }
+        }
+      } catch {
+        // Continue to PaymentIntent lookup
+      }
+    }
+
+    if (!paymentRow) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+        const rawPiInvoice = (pi as unknown as { invoice?: string | { id: string } | null }).invoice
+        const piInvoiceId =
+          typeof rawPiInvoice === 'string' ? rawPiInvoice : rawPiInvoice?.id || null
+
+        if (piInvoiceId && !invoiceId) {
+          invoiceId = piInvoiceId
+          paymentRow = await findByInvoiceId(piInvoiceId)
+        }
+
+        const metaPaymentId = pi.metadata?.payment_id
+        if (!paymentRow && metaPaymentId) {
+          const { data } = await adminSupabase
+            .from('payments')
+            .select(selectColumns)
+            .eq('id', metaPaymentId)
+            .maybeSingle()
+          if (data) paymentRow = data as RefundPaymentRow
+        }
+
+        const metaAnmeldungId = pi.metadata?.anmeldung_id
+        if (!paymentRow && metaAnmeldungId) {
+          const { data } = await adminSupabase
+            .from('payments')
+            .select(selectColumns)
+            .eq('anmeldung_id', metaAnmeldungId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          if (data) paymentRow = data as RefundPaymentRow
+        }
+      } catch {
+        // Continue to metadata fallback
+      }
+    }
+  }
+
+  // 4. Fallback via Stripe Invoice metadata if invoiceId is known
+  if (!paymentRow && invoiceId) {
+    try {
+      const stripe = getStripeServerClient()
+      const inv = await stripe.invoices.retrieve(invoiceId)
+      const metaPaymentId = inv.metadata?.payment_id
+      if (metaPaymentId) {
+        const { data } = await adminSupabase
+          .from('payments')
+          .select(selectColumns)
+          .eq('id', metaPaymentId)
+          .maybeSingle()
+        if (data) paymentRow = data as RefundPaymentRow
+      }
+      if (!paymentRow && inv.metadata?.anmeldung_id) {
+        const { data } = await adminSupabase
+          .from('payments')
+          .select(selectColumns)
+          .eq('anmeldung_id', inv.metadata.anmeldung_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (data) paymentRow = data as RefundPaymentRow
+      }
+    } catch {
+      // Ignore lookup errors
+    }
+  }
+
+  // 5. Fallback via metadata.payment_id passed from charge/refund
+  if (!paymentRow && typeof metadata?.payment_id === 'string' && metadata.payment_id) {
+    const { data } = await adminSupabase
+      .from('payments')
+      .select(selectColumns)
+      .eq('id', metadata.payment_id)
+      .maybeSingle()
+    if (data) paymentRow = data as RefundPaymentRow
+  }
+
+  if (!paymentRow) {
+    console.warn(
+      `Stripe refund webhook could not match a payment record (payment_intent=${paymentIntentId}, invoice=${invoiceId})`
+    )
+    return { updated: false }
+  }
+
+  if (paymentRow.status === 'refunded') {
+    return { updated: true }
+  }
+
+  // Ensure process_stripe_payment_update can locate the row by stripe_payment_intent_id or stripe_checkout_session_id
+  const effectivePaymentIntentId = paymentIntentId || paymentRow.stripe_payment_intent_id
+  if (
+    paymentIntentId &&
+    (!paymentRow.stripe_payment_intent_id || paymentRow.stripe_payment_intent_id.startsWith('inv_'))
+  ) {
+    await adminSupabase
+      .from('payments')
+      .update({
+        stripe_payment_intent_id: paymentIntentId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', paymentRow.id)
+  }
+
+  const existingMeta = paymentRow.metadata || {}
+  const { error: rpcError } = await adminSupabase.rpc('process_stripe_payment_update', {
+    p_checkout_session_id: paymentRow.stripe_checkout_session_id,
+    p_payment_intent_id: effectivePaymentIntentId,
+    p_status: 'refunded',
+    p_metadata: {
+      ...existingMeta,
+      ...(amountRefunded != null ? { amount_refunded: amountRefunded } : {}),
+      refunded_at: new Date().toISOString(),
+      ...(metadata || {}),
+    },
+  })
+
+  if (rpcError) {
+    return { updated: false, error: rpcError }
+  }
+
+  return { updated: true }
+}
+
 
 

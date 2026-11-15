@@ -4,6 +4,7 @@ import Stripe from 'stripe'
 import {
   getStripeServerClient,
   fulfillSystemPaymentFromStripeInvoice,
+  refundSystemPaymentFromStripe,
 } from '@/lib/stripe'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 
@@ -128,20 +129,65 @@ export async function POST(req: Request) {
         const paymentIntentId = typeof charge.payment_intent === 'string'
           ? charge.payment_intent
           : charge.payment_intent?.id || null
+        const rawInvoice = (charge as unknown as { invoice?: string | { id: string } | null }).invoice
+        const invoiceId = typeof rawInvoice === 'string'
+          ? rawInvoice
+          : rawInvoice?.id || null
 
-        if (paymentIntentId) {
-          const { error } = await adminSupabase.rpc('process_stripe_payment_update', {
-            p_checkout_session_id: null,
-            p_payment_intent_id: paymentIntentId,
-            p_status: 'refunded',
-            p_metadata: {
-              amount_refunded: charge.amount_refunded,
-            },
-          })
+        const result = await refundSystemPaymentFromStripe({
+          adminSupabase,
+          paymentIntentId,
+          invoiceId,
+          amountRefunded: charge.amount_refunded,
+          metadata: charge.metadata || undefined,
+        })
 
-          if (error) {
-            console.error('Failed to update payment status for charge.refunded:', error)
+        if (result.error) {
+          console.error('Failed to update payment status for charge.refunded:', result.error)
+          return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+        }
+        break
+      }
+
+      case 'refund.created':
+      case 'refund.updated':
+      case 'charge.refund.updated': {
+        const refund = event.data.object as Stripe.Refund
+        if (refund.status && refund.status !== 'succeeded') {
+          break
+        }
+
+        let paymentIntentId = typeof refund.payment_intent === 'string'
+          ? refund.payment_intent
+          : refund.payment_intent?.id || null
+        let invoiceId: string | null = null
+
+        if (!paymentIntentId && refund.charge) {
+          const chargeId = typeof refund.charge === 'string' ? refund.charge : refund.charge.id
+          if (chargeId) {
+            const stripe = getStripeServerClient()
+            const charge = await stripe.charges.retrieve(chargeId)
+            paymentIntentId = typeof charge.payment_intent === 'string'
+              ? charge.payment_intent
+              : charge.payment_intent?.id || null
+            const rawInvoice = (charge as unknown as { invoice?: string | { id: string } | null }).invoice
+            invoiceId = typeof rawInvoice === 'string'
+              ? rawInvoice
+              : rawInvoice?.id || null
           }
+        }
+
+        const result = await refundSystemPaymentFromStripe({
+          adminSupabase,
+          paymentIntentId,
+          invoiceId,
+          amountRefunded: refund.amount,
+          metadata: refund.metadata || undefined,
+        })
+
+        if (result.error) {
+          console.error(`Failed to update payment status for ${event.type}:`, result.error)
+          return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
         }
         break
       }

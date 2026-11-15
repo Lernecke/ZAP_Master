@@ -788,6 +788,10 @@ export function ProfilClient({ profile, stats, payments }: ProfilClientProps) {
                               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                                 <Clock className="w-3.5 h-3.5" /> Ausstehend
                               </span>
+                            ) : payment.status === 'refunded' ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">
+                                <RotateCcw className="w-3.5 h-3.5" /> Erstattet
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
                                 <XCircle className="w-3.5 h-3.5" /> {payment.status}
